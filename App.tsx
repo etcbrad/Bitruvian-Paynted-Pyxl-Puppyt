@@ -303,6 +303,58 @@ const App: React.FC = () => {
             >
               RESET POSE
             </button>
+            
+            {/* Basic pose adjustments */}
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                onClick={() => handlePoseUpdate({ waist: activePose.waist + 5 })}
+                className="text-[8px] px-1 py-0.5 bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 transition-all"
+              >
+                WAIST +
+              </button>
+              <button
+                onClick={() => handlePoseUpdate({ waist: activePose.waist - 5 })}
+                className="text-[8px] px-1 py-0.5 bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 transition-all"
+              >
+                WAIST -
+              </button>
+              <button
+                onClick={() => handlePoseUpdate({ torso: activePose.torso + 5 })}
+                className="text-[8px] px-1 py-0.5 bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 transition-all"
+              >
+                TORSO +
+              </button>
+              <button
+                onClick={() => handlePoseUpdate({ torso: activePose.torso - 5 })}
+                className="text-[8px] px-1 py-0.5 bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 transition-all"
+              >
+                TORSO -
+              </button>
+              <button
+                onClick={() => handlePoseUpdate({ l_shoulder: activePose.l_shoulder + 5 })}
+                className="text-[8px] px-1 py-0.5 bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 transition-all"
+              >
+                L.SHOULDER +
+              </button>
+              <button
+                onClick={() => handlePoseUpdate({ l_shoulder: activePose.l_shoulder - 5 })}
+                className="text-[8px] px-1 py-0.5 bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 transition-all"
+              >
+                L.SHOULDER -
+              </button>
+              <button
+                onClick={() => handlePoseUpdate({ r_shoulder: activePose.r_shoulder + 5 })}
+                className="text-[8px] px-1 py-0.5 bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 transition-all"
+              >
+                R.SHOULDER +
+              </button>
+              <button
+                onClick={() => handlePoseUpdate({ r_shoulder: activePose.r_shoulder - 5 })}
+                className="text-[8px] px-1 py-0.5 bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 transition-all"
+              >
+                R.SHOULDER -
+              </button>
+            </div>
           </div>
         </div>
       </DraggablePanel>
