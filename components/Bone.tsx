@@ -1,13 +1,13 @@
 
 
 import React from 'react';
-import { Vector2D, WalkingEnginePivotOffsets, WalkingEngineProportions } from '../types';
+import { BoneVariant, Vector2D, WalkingEnginePivotOffsets, WalkingEngineProportions } from '../types';
 
 export interface BoneProps { 
   rotation: number;
   length: number; 
   width?: number; 
-  variant?: 'diamond' | 'waist-teardrop-pointy-up' | 'torso-teardrop-pointy-down' | 'collar-horizontal-oval-shape' | 'deltoid-shape' | 'limb-tapered' | 'head-tall-oval' | 'hand-foot-arrowhead-shape' | 'foot-block-shape' | 'toe-rounded-cap';
+  variant?: BoneVariant;
   showPivots: boolean;
   visible?: boolean;
   offset?: Vector2D;
@@ -58,7 +58,7 @@ export const Bone: React.FC<BoneProps> = ({
   isInActiveChain = false,
 }) => {
 
-  const getBonePath = (boneLength: number, boneWidth: number, variant: string, drawsUpwards: boolean): string => {
+  const getBonePath = (boneLength: number, boneWidth: number, variant: BoneVariant, drawsUpwards: boolean): string => {
     const effectiveLength = drawsUpwards ? -boneLength : boneLength;
     const halfWidth = boneWidth / 2;
 
@@ -111,6 +111,44 @@ export const Bone: React.FC<BoneProps> = ({
       case 'hand-foot-arrowhead-shape':
         const handFootWidth = boneWidth;
         return `M ${-handFootWidth / 2},0 L ${handFootWidth / 2},0 L 0,${effectiveLength} Z`;
+
+      case 'triangle':
+        return `M ${-halfWidth},0 L ${halfWidth},0 L 0,${effectiveLength} Z`;
+
+      case 'triangle-up':
+        return `M ${-halfWidth},${effectiveLength} L ${halfWidth},${effectiveLength} L 0,0 Z`;
+
+      case 'trapezoid':
+        const trapTopWidth = boneWidth * 0.6;
+        return `M ${-halfWidth},0 L ${halfWidth},0 L ${trapTopWidth / 2},${effectiveLength} L ${-trapTopWidth / 2},${effectiveLength} Z`;
+
+      case 'trapezoid-up':
+        const trapUpBottomWidth = boneWidth * 0.6;
+        return `M ${-trapUpBottomWidth / 2},0 L ${trapUpBottomWidth / 2},0 L ${halfWidth},${effectiveLength} L ${-halfWidth},${effectiveLength} Z`;
+
+      case 'pentagon':
+        const pentMidY = effectiveLength * 0.65;
+        const pentMidW = boneWidth * 0.75;
+        const pentTopW = boneWidth * 0.35;
+        return `M ${-halfWidth},0 L ${halfWidth},0 L ${pentMidW / 2},${pentMidY} L ${pentTopW / 2},${effectiveLength} L ${-pentTopW / 2},${effectiveLength} L ${-pentMidW / 2},${pentMidY} Z`;
+
+      case 'capsule':
+        const capLen = effectiveLength;
+        const capAbs = Math.abs(capLen);
+        const capR = Math.min(halfWidth, capAbs / 2);
+        const capBottom = capLen >= 0 ? capLen : -capAbs;
+        return [
+          `M ${-halfWidth + capR},0`,
+          `H ${halfWidth - capR}`,
+          `A ${capR} ${capR} 0 0 1 ${halfWidth} ${capLen >= 0 ? capR : -capR}`,
+          `V ${capBottom - (capLen >= 0 ? capR : -capR)}`,
+          `A ${capR} ${capR} 0 0 1 ${halfWidth - capR} ${capBottom}`,
+          `H ${-halfWidth + capR}`,
+          `A ${capR} ${capR} 0 0 1 ${-halfWidth} ${capBottom - (capLen >= 0 ? capR : -capR)}`,
+          `V ${capLen >= 0 ? capR : -capR}`,
+          `A ${capR} ${capR} 0 0 1 ${-halfWidth + capR} 0`,
+          `Z`,
+        ].join(' ');
 
       default:
         const defaultWidth = boneWidth;
