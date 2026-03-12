@@ -455,6 +455,29 @@ const App: React.FC = () => {
     };
   }, [currentCanvas.animation.keyframes]);
 
+  const handleRigExport = useCallback((parts: PaperBodyPart[], pose: PaperPoseState) => {
+    const manifest = convertPaperRigToManifest(parts, pose);
+    setRigManifest(manifest);
+    setDynamicPose(manifest.pose);
+    setDynamicDisabledJoints({});
+    setWorkspaceMode('core');
+    addLog(`[SYSTEM]: RIG_IMPORTED - ${parts.length} PARTS`);
+  }, [addLog]);
+
+  const handlePoseUpdate = useCallback((parts: PaperBodyPart[], pose: PaperPoseState) => {
+    if (!rigManifest) return;
+    const joints: RigManifestPose['joints'] = {};
+    parts.forEach(part => {
+      const entry = pose[part.id];
+      joints[part.id] = {
+        rotation: entry?.rotation ?? 0,
+        offsetX: entry?.x ?? 0,
+        offsetY: entry?.y ?? 0,
+      };
+    });
+    setDynamicPose({ joints });
+  }, [rigManifest]);
+
   useEffect(() => {
     updateCanvas({ baseH: currentCanvas.globalScale });
   }, [currentCanvas.globalScale, updateCanvas]);
