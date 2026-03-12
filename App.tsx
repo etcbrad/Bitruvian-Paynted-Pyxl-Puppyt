@@ -900,6 +900,56 @@ const App: React.FC = () => {
     return hidden;
   }, [currentCanvas.boneVisibility, currentCanvas.masksEnabled, currentCanvas.hideBoneShapesWithMasks, currentCanvas.bodyPartMaskLayers, JOINT_PARENTS]);
 
+  const dynamicJointMap = useMemo(() => {
+    const map = new Map<string, RigManifestV1['joints'][number]>();
+    rigManifest?.joints.forEach(joint => map.set(joint.id, joint));
+    return map;
+  }, [rigManifest]);
+
+  const dynamicChildMap = useMemo(() => {
+    const map = new Map<string | null, string[]>();
+    rigManifest?.joints.forEach(joint => {
+      const key = joint.parentId ?? null;
+      const list = map.get(key) ?? [];
+      list.push(joint.id);
+      map.set(key, list);
+    });
+    return map;
+  }, [rigManifest]);
+
+  const dynamicTransforms = useMemo(() => {
+    if (!rigManifest) return new Map<string, { position: Vector2D; rotation: number }>();
+    const pose = dynamicPose ?? rigManifest.pose;
+    const transforms = new Map<string, { position: Vector2D; rotation: number }>();
+    const compute = (jointId: string, parent: { position: Vector2D; rotation: number } | null) => {
+      const joint = dynamicJointMap.get(jointId);
+      if (!joint) return;
+      const poseEntry = pose.joints[jointId];
+      const localOffset = {
+        x: joint.defaultOffset.x + (poseEntry?.offsetX ?? 0),
+        y: joint.defaultOffset.y + (poseEntry?.offsetY ?? 0),
+      };
+      const localRot = (joint.defaultRotation ?? 0) + (poseEntry?.rotation ?? 0);
+      const parentRot = parent?.rotation ?? 0;
+      const parentPos = parent?.position ?? { x: 0, y: 0 };
+      const rotatedOffset = rotateVec(localOffset, parentRot);
+      const position = { x: parentPos.x + rotatedOffset.x, y: parentPos.y + rotatedOffset.y };
+      const rotation = parentRot + localRot;
+      transforms.set(jointId, { position, rotation });
+      const children = dynamicChildMap.get(jointId) ?? [];
+      children.forEach(childId => compute(childId, { position, rotation }));
+    };
+    const roots = dynamicChildMap.get(null) ?? [];
+    roots.forEach(rootId => compute(rootId, null));
+    return transforms;
+  }, [rigManifest, dynamicPose, dynamicJointMap, dynamicChildMap]);
+
+  const dynamicPartsById = useMemo(() => {
+    const map = new Map<string, RigManifestV1['parts'][number]>();
+    rigManifest?.parts.forEach(part => map.set(part.id, part));
+    return map;
+  }, [rigManifest]);
+
   return (
     <div className="flex h-full w-full bg-paper font-mono text-ink overflow-hidden select-none">
       {isConsoleVisible && (
