@@ -833,8 +833,8 @@ const App: React.FC = () => {
             )}
           </div>
 
-          <div className="flex border-b border-ridge">
-            {(['pose', 'proportions', 'library'] as const).map(tab => (
+          <div className="flex border-b border-ridge flex-wrap">
+            {(['pose', 'proportions', 'library', 'masks', 'animation'] as const).map(tab => (
               <button key={tab} onClick={() => setActiveControlTab(tab)} className={`flex-1 text-[9px] py-2 font-bold transition-all ${activeControlTab === tab ? 'text-selection border-b-2 border-selection bg-white/40' : 'opacity-40 hover:opacity-100'}`}>{tab.toUpperCase()}</button>
             ))}
           </div>
