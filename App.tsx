@@ -1006,6 +1006,13 @@ const App: React.FC = () => {
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-archaic tracking-widest uppercase italic">Bitruvius.Core</h1>
               <button
+                onClick={() => setWorkspaceMode(workspaceMode === 'rig-studio' ? 'core' : 'rig-studio')}
+                className={`text-[9px] px-2 py-1 border font-bold uppercase ${workspaceMode === 'rig-studio' ? 'bg-selection text-paper border-selection' : 'bg-paper/10 border-ridge text-mono-light'}`}
+                title="Toggle Rig Studio"
+              >
+                {workspaceMode === 'rig-studio' ? 'Rig Studio' : 'Core'}
+              </button>
+              <button
                 onClick={() => updateCanvas({ maskControlsVisible: !currentCanvas.maskControlsVisible })}
                 className={`w-7 h-7 flex items-center justify-center rounded-full border transition-all ${currentCanvas.maskControlsVisible ? 'bg-accent-green text-paper border-accent-green' : 'bg-paper/10 border-ridge text-mono-light'}`}
                 title={`Toggle mask controls ${currentCanvas.maskControlsVisible ? 'off' : 'on'}`}
