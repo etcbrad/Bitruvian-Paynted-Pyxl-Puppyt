@@ -103,6 +103,7 @@ interface CanvasState {
   showLabels: boolean;
   baseH: number;
   jointModes: Record<keyof WalkingEnginePivotOffsets, JointMode>;
+  disabledJoints: Record<keyof WalkingEnginePivotOffsets, boolean>;
   isReversed: boolean;
   pinningMode: 'none' | 'rightFoot' | 'dual';
   pinOffset: Vector2D;
@@ -122,6 +123,7 @@ const createInitialCanvasState = (): CanvasState => ({
   showLabels: false,
   baseH: 150,
   jointModes: Object.fromEntries(JOINT_KEYS.map(k => [k, 'standard'])) as any,
+  disabledJoints: Object.fromEntries(JOINT_KEYS.map(k => [k, false])) as any,
   isReversed: false,
   pinningMode: 'none',
   pinOffset: { x: 0, y: 0 },
@@ -145,6 +147,7 @@ const rotateVec = (vec: Vector2D, angleDeg: number): Vector2D => {
 const addVec = (v1: Vector2D, v2: Vector2D): Vector2D => ({ x: v1.x + v2.x, y: v1.y + v2.y });
 
 const App: React.FC = () => {
+  const ROOT_DRAGGING_DISABLED = true;
   const [activeCanvasId] = useState<CanvasId>('primary'); // Future-ready: switch per-canvas state here.
   const [canvasStates, setCanvasStates] = useState<Record<CanvasId, CanvasState>>({
     primary: createInitialCanvasState(),
@@ -209,6 +212,41 @@ const App: React.FC = () => {
   const addLog = useCallback((message: string) => {
     setSystemLogs(prev => [...prev.slice(-49), { timestamp: new Date().toLocaleTimeString(), message }]);
   }, []);
+
+  const JOINT_PARENTS: Record<keyof WalkingEnginePivotOffsets, keyof WalkingEnginePivotOffsets | null> = useMemo(() => ({
+    waist: null,
+    torso: 'waist',
+    collar: 'torso',
+    neck: 'collar',
+    l_shoulder: 'collar',
+    l_elbow: 'l_shoulder',
+    l_hand: 'l_elbow',
+    r_shoulder: 'collar',
+    r_elbow: 'r_shoulder',
+    r_hand: 'r_elbow',
+    l_hip: 'waist',
+    l_knee: 'l_hip',
+    l_foot: 'l_knee',
+    l_toe: 'l_foot',
+    r_hip: 'waist',
+    r_knee: 'r_hip',
+    r_foot: 'r_knee',
+    r_toe: 'r_foot',
+  }), []);
+
+  const getRootJointKey = useCallback((): keyof WalkingEnginePivotOffsets => (
+    currentCanvas.isReversed ? 'neck' : 'waist'
+  ), [currentCanvas.isReversed]);
+
+  const getEffectiveBoneKey = useCallback((boneKey: keyof WalkingEnginePivotOffsets): keyof WalkingEnginePivotOffsets | null => {
+    let current: keyof WalkingEnginePivotOffsets | null = boneKey;
+    while (current && currentCanvas.disabledJoints[current]) {
+      current = JOINT_PARENTS[current];
+    }
+    if (!current) return null;
+    if (ROOT_DRAGGING_DISABLED && current === getRootJointKey()) return null;
+    return current;
+  }, [currentCanvas.disabledJoints, JOINT_PARENTS, ROOT_DRAGGING_DISABLED, getRootJointKey]);
 
   useEffect(() => {
     updateCanvas({ baseH: currentCanvas.globalScale });
