@@ -3,7 +3,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { Bone } from './Bone';
 import { ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT, RIGGING } from '../constants';
-import { WalkingEnginePose, WalkingEngineProportions, WalkingEnginePivotOffsets, Vector2D, MaskTransform, JointMode } from '../types';
+import { BoneVariant, WalkingEnginePose, WalkingEngineProportions, WalkingEnginePivotOffsets, Vector2D, MaskTransform, JointMode } from '../types';
 
 // Helper functions for vector math, copied from App.tsx for Mannequin's internal calculations.
 const rotateVec = (vec: Vector2D, angleDeg: number): Vector2D => {
@@ -215,6 +215,8 @@ interface MannequinProps {
   disabledJoints?: Record<keyof WalkingEnginePivotOffsets, boolean>;
   hiddenBoneKeys?: Set<keyof WalkingEnginePivotOffsets>;
   activeChain?: (keyof WalkingEnginePivotOffsets)[] | null;
+  partShapes?: Record<keyof WalkingEngineProportions, BoneVariant>;
+  partColors?: Record<keyof WalkingEngineProportions, string | null>;
 }
 
 const RENDER_ORDER: (keyof WalkingEngineProportions)[] = [
@@ -246,7 +248,7 @@ export const partDefinitions: Record<keyof WalkingEngineProportions, any> = {
 const Mannequin: React.FC<MannequinProps> = ({
   pivotOffsets, props, showPivots, showLabels, baseUnitH,
   onAnchorMouseDown, draggingBoneKey, isPaused, pinningMode,
-  maskImage, maskTransform, offset, isReversed, jointModes, disabledJoints, hiddenBoneKeys, activeChain
+  maskImage, maskTransform, offset, isReversed, jointModes, disabledJoints, hiddenBoneKeys, activeChain, partShapes, partColors
 }) => {
     const getScaledDimension = useCallback((raw: number, key: keyof WalkingEngineProportions, axis: 'w' | 'h') => {
         return raw * baseUnitH * (props[key]?.[axis] || 1);
@@ -265,9 +267,12 @@ const Mannequin: React.FC<MannequinProps> = ({
                 const t = globalTransforms[partKey];
                 if (!p || !t) return null;
 
-                const colorClass = (partKey === 'collar') ? 'fill-olive' : 
-                                  (partKey === 'l_hand' && pivotOffsets.l_hand_flash) ? 'fill-accent-red' : 
-                                  (partKey === 'r_hand' && pivotOffsets.r_hand_flash) ? 'fill-accent-red' : 'fill-mono-dark';
+                const colorOverride = partColors?.[partKey] || null;
+                const colorClass = colorOverride ?? (
+                  (partKey === 'collar') ? 'fill-olive' :
+                  (partKey === 'l_hand' && pivotOffsets.l_hand_flash) ? 'fill-accent-red' :
+                  (partKey === 'r_hand' && pivotOffsets.r_hand_flash) ? 'fill-accent-red' : 'fill-mono-dark'
+                );
 
                 return (
                     <g key={partKey} transform={`translate(${t.position.x}, ${t.position.y}) rotate(${t.rotation})`}>
@@ -275,7 +280,7 @@ const Mannequin: React.FC<MannequinProps> = ({
                             rotation={0}
                             length={t.length || 0}
                             width={getScaledDimension(p.rawW, partKey, 'w') || 0}
-                            variant={p.variant}
+                            variant={partShapes?.[partKey] || p.variant}
                             drawsUpwards={p.drawsUpwards}
                             label={p.label}
                             boneKey={p.boneKey}
