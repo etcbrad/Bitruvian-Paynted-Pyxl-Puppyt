@@ -6,7 +6,7 @@ import { Scanlines, SystemGuides } from './components/SystemGrid';
 import { DraggablePanel } from './components/DraggablePanel';
 import { COLORS } from './components/Bone';
 
-const RESTING_BASE_POSE: WalkingEnginePivotOffsets = {
+const RESTING_BASE_POSE: WalkingEnginePose = {
   waist: 0, neck: 0, collar: 0, torso: 0,
   l_shoulder: 0, r_shoulder: 0,
   l_elbow: 0, r_elbow: 0,
@@ -14,7 +14,10 @@ const RESTING_BASE_POSE: WalkingEnginePivotOffsets = {
   l_hip: 180, r_hip: 180, // Legs pointing straight down
   l_knee: 0, r_knee: 0,
   l_foot: 0, r_foot: 0,
-  l_toe: 0, r_toe: 0
+  l_toe: 0, r_toe: 0,
+  stride_phase: 0,
+  y_offset: 0,
+  x_offset: 0,
 };
 
 const DEFAULT_PROPORTIONS: WalkingEngineProportions = {
