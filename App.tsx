@@ -145,7 +145,7 @@ const rotateVec = (vec: Vector2D, angleDeg: number): Vector2D => {
 const addVec = (v1: Vector2D, v2: Vector2D): Vector2D => ({ x: v1.x + v2.x, y: v1.y + v2.y });
 
 const App: React.FC = () => {
-  const [activeCanvasId] = useState<CanvasId>('primary');
+  const [activeCanvasId] = useState<CanvasId>('primary'); // Future-ready: switch per-canvas state here.
   const [canvasStates, setCanvasStates] = useState<Record<CanvasId, CanvasState>>({
     primary: createInitialCanvasState(),
   });
