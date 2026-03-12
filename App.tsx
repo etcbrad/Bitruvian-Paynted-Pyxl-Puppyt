@@ -390,14 +390,14 @@ const App: React.FC = () => {
               pinningMode="none"
               offset={{ x: 0, y: 0 }}
               isReversed={false}
-              jointModes={Object.keys(DEFAULT_PROPORTIONS).reduce((acc, key) => ({ 
+              jointModes={Object.keys(pivotOffsets).reduce((acc, key) => ({ 
                 ...acc, 
                 [key]: 'fk' as JointMode 
-              }), {} as Record<keyof WalkingEngineProportions, JointMode>)}
-              disabledJoints={Object.keys(DEFAULT_PROPORTIONS).reduce((acc, key) => ({ 
+              }), {} as Record<keyof WalkingEnginePivotOffsets, JointMode>)}
+              disabledJoints={Object.keys(pivotOffsets).reduce((acc, key) => ({ 
                 ...acc, 
                 [key]: false 
-              }), {} as Record<keyof WalkingEngineProportions, boolean>)}
+              }), {} as Record<keyof WalkingEnginePivotOffsets, boolean>)}
               hiddenBoneKeys={new Set()}
               partShapes={partShapes}
               partColors={partColors}
