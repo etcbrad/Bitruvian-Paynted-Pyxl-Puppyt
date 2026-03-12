@@ -484,9 +484,11 @@ const App: React.FC = () => {
                     setLastPoppedKey('t-pose');
                     setTimeout(() => setLastPoppedKey(null), 300);
                     runTween({ id: 0, name: 'T-POSE', pivotOffsets: T_POSE, props: DEFAULT_PROPORTIONS, jointModes: Object.fromEntries(JOINT_KEYS.map(k => [k, 'standard'])) as any });
-                    setGlobalScale(150);
-                    setGlobalBoneWidthMultiplier(1);
-                    setGlobalLimbLengthMultiplier(1);
+                    updateCanvas({
+                      globalScale: 150,
+                      globalBoneWidthMultiplier: 1,
+                      globalLimbLengthMultiplier: 1,
+                    });
                   }} 
                   className={`text-[9px] px-3 py-2 border border-selection bg-selection text-paper font-bold uppercase transition-all hover:scale-[1.02] active:scale-[0.98] btn-pop ${lastPoppedKey === 't-pose' ? 'animate-pop' : ''}`}
                 >
@@ -495,23 +497,23 @@ const App: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2">
                     <button 
                     onClick={togglePinning} 
-                    className={`text-[9px] px-3 py-2 border transition-all font-bold uppercase hover:scale-[1.05] active:scale-[0.95] ${lastPoppedKey === 'pin-foot' ? 'animate-pop' : ''} ${pinningMode !== 'none' ? 'bg-accent-purple text-paper border-accent-purple shadow-lg scale-[1.05]' : 'bg-paper/10 border-ridge text-mono-light'}`}
+                    className={`text-[9px] px-3 py-2 border transition-all font-bold uppercase hover:scale-[1.05] active:scale-[0.95] ${lastPoppedKey === 'pin-foot' ? 'animate-pop' : ''} ${currentCanvas.pinningMode !== 'none' ? 'bg-accent-purple text-paper border-accent-purple shadow-lg scale-[1.05]' : 'bg-paper/10 border-ridge text-mono-light'}`}
                     >
-                    {pinningMode !== 'none' ? 'FOOT PINNED' : 'PIN FOOT'}
+                    {currentCanvas.pinningMode !== 'none' ? 'FOOT PINNED' : 'PIN FOOT'}
                     </button>
                     <button 
                     onClick={() => { 
                       setLastPoppedKey('reverse');
                       setTimeout(() => setLastPoppedKey(null), 300);
-                      setIsReversed(!isReversed); 
-                      addLog(`[SYSTEM]: HIERARCHY_REVERSED - ROOT SET TO ${!isReversed ? 'HEAD' : 'WAIST'}`); 
+                      updateCanvas({ isReversed: !currentCanvas.isReversed }); 
+                      addLog(`[SYSTEM]: HIERARCHY_REVERSED - ROOT SET TO ${!currentCanvas.isReversed ? 'HEAD' : 'WAIST'}`); 
                     }} 
-                    className={`text-[9px] px-3 py-2 border transition-all font-bold uppercase hover:scale-[1.05] active:scale-[0.95] ${lastPoppedKey === 'reverse' ? 'animate-pop' : ''} ${isReversed ? 'bg-accent-red text-paper border-accent-red shadow-lg scale-[1.05]' : 'bg-paper/10 border-ridge text-mono-light'}`}
+                    className={`text-[9px] px-3 py-2 border transition-all font-bold uppercase hover:scale-[1.05] active:scale-[0.95] ${lastPoppedKey === 'reverse' ? 'animate-pop' : ''} ${currentCanvas.isReversed ? 'bg-accent-red text-paper border-accent-red shadow-lg scale-[1.05]' : 'bg-paper/10 border-ridge text-mono-light'}`}
                     >
-                    {isReversed ? 'REVERSED' : 'REVERSE'}
+                    {currentCanvas.isReversed ? 'REVERSED' : 'REVERSE'}
                     </button>
                 </div>
-                <button onClick={() => setShowPivots(!showPivots)} className={`text-[9px] px-3 py-1 border transition-all ${showPivots ? 'bg-selection text-paper' : 'border-ridge'}`}>ANCHORS: {showPivots ? 'ON' : 'OFF'}</button>
+                <button onClick={() => updateCanvas({ showPivots: !currentCanvas.showPivots })} className={`text-[9px] px-3 py-1 border transition-all ${currentCanvas.showPivots ? 'bg-selection text-paper' : 'border-ridge'}`}>ANCHORS: {currentCanvas.showPivots ? 'ON' : 'OFF'}</button>
               </div>
             )}
           </div>
