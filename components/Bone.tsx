@@ -54,17 +54,43 @@ export const COLORS = {
   OLIVE: '#000000', // Changed to black as requested for the collar
 };
 
+// Map part categories to colors - simplified to grayscale for the doll's fill
+export const COLORS_BY_CATEGORY: { [category: string]: string } = {
+  head: COLORS.LIGHT_MONO_HEAD_HAND_FOOT,
+  hand: COLORS.LIGHT_MONO_HEAD_HAND_FOOT,
+  foot: COLORS.LIGHT_MONO_HEAD_HAND_FOOT,
+  
+  bicep: COLORS.DARK_MONO_BODY_PARTS,
+  forearm: COLORS.DARK_MONO_BODY_PARTS,
+  collar: COLORS.OLIVE, // Explicitly using the new OLIVE color for the collar
+  torso: COLORS.DARK_MONO_BODY_PARTS,
+  waist: COLORS.DARK_MONO_BODY_PARTS,
+  thigh: COLORS.DARK_MONO_BODY_PARTS,
+  shin: COLORS.DARK_MONO_BODY_PARTS,
+
+  default: COLORS.DEFAULT_FILL,
+};
+
+const getPartCategoryColor = (category?: string) => {
+  if (category && COLORS_BY_CATEGORY[category]) {
+    return COLORS_BY_CATEGORY[category];
+  }
+  return COLORS.DEFAULT_FILL;
+};
 export const Bone: React.FC<BoneProps> = ({
   rotation,
   length,
   width = 15,
   variant = 'diamond',
   showPivots = true,
+  showOverlay = true,
   visible = true,
   offset = { x: 0, y: 0 },
+  className,
   children,
   drawsUpwards = false,
   colorClass = "fill-mono-dark",
+  fillOverride,
   showLabel = false,
   label,
   boneKey,
@@ -74,6 +100,10 @@ export const Bone: React.FC<BoneProps> = ({
   patternFillId,
   isPinned = false,
   isInActiveChain = false,
+  isSelected = false,
+  renderMode = 'default',
+  partCategory,
+  jointConstraintMode = 'fk',
 }) => {
 
   const getBonePath = (boneLength: number, boneWidth: number, variant: BoneVariant, drawsUpwards: boolean): string => {
