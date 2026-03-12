@@ -11,6 +11,22 @@ export type MaskTransform = {
 
 export type JointMode = 'standard' | 'bend' | 'stretch';
 
+export type BodyPartMaskLayer = {
+  src: string | null;
+  visible: boolean;
+  opacity: number;
+  scale: number;
+  mode?: 'projection' | 'costume';
+  rotationDeg?: number;
+  skewXDeg?: number;
+  skewYDeg?: number;
+  offsetX?: number;
+  offsetY?: number;
+  blendMode?: GlobalCompositeOperation;
+  filter?: string;
+  layerOrder?: 'front' | 'behind';
+};
+
 export type WalkingEnginePose = {
   waist: number;
   neck: number; 
