@@ -584,7 +584,7 @@ const App: React.FC = () => {
                     <div key={pe.id} className="flex items-center justify-between p-2 border-b border-ridge hover:bg-white/40 group transition-colors">
                       <span className="text-[10px] uppercase font-bold">{pe.name}</span>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => { setPivotOffsets({ ...pe.pivotOffsets }); setJointModes({ ...pe.jointModes }); }} className="text-[8px] px-2 py-1 bg-selection text-paper uppercase hover:scale-105 active:scale-95 transition-transform">Load</button>
+                        <button onClick={() => { updateCanvasWith(prev => ({ ...prev, pivotOffsets: { ...pe.pivotOffsets }, jointModes: { ...pe.jointModes } })); }} className="text-[8px] px-2 py-1 bg-selection text-paper uppercase hover:scale-105 active:scale-95 transition-transform">Load</button>
                         <button onClick={() => runTween(pe)} className="text-[8px] px-2 py-1 bg-mono-mid text-paper uppercase hover:scale-105 active:scale-95 transition-transform">Tween</button>
                       </div>
                     </div>
