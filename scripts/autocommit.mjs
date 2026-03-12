@@ -35,6 +35,13 @@ function commitNow() {
   try {
     run('git add -A');
     run(`git commit -m "Auto-commit: ${ts}"`);
+    // Best-effort auto-push; ignore failures (offline, auth, no remote)
+    try {
+      run('git push');
+      process.stdout.write(`[autocommit] pushed at ${ts}\n`);
+    } catch {
+      process.stderr.write('[autocommit] push failed\n');
+    }
     process.stdout.write(`[autocommit] committed at ${ts}\n`);
   } catch (err) {
     process.stderr.write('[autocommit] commit failed\n');
