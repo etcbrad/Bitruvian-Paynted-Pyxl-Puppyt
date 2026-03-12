@@ -45,6 +45,51 @@ export type BodyPartMaskLayer = {
   layerOrder?: 'front' | 'behind';
 };
 
+export type RigManifestV1 = {
+  version: '1';
+  metadata?: {
+    source?: string;
+    createdAt?: string;
+  };
+  parts: RigManifestPart[];
+  joints: RigManifestJoint[];
+  pose: RigManifestPose;
+  constraints?: {
+    rigidClusters?: string[];
+  };
+};
+
+export type RigManifestPart = {
+  id: string;
+  name: string;
+  src: string | null;
+  width: number;
+  height: number;
+  pivot: Vector2D;
+  ballPoint: Vector2D;
+  zIndex: number;
+  physics?: {
+    stiffness: number;
+    tension: number;
+    volumePreservation: boolean;
+    shadowEnabled: boolean;
+  };
+  tags?: string[];
+};
+
+export type RigManifestJoint = {
+  id: string;
+  parentId: string | null;
+  drivesPartId: string;
+  defaultOffset: Vector2D;
+  defaultRotation: number;
+  rigidCluster?: boolean;
+};
+
+export type RigManifestPose = {
+  joints: Record<string, { rotation: number; offsetX?: number; offsetY?: number }>;
+};
+
 export type WalkingEnginePose = {
   waist: number;
   neck: number; 
