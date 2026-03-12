@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { UploadMode } from './components/UploadMode';
 import { SliceMode } from './components/SliceMode';
 import { RigMode } from './components/RigMode';
@@ -15,7 +15,12 @@ const STEP_CONFIG: Record<AppMode, { label: string; short: string }> = {
   pose: { label: 'Pose', short: '04' },
 };
 
-export default function App() {
+interface PaperRigStudioProps {
+  onRigExport?: (parts: BodyPart[], pose: PoseState) => void;
+  onPoseUpdate?: (parts: BodyPart[], pose: PoseState) => void;
+}
+
+export default function App({ onRigExport, onPoseUpdate }: PaperRigStudioProps) {
   const [mode, setMode] = useState<AppMode>('upload');
   const [cutoutSheet, setCutoutSheet] = useState<string | null>(null);
   const [backdrop, setBackdrop] = useState<string | null>(null);
@@ -30,6 +35,12 @@ export default function App() {
     if (step === 'rig' || step === 'pose') return !!cutoutSheet && parts.length > 0;
     return false;
   };
+
+  useEffect(() => {
+    if (mode === 'pose') {
+      onPoseUpdate?.(parts, pose);
+    }
+  }, [mode, parts, pose, onPoseUpdate]);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#0d1117', color: 'white', fontFamily: 'Inter, sans-serif' }}>
@@ -128,7 +139,10 @@ export default function App() {
           <RigMode
             parts={parts}
             setParts={setParts}
-            onNext={() => setMode('pose')}
+            onNext={() => {
+              onRigExport?.(parts, pose);
+              setMode('pose');
+            }}
           />
         )}
         {mode === 'pose' && (
