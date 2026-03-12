@@ -1,11 +1,13 @@
 
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { BoneVariant, WalkingEnginePose, WalkingEnginePivotOffsets, WalkingEngineProportions, Vector2D, MaskTransform, JointMode, BodyPartMaskLayer } from './types';
+import { BoneVariant, WalkingEnginePose, WalkingEnginePivotOffsets, WalkingEngineProportions, Vector2D, MaskTransform, JointMode, BodyPartMaskLayer, RigManifestV1, RigManifestPose } from './types';
 import { ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT, RIGGING } from './constants'; 
 import { Mannequin, getMannequinWorldTransformsHelper, partDefinitions } from './components/Mannequin';
 import { SystemLogger } from './components/SystemLogger';
 import TimelineStrip from './components/TimelineStrip';
+import { PaperRigStudioEmbed } from './components/PaperRigStudioEmbed';
+import type { BodyPart as PaperBodyPart, PoseState as PaperPoseState } from './components/paper-rig-studio/types';
 
 const T_POSE: WalkingEnginePivotOffsets = {
   waist: 0, neck: 0, collar: 0, torso: 0,
