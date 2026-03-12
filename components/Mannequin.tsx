@@ -212,6 +212,7 @@ interface MannequinProps {
   offset: Vector2D;
   isReversed?: boolean;
   jointModes?: Record<keyof WalkingEnginePivotOffsets, JointMode>;
+  disabledJoints?: Record<keyof WalkingEnginePivotOffsets, boolean>;
   activeChain?: (keyof WalkingEnginePivotOffsets)[] | null;
 }
 
