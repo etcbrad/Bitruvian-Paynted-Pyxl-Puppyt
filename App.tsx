@@ -303,6 +303,11 @@ const addVec = (v1: Vector2D, v2: Vector2D): Vector2D => ({ x: v1.x + v2.x, y: v
 
 const App: React.FC = () => {
   const ROOT_DRAGGING_DISABLED = true;
+  const [workspaceMode, setWorkspaceMode] = useState<'rig-studio' | 'core'>('rig-studio');
+  const [rigManifest, setRigManifest] = useState<RigManifestV1 | null>(null);
+  const [dynamicPose, setDynamicPose] = useState<RigManifestPose | null>(null);
+  const [dynamicDisabledJoints, setDynamicDisabledJoints] = useState<Record<string, boolean>>({});
+  const [draggingDynamicJointId, setDraggingDynamicJointId] = useState<string | null>(null);
   const [activeCanvasId] = useState<CanvasId>('primary'); // Future-ready: switch per-canvas state here.
   const [canvasStates, setCanvasStates] = useState<Record<CanvasId, CanvasState>>({
     primary: createInitialCanvasState(),
