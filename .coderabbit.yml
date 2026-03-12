@@ -1,0 +1,41 @@
+# CodeRabbit Configuration File
+# This file configures how CodeRabbit analyzes your code
+
+language: typescript
+framework: react
+
+# Enable auto-review for all commits
+auto_review:
+  enabled: true
+  trigger_on_push: true
+  trigger_on_pr: true
+
+# Review settings
+review:
+  # Focus on these aspects
+  focus_on:
+    - code_quality
+    - performance
+    - security
+    - best_practices
+    - react_patterns
+  
+  # Ignore these patterns
+  ignore:
+    - "*.test.*"
+    - "*.spec.*"
+    - "node_modules/**"
+    - "dist/**"
+    - "build/**"
+
+# Commit message formatting for better CodeRabbit analysis
+commit_message_format:
+  include_timestamp: true
+  include_changes_summary: true
+
+# Auto-fix settings
+auto_fix:
+  enabled: true
+  types:
+    - formatting
+    - simple_refactors
