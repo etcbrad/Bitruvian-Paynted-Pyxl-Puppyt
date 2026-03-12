@@ -73,7 +73,7 @@ export const AdvancedGrid: React.FC<AdvancedGridProps> = ({ origin, gridSize, vi
 };
 
 export const SystemGuides: React.FC<SystemGuidesProps> = ({ floorY, baseUnitH }) => {
-  const guideColor = 'rgba(0, 0, 0, 0.08)'; // Changed to monochrome rgba
+  const guideColor = 'rgba(80, 80, 80, 0.25)'; // Changed to darker monochrome rgba
   const span = 20000; // Extend guide lines far beyond typical viewport
 
   // Calculate ground strip width relative to H and position it centered on X=0
