@@ -1141,6 +1141,49 @@ const App: React.FC = () => {
           <div className="text-2xl font-archaic text-ink">{tokens.toLocaleString()}</div>
         </div>
 
+        {currentCanvas.maskControlsVisible && (
+          <div className="absolute top-16 left-4 z-40 bg-mono-darker/90 border border-ridge px-3 py-2 rounded shadow-lg text-[9px] uppercase text-mono-light">
+            <div className="flex items-center justify-between gap-2">
+              <span>Masks</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); updateCanvas({ masksEnabled: !currentCanvas.masksEnabled }); }}
+                className={`px-2 py-1 border text-[8px] ${currentCanvas.masksEnabled ? 'bg-accent-green text-paper border-accent-green' : 'bg-paper/10 border-ridge text-mono-light'}`}
+              >
+                {currentCanvas.masksEnabled ? 'On' : 'Off'}
+              </button>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <span>Active</span>
+              <select
+                value={currentCanvas.activeMaskJointId ?? ''}
+                onChange={(e) => { e.stopPropagation(); setActiveMaskJoint(e.target.value ? (e.target.value as keyof WalkingEnginePivotOffsets) : null); }}
+                className="bg-paper/10 border border-ridge text-[8px] px-1 py-1"
+              >
+                <option value="">None</option>
+                {JOINT_KEYS.map(k => (
+                  <option key={`mask-select-${k}`} value={k}>{k.replace(/_/g, ' ')}</option>
+                ))}
+              </select>
+            </div>
+            {currentCanvas.activeMaskJointId && (
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); openMaskUpload(currentCanvas.activeMaskJointId!); }}
+                  className="px-2 py-1 border border-selection bg-selection text-paper text-[8px]"
+                >
+                  Upload
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); clearMaskLayer(currentCanvas.activeMaskJointId!); }}
+                  className="px-2 py-1 border border-ridge bg-paper/10 text-mono-light text-[8px]"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <button onClick={() => setIsConsoleVisible(!isConsoleVisible)} className="absolute top-4 left-4 z-50 p-2 border border-ridge bg-white rounded-full transition-all hover:scale-110 active:scale-95 shadow-lg"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg></button>
 
         {!isCalibrated && (
@@ -1152,6 +1195,35 @@ const App: React.FC = () => {
         
         <svg ref={svgRef} viewBox="-500 -700 1000 1400" className="w-full h-full overflow-visible relative z-10 drop-shadow-2xl">
           <g transform={`translate(${currentCanvas.pinOffset.x}, ${currentCanvas.mannequinOffsetY + currentCanvas.pinOffset.y})`}>
+            {currentCanvas.masksEnabled && Object.entries(currentCanvas.bodyPartMaskLayers).map(([jointId, layer]) => {
+              const typedJoint = jointId as keyof WalkingEnginePivotOffsets;
+              if (!layer?.src || !layer.visible) return null;
+              const partKey = jointToPartKey[typedJoint];
+              if (!partKey) return null;
+              const transform = maskTransforms[partKey];
+              if (!transform) return null;
+              if (layer.layerOrder === 'front') return null;
+              const size = (transform.length || currentCanvas.baseH) * ((layer.scale ?? 100) / 100);
+              const rot = (transform.rotation || 0) + (layer.rotationDeg ?? 0);
+              const offsetX = layer.offsetX ?? 0;
+              const offsetY = layer.offsetY ?? 0;
+              const skewX = layer.skewXDeg ?? 0;
+              const skewY = layer.skewYDeg ?? 0;
+              return (
+                <g key={`mask-behind-${jointId}`} transform={`translate(${transform.position.x + offsetX}, ${transform.position.y + offsetY}) rotate(${rot}) skewX(${skewX}) skewY(${skewY})`}>
+                  <image
+                    href={layer.src}
+                    x={-size / 2}
+                    y={-size / 2}
+                    width={size}
+                    height={size}
+                    opacity={layer.opacity ?? 1}
+                    style={{ mixBlendMode: layer.blendMode || 'source-over', filter: layer.filter || 'none' }}
+                    preserveAspectRatio="xMidYMid meet"
+                  />
+                </g>
+              );
+            })}
             <Mannequin 
               pose={RESTING_BASE_POSE} 
               pivotOffsets={{...currentCanvas.pivotOffsets, l_hand_flash: lHandFlash, r_hand_flash: rHandFlash} as any} 
@@ -1167,7 +1239,37 @@ const App: React.FC = () => {
               isReversed={currentCanvas.isReversed}
               jointModes={currentCanvas.jointModes}
               disabledJoints={currentCanvas.disabledJoints}
+              hiddenBoneKeys={hiddenBoneKeys}
             />
+            {currentCanvas.masksEnabled && Object.entries(currentCanvas.bodyPartMaskLayers).map(([jointId, layer]) => {
+              const typedJoint = jointId as keyof WalkingEnginePivotOffsets;
+              if (!layer?.src || !layer.visible) return null;
+              const partKey = jointToPartKey[typedJoint];
+              if (!partKey) return null;
+              const transform = maskTransforms[partKey];
+              if (!transform) return null;
+              if (layer.layerOrder === 'behind') return null;
+              const size = (transform.length || currentCanvas.baseH) * ((layer.scale ?? 100) / 100);
+              const rot = (transform.rotation || 0) + (layer.rotationDeg ?? 0);
+              const offsetX = layer.offsetX ?? 0;
+              const offsetY = layer.offsetY ?? 0;
+              const skewX = layer.skewXDeg ?? 0;
+              const skewY = layer.skewYDeg ?? 0;
+              return (
+                <g key={`mask-front-${jointId}`} transform={`translate(${transform.position.x + offsetX}, ${transform.position.y + offsetY}) rotate(${rot}) skewX(${skewX}) skewY(${skewY})`}>
+                  <image
+                    href={layer.src}
+                    x={-size / 2}
+                    y={-size / 2}
+                    width={size}
+                    height={size}
+                    opacity={layer.opacity ?? 1}
+                    style={{ mixBlendMode: layer.blendMode || 'source-over', filter: layer.filter || 'none' }}
+                    preserveAspectRatio="xMidYMid meet"
+                  />
+                </g>
+              );
+            })}
           </g>
           {anomaly && (
             <g transform={`translate(${anomaly.x}, ${anomaly.y})`}>
