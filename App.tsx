@@ -620,21 +620,21 @@ const App: React.FC = () => {
         )}
         
         <svg ref={svgRef} viewBox="-500 -700 1000 1400" className="w-full h-full overflow-visible relative z-10 drop-shadow-2xl">
-          <g transform={`translate(${pinOffset.x}, ${mannequinOffsetY + pinOffset.y})`}>
+          <g transform={`translate(${currentCanvas.pinOffset.x}, ${currentCanvas.mannequinOffsetY + currentCanvas.pinOffset.y})`}>
             <Mannequin 
               pose={RESTING_BASE_POSE} 
-              pivotOffsets={{...pivotOffsets, l_hand_flash: lHandFlash, r_hand_flash: rHandFlash} as any} 
-              props={props} 
-              showPivots={showPivots && isCalibrated} 
-              showLabels={showLabels} 
-              baseUnitH={baseH} 
+              pivotOffsets={{...currentCanvas.pivotOffsets, l_hand_flash: lHandFlash, r_hand_flash: rHandFlash} as any} 
+              props={currentCanvas.props} 
+              showPivots={currentCanvas.showPivots && isCalibrated} 
+              showLabels={currentCanvas.showLabels} 
+              baseUnitH={currentCanvas.baseH} 
               onAnchorMouseDown={(k) => handleAnchorMouseDown(k)} 
               draggingBoneKey={draggingBoneKey} 
               isPaused={true} 
-              pinningMode={pinningMode} 
-              offset={pinOffset} 
-              isReversed={isReversed}
-              jointModes={jointModes}
+              pinningMode={currentCanvas.pinningMode} 
+              offset={currentCanvas.pinOffset} 
+              isReversed={currentCanvas.isReversed}
+              jointModes={currentCanvas.jointModes}
             />
           </g>
           {anomaly && (
