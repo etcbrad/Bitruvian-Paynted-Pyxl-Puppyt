@@ -734,6 +734,42 @@ const App: React.FC = () => {
     };
   }, [currentCanvas.animation.isPlaying, currentCanvas.animation.fps, currentCanvas.animation.currentFrame, currentCanvas.animation.frameCount, setCurrentFrame]);
 
+  const jointToPartKey = useMemo(() => {
+    const mapping: Partial<Record<keyof WalkingEnginePivotOffsets, keyof WalkingEngineProportions>> = {};
+    (Object.entries(partDefinitions) as Array<[keyof WalkingEngineProportions, any]>).forEach(([partKey, def]) => {
+      mapping[def.boneKey as keyof WalkingEnginePivotOffsets] = partKey;
+    });
+    return mapping;
+  }, []);
+
+  const maskTransforms = useMemo(() => (
+    getMannequinWorldTransformsHelper(
+      currentCanvas.pivotOffsets,
+      currentCanvas.props,
+      currentCanvas.baseH,
+      currentCanvas.isReversed,
+      currentCanvas.jointModes,
+      currentCanvas.disabledJoints
+    )
+  ), [currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.baseH, currentCanvas.isReversed, currentCanvas.jointModes, currentCanvas.disabledJoints]);
+
+  const hiddenBoneKeys = useMemo(() => {
+    if (!currentCanvas.masksEnabled || !currentCanvas.hideBoneShapesWithMasks) return new Set<keyof WalkingEnginePivotOffsets>();
+    const hidden = new Set<keyof WalkingEnginePivotOffsets>();
+    JOINT_KEYS.forEach(jointId => {
+      let current: keyof WalkingEnginePivotOffsets | null = jointId;
+      while (current) {
+        const layer = currentCanvas.bodyPartMaskLayers[current];
+        if (layer?.src && layer.visible) {
+          hidden.add(jointId);
+          break;
+        }
+        current = JOINT_PARENTS[current];
+      }
+    });
+    return hidden;
+  }, [currentCanvas.masksEnabled, currentCanvas.hideBoneShapesWithMasks, currentCanvas.bodyPartMaskLayers, JOINT_PARENTS]);
+
   return (
     <div className="flex h-full w-full bg-paper font-mono text-ink overflow-hidden select-none">
       {isConsoleVisible && (
