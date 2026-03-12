@@ -949,6 +949,64 @@ const App: React.FC = () => {
                         </div>
                         <input type="range" min="0.5" max="2" step="0.05" value={currentCanvas.globalLimbLengthMultiplier} onChange={e => updateCanvas({ globalLimbLengthMultiplier: parseFloat(e.target.value) })} className="w-full accent-selection h-1 cursor-ew-resize" />
                     </div>
+                    <div className="p-2 border border-ridge/20 rounded">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-[10px] uppercase font-bold text-ink">Joint + Bone Toggles</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {JOINT_KEYS.map(k => (
+                            <div key={`toggle-${k}`} className="flex items-center justify-between gap-2">
+                              <span className="text-[9px] uppercase font-bold text-ink">{k.replace(/_/g, ' ')}</span>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => toggleJointDisabled(k)}
+                                  className={`text-[8px] px-2 py-1 border uppercase ${currentCanvas.disabledJoints[k] ? 'bg-accent-red text-paper border-accent-red' : 'bg-paper/10 border-ridge text-mono-light'}`}
+                                >
+                                  Joint {currentCanvas.disabledJoints[k] ? 'Off' : 'On'}
+                                </button>
+                                <button
+                                  onClick={() => toggleBoneVisibility(k)}
+                                  className={`text-[8px] px-2 py-1 border uppercase ${currentCanvas.boneVisibility[k] ? 'bg-selection text-paper border-selection' : 'bg-paper/10 border-ridge text-mono-light'}`}
+                                >
+                                  Bone {currentCanvas.boneVisibility[k] ? 'On' : 'Off'}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
+                    <div className="p-2 border border-ridge/20 rounded">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-[10px] uppercase font-bold text-ink">Shapes + Colors</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {PROP_KEYS.map(partKey => (
+                            <div key={`shape-${partKey}`} className="flex items-center justify-between gap-2">
+                              <span className="text-[9px] uppercase font-bold text-ink">{partDefinitions[partKey]?.label || partKey.replace(/_/g, ' ')}</span>
+                              <div className="flex gap-1">
+                                <select
+                                  value={currentCanvas.partShapes[partKey]}
+                                  onChange={(e) => updateCanvasWith(prev => ({ ...prev, partShapes: { ...prev.partShapes, [partKey]: e.target.value as BoneVariant } }))}
+                                  className="bg-paper/10 border border-ridge text-[8px] px-1 py-1"
+                                >
+                                  {SHAPE_OPTIONS.map(option => (
+                                    <option key={`${partKey}-${option.value}`} value={option.value}>{option.label}</option>
+                                  ))}
+                                </select>
+                                <select
+                                  value={currentCanvas.partColors[partKey] ?? 'default'}
+                                  onChange={(e) => updateCanvasWith(prev => ({ ...prev, partColors: { ...prev.partColors, [partKey]: e.target.value === 'default' ? null : e.target.value } }))}
+                                  className="bg-paper/10 border border-ridge text-[8px] px-1 py-1"
+                                >
+                                  {COLOR_OPTIONS.map(option => (
+                                    <option key={`${partKey}-${option.value}`} value={option.value}>{option.label}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
                 </div>
             )}
             {activeControlTab === 'library' && (
