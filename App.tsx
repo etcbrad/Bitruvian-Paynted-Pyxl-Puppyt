@@ -592,16 +592,24 @@ const App: React.FC = () => {
                                         key={m} 
                                         onClick={() => setJointMode(k, m)}
                                         title={m.toUpperCase()}
-                                        className={`w-5 h-5 flex items-center justify-center rounded-sm text-[8px] font-bold border transition-all hover:scale-110 active:scale-90 ${lastPoppedKey === `${k}-${m}` ? 'animate-pop' : ''} ${currentCanvas.jointModes[k] === m ? 'bg-selection text-paper border-selection shadow-md translate-y-[-1px]' : 'border-ridge text-mono-mid opacity-40 hover:opacity-100'}`}
+                                        disabled={currentCanvas.disabledJoints[k]}
+                                        className={`w-5 h-5 flex items-center justify-center rounded-sm text-[8px] font-bold border transition-all hover:scale-110 active:scale-90 ${lastPoppedKey === `${k}-${m}` ? 'animate-pop' : ''} ${currentCanvas.jointModes[k] === m ? 'bg-selection text-paper border-selection shadow-md translate-y-[-1px]' : 'border-ridge text-mono-mid opacity-40 hover:opacity-100'} ${currentCanvas.disabledJoints[k] ? 'opacity-20 cursor-not-allowed' : ''}`}
                                     >
                                         {m === 'bend' ? 'B' : '2'}
                                     </button>
                                 ))}
+                                <button
+                                  onClick={() => toggleJointDisabled(k)}
+                                  title={currentCanvas.disabledJoints[k] ? 'ENABLE' : 'DISABLE'}
+                                  className={`w-5 h-5 flex items-center justify-center rounded-sm text-[8px] font-bold border transition-all hover:scale-110 active:scale-90 ${currentCanvas.disabledJoints[k] ? 'bg-accent-red text-paper border-accent-red shadow-md' : 'border-ridge text-mono-mid opacity-50 hover:opacity-100'}`}
+                                >
+                                  {currentCanvas.disabledJoints[k] ? 'X' : 'Ø'}
+                                </button>
                             </div>
                         </div>
-                        <span className="text-[8px] font-mono text-mono-mid tabular-nums">{Math.round(currentCanvas.pivotOffsets[k])}°</span>
+                        <span className="text-[8px] font-mono text-mono-mid tabular-nums">{currentCanvas.disabledJoints[k] ? 'DISABLED' : `${Math.round(currentCanvas.pivotOffsets[k])}°`}</span>
                     </div>
-                    <input type="range" min="-180" max="180" value={currentCanvas.pivotOffsets[k]} onChange={e => !currentCanvas.isTweening && updateCanvasWith(prev => ({ ...prev, pivotOffsets: { ...prev.pivotOffsets, [k]: parseInt(e.target.value) } }))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                    <input type="range" min="-180" max="180" value={currentCanvas.pivotOffsets[k]} onChange={e => !currentCanvas.isTweening && updateCanvasWith(prev => ({ ...prev, pivotOffsets: { ...prev.pivotOffsets, [k]: parseInt(e.target.value) } }))} disabled={currentCanvas.disabledJoints[k]} className={`w-full accent-selection h-1 cursor-ew-resize ${currentCanvas.disabledJoints[k] ? 'opacity-30 cursor-not-allowed' : ''}`} />
                   </div>
                 ))}
               </div>
