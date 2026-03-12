@@ -592,6 +592,45 @@ const App: React.FC = () => {
     addLog(`[SYSTEM]: KEYFRAME_REMOVED - FRAME ${currentCanvas.animation.currentFrame}`);
   }, [updateCanvasWith, addLog, currentCanvas.animation.currentFrame]);
 
+  const setActiveMaskJoint = useCallback((jointId: keyof WalkingEnginePivotOffsets | null) => {
+    updateCanvas({ activeMaskJointId: jointId });
+  }, [updateCanvas]);
+
+  const patchMaskLayer = useCallback((jointId: keyof WalkingEnginePivotOffsets, patch: Partial<BodyPartMaskLayer>) => {
+    updateCanvasWith(prev => ({
+      ...prev,
+      bodyPartMaskLayers: {
+        ...prev.bodyPartMaskLayers,
+        [jointId]: { ...prev.bodyPartMaskLayers[jointId], ...patch },
+      },
+    }));
+  }, [updateCanvasWith]);
+
+  const openMaskUpload = useCallback((jointId: keyof WalkingEnginePivotOffsets) => {
+    setActiveMaskJoint(jointId);
+    maskUploadInputRef.current?.click();
+  }, [setActiveMaskJoint]);
+
+  const handleMaskUploadInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    const jointId = currentCanvas.activeMaskJointId;
+    if (!file || !jointId) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = typeof reader.result === 'string' ? reader.result : null;
+      if (!src) return;
+      patchMaskLayer(jointId, { src, visible: true });
+      addLog(`[SYSTEM]: MASK_UPLOADED - ${jointId.toUpperCase()}`);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  }, [currentCanvas.activeMaskJointId, patchMaskLayer, addLog]);
+
+  const clearMaskLayer = useCallback((jointId: keyof WalkingEnginePivotOffsets) => {
+    patchMaskLayer(jointId, { ...DEFAULT_MASK_LAYER, src: null });
+    addLog(`[SYSTEM]: MASK_CLEARED - ${jointId.toUpperCase()}`);
+  }, [patchMaskLayer, addLog]);
+
   const runTween = useCallback((target: SavedPoseEntry) => {
     if (currentCanvas.isTweening) return;
     updateCanvas({ isTweening: true });
