@@ -96,6 +96,46 @@ interface SavedPoseEntry {
   jointModes: Record<keyof WalkingEnginePivotOffsets, JointMode>;
 }
 
+type CanvasId = 'primary';
+
+interface CanvasState {
+  showPivots: boolean;
+  showLabels: boolean;
+  baseH: number;
+  jointModes: Record<keyof WalkingEnginePivotOffsets, JointMode>;
+  isReversed: boolean;
+  pinningMode: 'none' | 'rightFoot' | 'dual';
+  pinOffset: Vector2D;
+  tweenDuration: number;
+  tweenEasing: 'linear' | 'easeInOutQuad' | 'snapOut';
+  isTweening: boolean;
+  pivotOffsets: WalkingEnginePivotOffsets;
+  props: WalkingEngineProportions;
+  globalScale: number;
+  globalBoneWidthMultiplier: number;
+  globalLimbLengthMultiplier: number;
+  mannequinOffsetY: number;
+}
+
+const createInitialCanvasState = (): CanvasState => ({
+  showPivots: true,
+  showLabels: false,
+  baseH: 150,
+  jointModes: Object.fromEntries(JOINT_KEYS.map(k => [k, 'standard'])) as any,
+  isReversed: false,
+  pinningMode: 'none',
+  pinOffset: { x: 0, y: 0 },
+  tweenDuration: 1000,
+  tweenEasing: 'easeInOutQuad',
+  isTweening: false,
+  pivotOffsets: INITIAL_CHALLENGE_POSE,
+  props: DEFAULT_PROPORTIONS,
+  globalScale: 150,
+  globalBoneWidthMultiplier: 1,
+  globalLimbLengthMultiplier: 1,
+  mannequinOffsetY: -50,
+});
+
 const rotateVec = (vec: Vector2D, angleDeg: number): Vector2D => {
   const r = angleDeg * Math.PI / 180;
   const c = Math.cos(r);
@@ -105,9 +145,24 @@ const rotateVec = (vec: Vector2D, angleDeg: number): Vector2D => {
 const addVec = (v1: Vector2D, v2: Vector2D): Vector2D => ({ x: v1.x + v2.x, y: v1.y + v2.y });
 
 const App: React.FC = () => {
-  const [showPivots, setShowPivots] = useState(true);
-  const [showLabels, setShowLabels] = useState(false);
-  const [baseH, setBaseH] = useState(150);
+  const [activeCanvasId] = useState<CanvasId>('primary');
+  const [canvasStates, setCanvasStates] = useState<Record<CanvasId, CanvasState>>({
+    primary: createInitialCanvasState(),
+  });
+  const currentCanvas = canvasStates[activeCanvasId];
+  const updateCanvas = useCallback((patch: Partial<CanvasState>) => {
+    setCanvasStates(prev => ({
+      ...prev,
+      [activeCanvasId]: { ...prev[activeCanvasId], ...patch },
+    }));
+  }, [activeCanvasId]);
+  const updateCanvasWith = useCallback((updater: (prev: CanvasState) => CanvasState) => {
+    setCanvasStates(prev => ({
+      ...prev,
+      [activeCanvasId]: updater(prev[activeCanvasId]),
+    }));
+  }, [activeCanvasId]);
+
   const [isConsoleVisible, setIsConsoleVisible] = useState(false);
   const [activeControlTab, setActiveControlTab] = useState<'pose' | 'proportions' | 'library'>('pose');
   const [systemLogs, setSystemLogs] = useState<{ timestamp: string; message: string }[]>([]);
@@ -119,30 +174,12 @@ const App: React.FC = () => {
   
   const anomalySize = useMemo(() => 15, []);
 
-  const [jointModes, setJointModes] = useState<Record<keyof WalkingEnginePivotOffsets, JointMode>>(
-    Object.fromEntries(JOINT_KEYS.map(k => [k, 'standard'])) as any
-  );
-  const [isReversed, setIsReversed] = useState(false);
   const [lastPoppedKey, setLastPoppedKey] = useState<string | null>(null);
 
-  const [pinningMode, setPinningMode] = useState<'none' | 'rightFoot' | 'dual'>('none');
-  const [pinOffset, setPinOffset] = useState<Vector2D>({ x: 0, y: 0 });
   const pinnedWorldPosRef = useRef<Vector2D | null>(null);
-
-  const [tweenDuration, setTweenDuration] = useState(1000);
-  const [tweenEasing, setTweenEasing] = useState<'linear' | 'easeInOutQuad' | 'snapOut'>('easeInOutQuad');
-  const [isTweening, setIsTweening] = useState(false);
 
   const lastInteractionTimeRef = useRef(Date.now());
   const draggingBoneKeyRef = useRef<keyof WalkingEnginePivotOffsets | null>(null);
-
-  const [pivotOffsets, setPivotOffsets] = useState<WalkingEnginePivotOffsets>(INITIAL_CHALLENGE_POSE);
-  const [props, setProps] = useState<WalkingEngineProportions>(DEFAULT_PROPORTIONS);
-
-  const [globalScale, setGlobalScale] = useState(150);
-  const [globalBoneWidthMultiplier, setGlobalBoneWidthMultiplier] = useState(1);
-  const [globalLimbLengthMultiplier, setGlobalLimbLengthMultiplier] = useState(1);
-  const [mannequinOffsetY, setMannequinOffsetY] = useState(-50);
 
   const [savedPoses, setSavedPoses] = useState<SavedPoseEntry[]>([]);
   const [anomaly, setAnomaly] = useState<Vector2D | null>(null);
@@ -151,44 +188,44 @@ const App: React.FC = () => {
   const [draggingBoneKey, setDraggingBoneKey] = useState<keyof WalkingEnginePivotOffsets | null>(null);
   
   const svgRef = useRef<SVGSVGElement>(null);
-  const pivotOffsetsRef = useRef(pivotOffsets);
-  const propsRef = useRef(props);
-  const baseHRef = useRef(baseH);
-  const isReversedRef = useRef(isReversed);
-  const jointModesRef = useRef(jointModes);
-  const pinOffsetRef = useRef(pinOffset);
-  const pinningModeRef = useRef(pinningMode);
-  const mannequinOffsetYRef = useRef(mannequinOffsetY);
+  const pivotOffsetsRef = useRef(currentCanvas.pivotOffsets);
+  const propsRef = useRef(currentCanvas.props);
+  const baseHRef = useRef(currentCanvas.baseH);
+  const isReversedRef = useRef(currentCanvas.isReversed);
+  const jointModesRef = useRef(currentCanvas.jointModes);
+  const pinOffsetRef = useRef(currentCanvas.pinOffset);
+  const pinningModeRef = useRef(currentCanvas.pinningMode);
+  const mannequinOffsetYRef = useRef(currentCanvas.mannequinOffsetY);
 
-  useEffect(() => { pivotOffsetsRef.current = pivotOffsets; }, [pivotOffsets]);
-  useEffect(() => { propsRef.current = props; }, [props]);
-  useEffect(() => { baseHRef.current = baseH; }, [baseH]);
-  useEffect(() => { isReversedRef.current = isReversed; }, [isReversed]);
-  useEffect(() => { jointModesRef.current = jointModes; }, [jointModes]);
-  useEffect(() => { pinOffsetRef.current = pinOffset; }, [pinOffset]);
-  useEffect(() => { pinningModeRef.current = pinningMode; }, [pinningMode]);
-  useEffect(() => { mannequinOffsetYRef.current = mannequinOffsetY; }, [mannequinOffsetY]);
+  useEffect(() => { pivotOffsetsRef.current = currentCanvas.pivotOffsets; }, [currentCanvas.pivotOffsets]);
+  useEffect(() => { propsRef.current = currentCanvas.props; }, [currentCanvas.props]);
+  useEffect(() => { baseHRef.current = currentCanvas.baseH; }, [currentCanvas.baseH]);
+  useEffect(() => { isReversedRef.current = currentCanvas.isReversed; }, [currentCanvas.isReversed]);
+  useEffect(() => { jointModesRef.current = currentCanvas.jointModes; }, [currentCanvas.jointModes]);
+  useEffect(() => { pinOffsetRef.current = currentCanvas.pinOffset; }, [currentCanvas.pinOffset]);
+  useEffect(() => { pinningModeRef.current = currentCanvas.pinningMode; }, [currentCanvas.pinningMode]);
+  useEffect(() => { mannequinOffsetYRef.current = currentCanvas.mannequinOffsetY; }, [currentCanvas.mannequinOffsetY]);
 
   const addLog = useCallback((message: string) => {
     setSystemLogs(prev => [...prev.slice(-49), { timestamp: new Date().toLocaleTimeString(), message }]);
   }, []);
 
   useEffect(() => {
-    setBaseH(globalScale);
-  }, [globalScale]);
+    updateCanvas({ baseH: currentCanvas.globalScale });
+  }, [currentCanvas.globalScale, updateCanvas]);
 
   useEffect(() => {
-    setProps(prevProps => {
+    updateCanvasWith(prev => {
       const newProps: WalkingEngineProportions = {} as WalkingEngineProportions;
       PROP_KEYS.forEach(key => {
         newProps[key] = {
-          w: (DEFAULT_PROPORTIONS[key]?.w || 1) * globalBoneWidthMultiplier,
-          h: (DEFAULT_PROPORTIONS[key]?.h || 1) * globalLimbLengthMultiplier,
+          w: (DEFAULT_PROPORTIONS[key]?.w || 1) * prev.globalBoneWidthMultiplier,
+          h: (DEFAULT_PROPORTIONS[key]?.h || 1) * prev.globalLimbLengthMultiplier,
         };
       });
-      return newProps;
+      return { ...prev, props: newProps };
     });
-  }, [globalBoneWidthMultiplier, globalLimbLengthMultiplier]);
+  }, [currentCanvas.globalBoneWidthMultiplier, currentCanvas.globalLimbLengthMultiplier, updateCanvasWith]);
 
   useEffect(() => {
     try {
@@ -208,12 +245,12 @@ const App: React.FC = () => {
 
   const awardTokens = useCallback((sourceBone: string) => {
     const timeSinceLastInteraction = Date.now() - lastInteractionTimeRef.current;
-    let passiveMultiplier = (timeSinceLastInteraction > 1500 || isTweening) ? 2 : 1;
+    let passiveMultiplier = (timeSinceLastInteraction > 1500 || currentCanvas.isTweening) ? 2 : 1;
     let limbBonus = CHAIN_DEPTH[sourceBone] || 1;
     const gain = Math.floor(limbBonus * passiveMultiplier);
     setTokens(prev => prev + gain);
     addLog(`[SYSTEM]: POSE_PICKUP - UNIT TOKENS UPDATED (+${gain}) ${passiveMultiplier > 1 ? '[PASSIVE BONUS]' : ''} [${sourceBone.toUpperCase()} DEPTH: ${limbBonus}X]`);
-  }, [addLog, isTweening]);
+  }, [addLog, currentCanvas.isTweening]);
 
   const spawnAnomaly = useCallback(() => {
     const angle = Math.random() * Math.PI * 2;
@@ -225,7 +262,7 @@ const App: React.FC = () => {
 
   const calculateAnklePos = useCallback((currentPivotOffsets: WalkingEnginePivotOffsets, currentProps: WalkingEngineProportions) => {
     const getRot = (key: string) => ((currentPivotOffsets as any)[key] || 0);
-    const getDim = (raw: number, key: keyof WalkingEngineProportions) => raw * baseH * (currentProps[key]?.h || 1);
+    const getDim = (raw: number, key: keyof WalkingEngineProportions) => raw * currentCanvas.baseH * (currentProps[key]?.h || 1);
     const waistRot = getRot('waist');
     const hipRot = waistRot + getRot('r_hip'); 
     const thighLen = getDim(ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT.LEG_UPPER, 'r_upper_leg');
@@ -234,42 +271,42 @@ const App: React.FC = () => {
     const calfLen = getDim(ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT.LEG_LOWER, 'r_lower_leg');
     const anklePos = addVec(kneePos, rotateVec({ x: 0, y: calfLen }, kneeRot));
     return anklePos;
-  }, [baseH]);
+  }, [currentCanvas.baseH]);
 
   const togglePinning = useCallback(() => {
     setLastPoppedKey('pin-foot');
     setTimeout(() => setLastPoppedKey(null), 300);
-    if (pinningMode === 'none') {
-      const local = calculateAnklePos(pivotOffsets, props);
-      pinnedWorldPosRef.current = { x: local.x + pinOffset.x, y: local.y - 50 + pinOffset.y };
-      setPinningMode('rightFoot');
+    if (currentCanvas.pinningMode === 'none') {
+      const local = calculateAnklePos(currentCanvas.pivotOffsets, currentCanvas.props);
+      pinnedWorldPosRef.current = { x: local.x + currentCanvas.pinOffset.x, y: local.y - 50 + currentCanvas.pinOffset.y };
+      updateCanvas({ pinningMode: 'rightFoot' });
       addLog(`[SYSTEM]: PINNING ENABLED - RIGHT ANKLE ANCHORED.`);
     } else {
-      setPinningMode('none');
+      updateCanvas({ pinningMode: 'none' });
       pinnedWorldPosRef.current = null;
-      setPinOffset({ x: 0, y: 0 });
+      updateCanvas({ pinOffset: { x: 0, y: 0 } });
       addLog(`[SYSTEM]: PINNING DISABLED.`);
     }
-  }, [pinningMode, calculateAnklePos, pivotOffsets, props, pinOffset, addLog]);
+  }, [currentCanvas.pinningMode, currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.pinOffset, calculateAnklePos, addLog, updateCanvas]);
 
   const updatePinOffset = useCallback(() => {
-    if (pinningMode === 'none' || !pinnedWorldPosRef.current) return;
-    const currentLocal = calculateAnklePos(pivotOffsets, props);
+    if (currentCanvas.pinningMode === 'none' || !pinnedWorldPosRef.current) return;
+    const currentLocal = calculateAnklePos(currentCanvas.pivotOffsets, currentCanvas.props);
     const nextX = pinnedWorldPosRef.current.x - currentLocal.x;
     const nextY = pinnedWorldPosRef.current.y - currentLocal.y + 50;
-    setPinOffset({ x: nextX, y: nextY });
-  }, [pinningMode, calculateAnklePos, pivotOffsets, props]);
+    updateCanvas({ pinOffset: { x: nextX, y: nextY } });
+  }, [currentCanvas.pinningMode, currentCanvas.pivotOffsets, currentCanvas.props, calculateAnklePos, updateCanvas]);
 
   useEffect(() => {
-    if (pinningMode !== 'none') updatePinOffset();
-  }, [pivotOffsets, props, updatePinOffset]);
+    if (currentCanvas.pinningMode !== 'none') updatePinOffset();
+  }, [currentCanvas.pinningMode, currentCanvas.pivotOffsets, currentCanvas.props, updatePinOffset]);
 
   const handleAnchorMouseDown = useCallback((boneKey: keyof WalkingEnginePivotOffsets) => {
     setDraggingBoneKey(boneKey);
   }, []);
 
   const handleDrag = useCallback((e: MouseEvent) => {
-    if (draggingBoneKey && !isTweening && svgRef.current) {
+    if (draggingBoneKey && !currentCanvas.isTweening && svgRef.current) {
       lastInteractionTimeRef.current = Date.now();
       
       const svg = svgRef.current;
@@ -280,7 +317,8 @@ const App: React.FC = () => {
       if (!ctm) return;
       const svgP = pt.matrixTransform(ctm.inverse());
       
-      setPivotOffsets(latestPivotOffsets => {
+      updateCanvasWith(prev => {
+        const latestPivotOffsets = prev.pivotOffsets;
         let currentPinOffset = pinOffsetRef.current;
         if (pinningModeRef.current !== 'none' && pinnedWorldPosRef.current) {
           const currentLocal = calculateAnklePos(latestPivotOffsets, propsRef.current);
@@ -322,12 +360,12 @@ const App: React.FC = () => {
         while (newLocal > 180) newLocal -= 360;
         while (newLocal < -180) newLocal += 360;
         
-        return { ...latestPivotOffsets, [draggingBoneKey]: newLocal };
+        return { ...prev, pivotOffsets: { ...latestPivotOffsets, [draggingBoneKey]: newLocal } };
       });
       
       awardTokens(draggingBoneKey);
     }
-  }, [draggingBoneKey, isTweening, awardTokens, calculateAnklePos]);
+  }, [draggingBoneKey, currentCanvas.isTweening, awardTokens, calculateAnklePos, updateCanvasWith]);
 
   useEffect(() => {
     const hu = () => { setDraggingBoneKey(null); draggingBoneKeyRef.current = null; };
@@ -342,24 +380,24 @@ const App: React.FC = () => {
   const setJointMode = (key: keyof WalkingEnginePivotOffsets, mode: JointMode) => {
     setLastPoppedKey(`${key}-${mode}`);
     setTimeout(() => setLastPoppedKey(null), 300);
-    const nextMode = jointModes[key] === mode ? 'standard' : mode;
-    setJointModes(prev => ({ ...prev, [key]: nextMode }));
+    const nextMode = currentCanvas.jointModes[key] === mode ? 'standard' : mode;
+    updateCanvasWith(prev => ({ ...prev, jointModes: { ...prev.jointModes, [key]: nextMode } }));
     addLog(`[SYSTEM]: JOINT_MODE_UPDATE - ${key.toUpperCase()} SET TO ${nextMode.toUpperCase()}`);
   };
 
   const runTween = useCallback((target: SavedPoseEntry) => {
-    if (isTweening) return;
-    setIsTweening(true);
-    const startPivot = { ...pivotOffsets };
-    const startProps = { ...props };
-    const startJointModes = { ...jointModes };
+    if (currentCanvas.isTweening) return;
+    updateCanvas({ isTweening: true });
+    const startPivot = { ...currentCanvas.pivotOffsets };
+    const startProps = { ...currentCanvas.props };
+    const startJointModes = { ...currentCanvas.jointModes };
     let startTime: number | null = null;
 
     const animate = (currentTime: number) => {
       if (!startTime) startTime = currentTime;
       const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / tweenDuration, 1);
-      const easedProgress = EASING_FUNCTIONS[tweenEasing](progress);
+      const progress = Math.min(elapsed / currentCanvas.tweenDuration, 1);
+      const easedProgress = EASING_FUNCTIONS[currentCanvas.tweenEasing](progress);
 
       const nextPivot = { ...startPivot };
       JOINT_KEYS.forEach(key => {
@@ -380,47 +418,53 @@ const App: React.FC = () => {
         };
       });
 
-      setPivotOffsets(nextPivot);
-      setProps(nextProps);
-      setJointModes(startJointModes);
+      updateCanvasWith(prev => ({
+        ...prev,
+        pivotOffsets: nextPivot,
+        props: nextProps,
+        jointModes: startJointModes,
+      }));
 
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        setIsTweening(false);
-        setJointModes(target.jointModes);
-        setProps(target.props);
+        updateCanvasWith(prev => ({
+          ...prev,
+          isTweening: false,
+          jointModes: target.jointModes,
+          props: target.props,
+        }));
         addLog(`[SYSTEM]: TWEEN_COMPLETE - POSE "${target.name.toUpperCase()}" LOADED.`);
       }
     };
 
     requestAnimationFrame(animate);
-  }, [isTweening, pivotOffsets, props, jointModes, tweenDuration, tweenEasing, addLog]);
+  }, [currentCanvas.isTweening, currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.jointModes, currentCanvas.tweenDuration, currentCanvas.tweenEasing, addLog, updateCanvas, updateCanvasWith]);
 
   const saveCurrentPose = useCallback(() => {
     const newEntry: SavedPoseEntry = {
       id: Date.now(),
       name: `Pose ${savedPoses.length + 1}`,
-      pivotOffsets: { ...pivotOffsets },
-      props: { ...props },
-      jointModes: { ...jointModes }
+      pivotOffsets: { ...currentCanvas.pivotOffsets },
+      props: { ...currentCanvas.props },
+      jointModes: { ...currentCanvas.jointModes }
     };
     setSavedPoses(prev => [...prev, newEntry]);
     setSaveConfirmation(true);
     addLog(`[SYSTEM]: POSE_SAVED - ENTITY ID: ${newEntry.id}`);
     setTimeout(() => setSaveConfirmation(false), 2000);
-  }, [savedPoses, pivotOffsets, props, jointModes, addLog]);
+  }, [savedPoses, currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.jointModes, addLog]);
 
   const getMannequinGlobalTransforms = useCallback((reversed: boolean) => {
-    return getMannequinWorldTransformsHelper(pivotOffsets, props, baseH, reversed, jointModes);
-  }, [baseH, props, pivotOffsets, jointModes]);
+    return getMannequinWorldTransformsHelper(currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.baseH, reversed, currentCanvas.jointModes);
+  }, [currentCanvas.baseH, currentCanvas.props, currentCanvas.pivotOffsets, currentCanvas.jointModes]);
 
   useEffect(() => {
-    const currentTransforms = getMannequinGlobalTransforms(isReversed);
+    const currentTransforms = getMannequinGlobalTransforms(currentCanvas.isReversed);
     const currentTorsoY = currentTransforms.torso?.position.y || 0;
     const targetTorsoY = -200;
-    setMannequinOffsetY(targetTorsoY - currentTorsoY);
-  }, [isReversed, getMannequinGlobalTransforms]);
+    updateCanvas({ mannequinOffsetY: targetTorsoY - currentTorsoY });
+  }, [currentCanvas.isReversed, getMannequinGlobalTransforms, updateCanvas]);
 
   return (
     <div className="flex h-full w-full bg-paper font-mono text-ink overflow-hidden select-none">
