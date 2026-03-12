@@ -61,6 +61,37 @@ const DEFAULT_PART_SHAPES: Record<keyof WalkingEngineProportions, BoneVariant> =
   PROP_KEYS.map(key => [key, (partDefinitions as any)[key]?.variant || 'diamond'])
 ) as any;
 
+const SHAPE_OPTIONS: Array<{ value: BoneVariant; label: string }> = [
+  { value: 'diamond', label: 'Diamond' },
+  { value: 'capsule', label: 'Capsule' },
+  { value: 'triangle', label: 'Triangle' },
+  { value: 'triangle-up', label: 'Triangle (Up)' },
+  { value: 'trapezoid', label: 'Trapezoid' },
+  { value: 'trapezoid-up', label: 'Trapezoid (Wide Up)' },
+  { value: 'pentagon', label: 'Pentagon' },
+  { value: 'head-tall-oval', label: 'Head Oval' },
+  { value: 'collar-horizontal-oval-shape', label: 'Collar Oval' },
+  { value: 'torso-teardrop-pointy-down', label: 'Torso Teardrop' },
+  { value: 'waist-teardrop-pointy-up', label: 'Waist Teardrop' },
+  { value: 'deltoid-shape', label: 'Deltoid' },
+  { value: 'limb-tapered', label: 'Limb Tapered' },
+  { value: 'hand-foot-arrowhead-shape', label: 'Arrowhead' },
+  { value: 'foot-block-shape', label: 'Foot Block' },
+  { value: 'toe-rounded-cap', label: 'Toe Cap' },
+];
+
+const COLOR_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'default', label: 'Default' },
+  { value: 'fill-mono-dark', label: 'Mono Dark' },
+  { value: 'fill-mono-mid', label: 'Mono Mid' },
+  { value: 'fill-mono-light', label: 'Mono Light' },
+  { value: 'fill-selection', label: 'Selection' },
+  { value: 'fill-olive', label: 'Olive' },
+  { value: 'fill-accent-red', label: 'Accent Red' },
+  { value: 'fill-accent-green', label: 'Accent Green' },
+  { value: 'fill-accent-purple', label: 'Accent Purple' },
+];
+
 const JOINT_KEYS: (keyof WalkingEnginePivotOffsets)[] = [
   'waist', 'torso', 'collar', 'neck',
   'l_shoulder', 'l_elbow', 'l_hand',
