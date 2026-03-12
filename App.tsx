@@ -126,13 +126,19 @@ const App: React.FC = () => {
     }
   }, [viewMode, windowSize.innerWidth, windowSize.innerHeight, baseUnitH]);
 
-  const handleAnchorMouseDown = useCallback((boneKey: keyof WalkingEnginePivotOffsets) => {
+  const handleAnchorMouseDown = useCallback((boneKey: keyof WalkingEnginePose) => {
     console.log('Anchor clicked:', boneKey);
   }, []);
 
   const handlePoseUpdate = useCallback((updates: Partial<WalkingEnginePose>) => {
     setActivePose(prev => ({ ...prev, ...updates }));
   }, []);
+
+  // Extract pivot offsets from pose to fix type mismatch
+  const pivotOffsets = useMemo(() => {
+    const { stride_phase, y_offset, x_offset, ...pivotData } = activePose;
+    return pivotData as WalkingEnginePivotOffsets;
+  }, [activePose]);
 
   const handlePartColorChange = useCallback((partKey: keyof WalkingEngineProportions, color: string) => {
     setPartColors(prev => ({ ...prev, [partKey]: color }));
