@@ -1,0 +1,605 @@
+
+
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { WalkingEnginePose, WalkingEnginePivotOffsets, WalkingEngineProportions, Vector2D, MaskTransform, JointMode } from './types';
+import { ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT, RIGGING } from './constants'; 
+import { Mannequin, getMannequinWorldTransformsHelper, partDefinitions } from './components/Mannequin';
+import { SystemLogger } from './components/SystemLogger';
+
+const T_POSE: WalkingEnginePivotOffsets = {
+  waist: 0, neck: 0, collar: 0, torso: 0,
+  l_shoulder: 0, r_shoulder: 0,
+  l_elbow: 0, r_elbow: 0,
+  l_hand: 0, r_hand: 0,
+  l_hip: 180, r_hip: 180, // Legs pointing straight down
+  l_knee: 0, r_knee: 0,
+  l_foot: 0, r_foot: 0,
+  l_toe: 0, r_toe: 0
+};
+
+// Define RESTING_BASE_POSE with all fields of WalkingEnginePose
+const RESTING_BASE_POSE: WalkingEnginePose = {
+  waist: 0, neck: 0, collar: 0, torso: 0,
+  l_shoulder: 0, r_shoulder: 0,
+  l_elbow: 0, r_elbow: 0,
+  l_hand: 0, r_hand: 0,
+  l_hip: 180, r_hip: 180, // Legs pointing straight down
+  l_knee: 0, r_knee: 0,
+  l_foot: 0, r_foot: 0,
+  l_toe: 0, r_toe: 0,
+  stride_phase: 0, // Default value for WalkingEnginePose
+  y_offset: 0,     // Default value for WalkingEnginePose
+  x_offset: 0,     // Default value for WalkingEnginePose
+};
+
+const INITIAL_CHALLENGE_POSE: WalkingEnginePivotOffsets = {
+  waist: 0, torso: 0, collar: 0, neck: 0, // Reset these to 0 for a more "natural" starting point for challenges.
+  l_shoulder: 0, l_elbow: 0, l_hand: 0,
+  r_shoulder: 0, r_elbow: 0, r_hand: 0,
+  l_hip: 180, l_knee: 0, l_foot: 0, l_toe: 0, // Legs start pointing down
+  r_hip: 180, r_knee: 0, r_foot: 0, r_toe: 0
+};
+
+const DEFAULT_PROPORTIONS: WalkingEngineProportions = {
+  head: { w: 1, h: 1 }, collar: { w: 1, h: 1 }, torso: { w: 1, h: 1 }, waist: { w: 1, h: 1 },
+  l_upper_arm: { w: 1, h: 1 }, l_lower_arm: { w: 1, h: 1 }, l_hand: { w: 1, h: 1 },
+  r_upper_arm: { w: 1, h: 1 }, r_lower_arm: { w: 1, h: 1 }, r_hand: { w: 1, h: 1 },
+  l_upper_leg: { w: 1, h: 1 }, l_lower_leg: { w: 1, h: 1 }, l_foot: { w: 1, h: 1 }, l_toe: { w: 1, h: 1 },
+  r_upper_leg: { w: 1, h: 1 }, r_lower_leg: { w: 1, h: 1 }, r_foot: { w: 1, h: 1 }, r_toe: { w: 1, h: 1 }
+};
+
+const PROP_KEYS: (keyof WalkingEngineProportions)[] = [
+  'head', 'collar', 'torso', 'waist',
+  'l_upper_arm', 'l_lower_arm', 'l_hand',
+  'r_upper_arm', 'r_lower_arm', 'r_hand',
+  'l_upper_leg', 'l_lower_leg', 'l_foot', 'l_toe',
+  'r_upper_leg', 'r_lower_leg', 'r_foot', 'r_toe'
+];
+
+const JOINT_KEYS: (keyof WalkingEnginePivotOffsets)[] = [
+  'waist', 'torso', 'collar', 'neck',
+  'l_shoulder', 'l_elbow', 'l_hand',
+  'r_shoulder', 'r_elbow', 'r_hand',
+  'l_hip', 'l_knee', 'l_foot', 'l_toe',
+  'r_hip', 'r_knee', 'r_foot', 'r_toe'
+];
+
+const CHAIN_DEPTH: Record<string, number> = {
+  waist: 0, torso: 1, collar: 2, neck: 3, head: 4,
+  l_shoulder: 3, r_shoulder: 3, l_elbow: 4, r_elbow: 4, l_hand: 5, r_hand: 5,
+  l_hip: 1, r_hip: 1, l_knee: 2, r_knee: 2, l_foot: 3, r_foot: 3, l_toe: 4, r_toe: 4
+};
+
+const snapOutEase = (t: number) => {
+  const c4 = (2 * Math.PI) / 3;
+  return t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+};
+
+const EASING_FUNCTIONS = {
+  linear: (t: number) => t,
+  easeInOutQuad: (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
+  snapOut: snapOutEase,
+};
+
+interface HistoryState {
+  pivotOffsets: WalkingEnginePivotOffsets;
+  props: WalkingEngineProportions;
+  jointModes: Record<keyof WalkingEnginePivotOffsets, JointMode>;
+  timestamp: number;
+}
+
+interface SavedPoseEntry {
+  id: number;
+  name: string;
+  pivotOffsets: WalkingEnginePivotOffsets;
+  props: WalkingEngineProportions;
+  jointModes: Record<keyof WalkingEnginePivotOffsets, JointMode>;
+}
+
+const rotateVec = (vec: Vector2D, angleDeg: number): Vector2D => {
+  const r = angleDeg * Math.PI / 180;
+  const c = Math.cos(r);
+  const s = Math.sin(r);
+  return { x: vec.x * c - vec.y * s, y: vec.x * s + vec.y * c };
+};
+const addVec = (v1: Vector2D, v2: Vector2D): Vector2D => ({ x: v1.x + v2.x, y: v1.y + v2.y });
+
+const App: React.FC = () => {
+  const [showPivots, setShowPivots] = useState(true);
+  const [showLabels, setShowLabels] = useState(false);
+  const [baseH, setBaseH] = useState(150);
+  const [isConsoleVisible, setIsConsoleVisible] = useState(false);
+  const [activeControlTab, setActiveControlTab] = useState<'pose' | 'proportions' | 'library'>('pose');
+  const [systemLogs, setSystemLogs] = useState<{ timestamp: string; message: string }[]>([]);
+  const [isCalibrated, setIsCalibrated] = useState(false);
+  const [tokens, setTokens] = useState(0);
+  const [lHandFlash, setLHandFlash] = useState(false);
+  const [rHandFlash, setRHandFlash] = useState(false);
+  const [saveConfirmation, setSaveConfirmation] = useState(false);
+  
+  const anomalySize = useMemo(() => 15, []);
+
+  const [jointModes, setJointModes] = useState<Record<keyof WalkingEnginePivotOffsets, JointMode>>(
+    Object.fromEntries(JOINT_KEYS.map(k => [k, 'standard'])) as any
+  );
+  const [isReversed, setIsReversed] = useState(false);
+  const [lastPoppedKey, setLastPoppedKey] = useState<string | null>(null);
+
+  const [pinningMode, setPinningMode] = useState<'none' | 'rightFoot' | 'dual'>('none');
+  const [pinOffset, setPinOffset] = useState<Vector2D>({ x: 0, y: 0 });
+  const pinnedWorldPosRef = useRef<Vector2D | null>(null);
+
+  const [tweenDuration, setTweenDuration] = useState(1000);
+  const [tweenEasing, setTweenEasing] = useState<'linear' | 'easeInOutQuad' | 'snapOut'>('easeInOutQuad');
+  const [isTweening, setIsTweening] = useState(false);
+
+  const lastInteractionTimeRef = useRef(Date.now());
+  const draggingBoneKeyRef = useRef<keyof WalkingEnginePivotOffsets | null>(null);
+
+  const [pivotOffsets, setPivotOffsets] = useState<WalkingEnginePivotOffsets>(INITIAL_CHALLENGE_POSE);
+  const [props, setProps] = useState<WalkingEngineProportions>(DEFAULT_PROPORTIONS);
+
+  const [globalScale, setGlobalScale] = useState(150);
+  const [globalBoneWidthMultiplier, setGlobalBoneWidthMultiplier] = useState(1);
+  const [globalLimbLengthMultiplier, setGlobalLimbLengthMultiplier] = useState(1);
+  const [mannequinOffsetY, setMannequinOffsetY] = useState(-50);
+
+  const [savedPoses, setSavedPoses] = useState<SavedPoseEntry[]>([]);
+  const [anomaly, setAnomaly] = useState<Vector2D | null>(null);
+  const anomalyRef = useRef<Vector2D | null>(null);
+
+  const [draggingBoneKey, setDraggingBoneKey] = useState<keyof WalkingEnginePivotOffsets | null>(null);
+  
+  const svgRef = useRef<SVGSVGElement>(null);
+  const pivotOffsetsRef = useRef(pivotOffsets);
+  const propsRef = useRef(props);
+  const baseHRef = useRef(baseH);
+  const isReversedRef = useRef(isReversed);
+  const jointModesRef = useRef(jointModes);
+  const pinOffsetRef = useRef(pinOffset);
+  const pinningModeRef = useRef(pinningMode);
+  const mannequinOffsetYRef = useRef(mannequinOffsetY);
+
+  useEffect(() => { pivotOffsetsRef.current = pivotOffsets; }, [pivotOffsets]);
+  useEffect(() => { propsRef.current = props; }, [props]);
+  useEffect(() => { baseHRef.current = baseH; }, [baseH]);
+  useEffect(() => { isReversedRef.current = isReversed; }, [isReversed]);
+  useEffect(() => { jointModesRef.current = jointModes; }, [jointModes]);
+  useEffect(() => { pinOffsetRef.current = pinOffset; }, [pinOffset]);
+  useEffect(() => { pinningModeRef.current = pinningMode; }, [pinningMode]);
+  useEffect(() => { mannequinOffsetYRef.current = mannequinOffsetY; }, [mannequinOffsetY]);
+
+  const addLog = useCallback((message: string) => {
+    setSystemLogs(prev => [...prev.slice(-49), { timestamp: new Date().toLocaleTimeString(), message }]);
+  }, []);
+
+  useEffect(() => {
+    setBaseH(globalScale);
+  }, [globalScale]);
+
+  useEffect(() => {
+    setProps(prevProps => {
+      const newProps: WalkingEngineProportions = {} as WalkingEngineProportions;
+      PROP_KEYS.forEach(key => {
+        newProps[key] = {
+          w: (DEFAULT_PROPORTIONS[key]?.w || 1) * globalBoneWidthMultiplier,
+          h: (DEFAULT_PROPORTIONS[key]?.h || 1) * globalLimbLengthMultiplier,
+        };
+      });
+      return newProps;
+    });
+  }, [globalBoneWidthMultiplier, globalLimbLengthMultiplier]);
+
+  useEffect(() => {
+    try {
+      const storedPoses = localStorage.getItem('bitruvian_library');
+      if (storedPoses) {
+        const parsed = JSON.parse(storedPoses);
+        if (Array.isArray(parsed)) setSavedPoses(parsed);
+      }
+    } catch (e) { console.error("Error loading library", e); }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('bitruvian_library', JSON.stringify(savedPoses));
+    } catch (e) { console.error("Error saving library", e); }
+  }, [savedPoses]);
+
+  const awardTokens = useCallback((sourceBone: string) => {
+    const timeSinceLastInteraction = Date.now() - lastInteractionTimeRef.current;
+    let passiveMultiplier = (timeSinceLastInteraction > 1500 || isTweening) ? 2 : 1;
+    let limbBonus = CHAIN_DEPTH[sourceBone] || 1;
+    const gain = Math.floor(limbBonus * passiveMultiplier);
+    setTokens(prev => prev + gain);
+    addLog(`[SYSTEM]: POSE_PICKUP - UNIT TOKENS UPDATED (+${gain}) ${passiveMultiplier > 1 ? '[PASSIVE BONUS]' : ''} [${sourceBone.toUpperCase()} DEPTH: ${limbBonus}X]`);
+  }, [addLog, isTweening]);
+
+  const spawnAnomaly = useCallback(() => {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 150 + Math.random() * 350;
+    const newAnom = { x: Math.cos(angle) * distance, y: -250 + Math.sin(angle) * distance };
+    setAnomaly(newAnom);
+    anomalyRef.current = newAnom;
+  }, []);
+
+  const calculateAnklePos = useCallback((currentPivotOffsets: WalkingEnginePivotOffsets, currentProps: WalkingEngineProportions) => {
+    const getRot = (key: string) => ((currentPivotOffsets as any)[key] || 0);
+    const getDim = (raw: number, key: keyof WalkingEngineProportions) => raw * baseH * (currentProps[key]?.h || 1);
+    const waistRot = getRot('waist');
+    const hipRot = waistRot + getRot('r_hip'); 
+    const thighLen = getDim(ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT.LEG_UPPER, 'r_upper_leg');
+    const kneeRot = hipRot + getRot('r_knee');
+    const kneePos = rotateVec({ x: 0, y: thighLen }, hipRot);
+    const calfLen = getDim(ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT.LEG_LOWER, 'r_lower_leg');
+    const anklePos = addVec(kneePos, rotateVec({ x: 0, y: calfLen }, kneeRot));
+    return anklePos;
+  }, [baseH]);
+
+  const togglePinning = useCallback(() => {
+    setLastPoppedKey('pin-foot');
+    setTimeout(() => setLastPoppedKey(null), 300);
+    if (pinningMode === 'none') {
+      const local = calculateAnklePos(pivotOffsets, props);
+      pinnedWorldPosRef.current = { x: local.x + pinOffset.x, y: local.y - 50 + pinOffset.y };
+      setPinningMode('rightFoot');
+      addLog(`[SYSTEM]: PINNING ENABLED - RIGHT ANKLE ANCHORED.`);
+    } else {
+      setPinningMode('none');
+      pinnedWorldPosRef.current = null;
+      setPinOffset({ x: 0, y: 0 });
+      addLog(`[SYSTEM]: PINNING DISABLED.`);
+    }
+  }, [pinningMode, calculateAnklePos, pivotOffsets, props, pinOffset, addLog]);
+
+  const updatePinOffset = useCallback(() => {
+    if (pinningMode === 'none' || !pinnedWorldPosRef.current) return;
+    const currentLocal = calculateAnklePos(pivotOffsets, props);
+    const nextX = pinnedWorldPosRef.current.x - currentLocal.x;
+    const nextY = pinnedWorldPosRef.current.y - currentLocal.y + 50;
+    setPinOffset({ x: nextX, y: nextY });
+  }, [pinningMode, calculateAnklePos, pivotOffsets, props]);
+
+  useEffect(() => {
+    if (pinningMode !== 'none') updatePinOffset();
+  }, [pivotOffsets, props, updatePinOffset]);
+
+  const handleAnchorMouseDown = useCallback((boneKey: keyof WalkingEnginePivotOffsets) => {
+    setDraggingBoneKey(boneKey);
+  }, []);
+
+  const handleDrag = useCallback((e: MouseEvent) => {
+    if (draggingBoneKey && !isTweening && svgRef.current) {
+      lastInteractionTimeRef.current = Date.now();
+      
+      const svg = svgRef.current;
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      const svgP = pt.matrixTransform(ctm.inverse());
+      
+      setPivotOffsets(latestPivotOffsets => {
+        let currentPinOffset = pinOffsetRef.current;
+        if (pinningModeRef.current !== 'none' && pinnedWorldPosRef.current) {
+          const currentLocal = calculateAnklePos(latestPivotOffsets, propsRef.current);
+          currentPinOffset = {
+            x: pinnedWorldPosRef.current.x - currentLocal.x,
+            y: pinnedWorldPosRef.current.y - currentLocal.y + 50
+          };
+        }
+        
+        const localX = svgP.x - currentPinOffset.x;
+        const localY = svgP.y - (mannequinOffsetYRef.current + currentPinOffset.y);
+        
+        const transforms = getMannequinWorldTransformsHelper(latestPivotOffsets, propsRef.current, baseHRef.current, isReversedRef.current, jointModesRef.current);
+        
+        const partEntry = Object.entries(partDefinitions).find(([_, def]) => def.boneKey === draggingBoneKey);
+        if (!partEntry) return latestPivotOffsets;
+        const [propKey, def] = partEntry;
+        
+        const jointTransform = transforms[propKey as keyof WalkingEngineProportions];
+        if (!jointTransform) return latestPivotOffsets;
+        
+        const dx = localX - jointTransform.position.x;
+        const dy = localY - jointTransform.position.y;
+        
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return latestPivotOffsets;
+        
+        let targetGlobalRot = Math.atan2(dy, dx) * 180 / Math.PI;
+        targetGlobalRot += def.drawsUpwards ? 90 : -90;
+        
+        const currentGlobalRot = jointTransform.rotation;
+        const currentLocal = latestPivotOffsets[draggingBoneKey];
+        const mode = jointModesRef.current[draggingBoneKey] || 'standard';
+        const multiplier = mode === 'bend' ? 1.5 : (mode === 'stretch' ? 0.5 : 1);
+        
+        const parentRot = currentGlobalRot - currentLocal * multiplier;
+        
+        let newLocal = (targetGlobalRot - parentRot) / multiplier;
+        
+        while (newLocal > 180) newLocal -= 360;
+        while (newLocal < -180) newLocal += 360;
+        
+        return { ...latestPivotOffsets, [draggingBoneKey]: newLocal };
+      });
+      
+      awardTokens(draggingBoneKey);
+    }
+  }, [draggingBoneKey, isTweening, awardTokens, calculateAnklePos]);
+
+  useEffect(() => {
+    const hu = () => { setDraggingBoneKey(null); draggingBoneKeyRef.current = null; };
+    if (draggingBoneKey) {
+      draggingBoneKeyRef.current = draggingBoneKey;
+      window.addEventListener('mousemove', handleDrag);
+      window.addEventListener('mouseup', hu);
+    }
+    return () => { window.removeEventListener('mousemove', handleDrag); window.removeEventListener('mouseup', hu); };
+  }, [draggingBoneKey, handleDrag]);
+
+  const setJointMode = (key: keyof WalkingEnginePivotOffsets, mode: JointMode) => {
+    setLastPoppedKey(`${key}-${mode}`);
+    setTimeout(() => setLastPoppedKey(null), 300);
+    const nextMode = jointModes[key] === mode ? 'standard' : mode;
+    setJointModes(prev => ({ ...prev, [key]: nextMode }));
+    addLog(`[SYSTEM]: JOINT_MODE_UPDATE - ${key.toUpperCase()} SET TO ${nextMode.toUpperCase()}`);
+  };
+
+  const runTween = useCallback((target: SavedPoseEntry) => {
+    if (isTweening) return;
+    setIsTweening(true);
+    const startPivot = { ...pivotOffsets };
+    const startProps = { ...props };
+    const startJointModes = { ...jointModes };
+    let startTime: number | null = null;
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / tweenDuration, 1);
+      const easedProgress = EASING_FUNCTIONS[tweenEasing](progress);
+
+      const nextPivot = { ...startPivot };
+      JOINT_KEYS.forEach(key => {
+        const startValue = startPivot[key];
+        const endValue = target.pivotOffsets[key];
+        nextPivot[key] = startValue + (endValue - startValue) * easedProgress;
+      });
+
+      const nextProps: WalkingEngineProportions = {} as WalkingEngineProportions;
+      PROP_KEYS.forEach(key => {
+        const startW = startProps[key]?.w || 1;
+        const endW = target.props[key]?.w || 1;
+        const startH = startProps[key]?.h || 1;
+        const endH = target.props[key]?.h || 1;
+        nextProps[key] = {
+          w: startW + (endW - startW) * easedProgress,
+          h: startH + (endH - startH) * easedProgress,
+        };
+      });
+
+      setPivotOffsets(nextPivot);
+      setProps(nextProps);
+      setJointModes(startJointModes);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setIsTweening(false);
+        setJointModes(target.jointModes);
+        setProps(target.props);
+        addLog(`[SYSTEM]: TWEEN_COMPLETE - POSE "${target.name.toUpperCase()}" LOADED.`);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [isTweening, pivotOffsets, props, jointModes, tweenDuration, tweenEasing, addLog]);
+
+  const saveCurrentPose = useCallback(() => {
+    const newEntry: SavedPoseEntry = {
+      id: Date.now(),
+      name: `Pose ${savedPoses.length + 1}`,
+      pivotOffsets: { ...pivotOffsets },
+      props: { ...props },
+      jointModes: { ...jointModes }
+    };
+    setSavedPoses(prev => [...prev, newEntry]);
+    setSaveConfirmation(true);
+    addLog(`[SYSTEM]: POSE_SAVED - ENTITY ID: ${newEntry.id}`);
+    setTimeout(() => setSaveConfirmation(false), 2000);
+  }, [savedPoses, pivotOffsets, props, jointModes, addLog]);
+
+  const getMannequinGlobalTransforms = useCallback((reversed: boolean) => {
+    return getMannequinWorldTransformsHelper(pivotOffsets, props, baseH, reversed, jointModes);
+  }, [baseH, props, pivotOffsets, jointModes]);
+
+  useEffect(() => {
+    const currentTransforms = getMannequinGlobalTransforms(isReversed);
+    const currentTorsoY = currentTransforms.torso?.position.y || 0;
+    const targetTorsoY = -200;
+    setMannequinOffsetY(targetTorsoY - currentTorsoY);
+  }, [isReversed, getMannequinGlobalTransforms]);
+
+  return (
+    <div className="flex h-full w-full bg-paper font-mono text-ink overflow-hidden select-none">
+      {isConsoleVisible && (
+        <div className="w-80 border-r border-ridge bg-mono-darker p-4 flex flex-col gap-4 custom-scrollbar overflow-y-auto z-50">
+          <div className="flex justify-between items-center border-b border-ridge pb-2">
+            <h1 className="text-xl font-archaic tracking-widest uppercase italic">Bitruvius.Core</h1>
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            {!isCalibrated ? (
+              <button onClick={() => setIsCalibrated(true)} className="text-[9px] px-3 py-2 border border-selection bg-selection text-paper font-bold uppercase hover:scale-[1.02] active:scale-[0.98] transition-transform btn-pop">INITIALIZE ENGINE</button>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={() => {
+                    setLastPoppedKey('t-pose');
+                    setTimeout(() => setLastPoppedKey(null), 300);
+                    runTween({ id: 0, name: 'T-POSE', pivotOffsets: T_POSE, props: DEFAULT_PROPORTIONS, jointModes: Object.fromEntries(JOINT_KEYS.map(k => [k, 'standard'])) as any });
+                    setGlobalScale(150);
+                    setGlobalBoneWidthMultiplier(1);
+                    setGlobalLimbLengthMultiplier(1);
+                  }} 
+                  className={`text-[9px] px-3 py-2 border border-selection bg-selection text-paper font-bold uppercase transition-all hover:scale-[1.02] active:scale-[0.98] btn-pop ${lastPoppedKey === 't-pose' ? 'animate-pop' : ''}`}
+                >
+                  T-POSE
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                    <button 
+                    onClick={togglePinning} 
+                    className={`text-[9px] px-3 py-2 border transition-all font-bold uppercase hover:scale-[1.05] active:scale-[0.95] ${lastPoppedKey === 'pin-foot' ? 'animate-pop' : ''} ${pinningMode !== 'none' ? 'bg-accent-purple text-paper border-accent-purple shadow-lg scale-[1.05]' : 'bg-paper/10 border-ridge text-mono-light'}`}
+                    >
+                    {pinningMode !== 'none' ? 'FOOT PINNED' : 'PIN FOOT'}
+                    </button>
+                    <button 
+                    onClick={() => { 
+                      setLastPoppedKey('reverse');
+                      setTimeout(() => setLastPoppedKey(null), 300);
+                      setIsReversed(!isReversed); 
+                      addLog(`[SYSTEM]: HIERARCHY_REVERSED - ROOT SET TO ${!isReversed ? 'HEAD' : 'WAIST'}`); 
+                    }} 
+                    className={`text-[9px] px-3 py-2 border transition-all font-bold uppercase hover:scale-[1.05] active:scale-[0.95] ${lastPoppedKey === 'reverse' ? 'animate-pop' : ''} ${isReversed ? 'bg-accent-red text-paper border-accent-red shadow-lg scale-[1.05]' : 'bg-paper/10 border-ridge text-mono-light'}`}
+                    >
+                    {isReversed ? 'REVERSED' : 'REVERSE'}
+                    </button>
+                </div>
+                <button onClick={() => setShowPivots(!showPivots)} className={`text-[9px] px-3 py-1 border transition-all ${showPivots ? 'bg-selection text-paper' : 'border-ridge'}`}>ANCHORS: {showPivots ? 'ON' : 'OFF'}</button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex border-b border-ridge">
+            {(['pose', 'proportions', 'library'] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveControlTab(tab)} className={`flex-1 text-[9px] py-2 font-bold transition-all ${activeControlTab === tab ? 'text-selection border-b-2 border-selection bg-white/40' : 'opacity-40 hover:opacity-100'}`}>{tab.toUpperCase()}</button>
+            ))}
+          </div>
+
+          <div className="flex-grow flex flex-col min-h-0">
+            {activeControlTab === 'pose' && (
+              <div className="flex flex-col gap-2 overflow-y-auto custom-scrollbar py-2 pr-1">
+                {JOINT_KEYS.map(k => (
+                  <div key={k} className="p-2 border border-ridge/20 rounded hover:bg-white/30 transition-colors">
+                    <div className="flex justify-between items-center mb-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] uppercase font-bold text-ink">{k.replace(/_/g, ' ')}</span>
+                            <div className="flex gap-1">
+                                {(['bend', 'stretch'] as JointMode[]).map(m => (
+                                    <button 
+                                        key={m} 
+                                        onClick={() => setJointMode(k, m)}
+                                        title={m.toUpperCase()}
+                                        className={`w-5 h-5 flex items-center justify-center rounded-sm text-[8px] font-bold border transition-all hover:scale-110 active:scale-90 ${lastPoppedKey === `${k}-${m}` ? 'animate-pop' : ''} ${jointModes[k] === m ? 'bg-selection text-paper border-selection shadow-md translate-y-[-1px]' : 'border-ridge text-mono-mid opacity-40 hover:opacity-100'}`}
+                                    >
+                                        {m === 'bend' ? 'B' : '2'}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <span className="text-[8px] font-mono text-mono-mid tabular-nums">{Math.round(pivotOffsets[k])}°</span>
+                    </div>
+                    <input type="range" min="-180" max="180" value={pivotOffsets[k]} onChange={e => !isTweening && setPivotOffsets(p => ({...p, [k]: parseInt(e.target.value)}))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                  </div>
+                ))}
+              </div>
+            )}
+            {activeControlTab === 'proportions' && (
+                <div className="flex flex-col gap-4 overflow-y-auto custom-scrollbar py-2 pr-1">
+                    <div className="p-2 border border-ridge/20 rounded">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-[10px] uppercase font-bold text-ink">Global Scale</span>
+                            <span className="text-[8px] font-mono text-mono-mid tabular-nums">{Math.round(globalScale)}</span>
+                        </div>
+                        <input type="range" min="50" max="250" value={globalScale} onChange={e => setGlobalScale(parseInt(e.target.value))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                    </div>
+                    <div className="p-2 border border-ridge/20 rounded">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-[10px] uppercase font-bold text-ink">Limb Width</span>
+                            <span className="text-[8px] font-mono text-mono-mid tabular-nums">{(globalBoneWidthMultiplier).toFixed(2)}x</span>
+                        </div>
+                        <input type="range" min="0.5" max="2" step="0.05" value={globalBoneWidthMultiplier} onChange={e => setGlobalBoneWidthMultiplier(parseFloat(e.target.value))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                    </div>
+                    <div className="p-2 border border-ridge/20 rounded">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-[10px] uppercase font-bold text-ink">Limb Length</span>
+                            <span className="text-[8px] font-mono text-mono-mid tabular-nums">{(globalLimbLengthMultiplier).toFixed(2)}x</span>
+                        </div>
+                        <input type="range" min="0.5" max="2" step="0.05" value={globalLimbLengthMultiplier} onChange={e => setGlobalLimbLengthMultiplier(parseFloat(e.target.value))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                    </div>
+                </div>
+            )}
+            {activeControlTab === 'library' && (
+              <div className="flex flex-col h-full gap-2">
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  {savedPoses.map(pe => (
+                    <div key={pe.id} className="flex items-center justify-between p-2 border-b border-ridge hover:bg-white/40 group transition-colors">
+                      <span className="text-[10px] uppercase font-bold">{pe.name}</span>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => { setPivotOffsets({ ...pe.pivotOffsets }); setJointModes({ ...pe.jointModes }); }} className="text-[8px] px-2 py-1 bg-selection text-paper uppercase hover:scale-105 active:scale-95 transition-transform">Load</button>
+                        <button onClick={() => runTween(pe)} className="text-[8px] px-2 py-1 bg-mono-mid text-paper uppercase hover:scale-105 active:scale-95 transition-transform">Tween</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  onClick={saveCurrentPose} 
+                  className={`w-full py-3 text-[10px] font-bold uppercase transition-all hover:scale-[1.02] active:scale-[0.98] ${saveConfirmation ? 'bg-accent-green text-paper scale-[1.02] shadow-lg' : 'bg-selection text-paper shadow-md'}`}
+                >
+                  {saveConfirmation ? '✓ SAVED' : 'SAVE POSE'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-auto pt-4"><SystemLogger logs={systemLogs} isVisible={true} historyCount={tokens} /></div>
+        </div>
+      )}
+
+      <div className="flex-1 relative bg-paper flex items-center justify-center overflow-hidden" onClick={() => !isCalibrated && setIsCalibrated(true)}>
+        <div className="absolute top-4 right-4 z-50 text-right">
+          <div className="text-[10px] text-mono-mid uppercase tracking-widest">Unit Tokens</div>
+          <div className="text-2xl font-archaic text-ink">{tokens.toLocaleString()}</div>
+        </div>
+
+        <button onClick={() => setIsConsoleVisible(!isConsoleVisible)} className="absolute top-4 left-4 z-50 p-2 border border-ridge bg-white rounded-full transition-all hover:scale-110 active:scale-95 shadow-lg"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg></button>
+
+        {!isCalibrated && (
+          <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none bg-paper/20">
+            <h2 className="text-6xl font-archaic uppercase tracking-tighter text-ink">Bitruvian Station</h2>
+            <p className="text-[10px] uppercase tracking-[0.5em] animate-pulse text-mono-mid">Touch to Wake Core</p>
+          </div>
+        )}
+        
+        <svg ref={svgRef} viewBox="-500 -700 1000 1400" className="w-full h-full overflow-visible relative z-10 drop-shadow-2xl">
+          <g transform={`translate(${pinOffset.x}, ${mannequinOffsetY + pinOffset.y})`}>
+            <Mannequin 
+              pose={RESTING_BASE_POSE} 
+              pivotOffsets={{...pivotOffsets, l_hand_flash: lHandFlash, r_hand_flash: rHandFlash} as any} 
+              props={props} 
+              showPivots={showPivots && isCalibrated} 
+              showLabels={showLabels} 
+              baseUnitH={baseH} 
+              onAnchorMouseDown={(k) => handleAnchorMouseDown(k)} 
+              draggingBoneKey={draggingBoneKey} 
+              isPaused={true} 
+              pinningMode={pinningMode} 
+              offset={pinOffset} 
+              isReversed={isReversed}
+              jointModes={jointModes}
+            />
+          </g>
+          {anomaly && (
+            <g transform={`translate(${anomaly.x}, ${anomaly.y})`}>
+              <rect x={-anomalySize / 2} y={-anomalySize / 2} width={anomalySize} height={anomalySize} className="fill-ink hover:fill-accent-red cursor-crosshair transition-all hover:scale-150 active:scale-90" />
+            </g>
+          )}
+        </svg>
+      </div>
+    </div>
+  );
+};
+
+export default App;

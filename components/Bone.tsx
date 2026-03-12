@@ -1,0 +1,202 @@
+
+
+import React from 'react';
+import { Vector2D, WalkingEnginePivotOffsets, WalkingEngineProportions } from '../types';
+
+export interface BoneProps { 
+  rotation: number;
+  length: number; 
+  width?: number; 
+  variant?: 'diamond' | 'waist-teardrop-pointy-up' | 'torso-teardrop-pointy-down' | 'collar-horizontal-oval-shape' | 'deltoid-shape' | 'limb-tapered' | 'head-tall-oval' | 'hand-foot-arrowhead-shape' | 'foot-block-shape' | 'toe-rounded-cap';
+  showPivots: boolean;
+  visible?: boolean;
+  offset?: Vector2D;
+  children?: React.ReactNode;
+  drawsUpwards?: boolean;
+  colorClass?: string;
+  showLabel?: boolean;
+  label?: string;
+  boneKey?: keyof WalkingEnginePivotOffsets; 
+  proportionKey?: keyof WalkingEngineProportions; 
+  onAnchorMouseDown?: (boneKey: keyof WalkingEnginePivotOffsets, event: React.MouseEvent) => void;
+  isBeingDragged?: boolean;
+  isPausedAndPivotsVisible?: boolean;
+  patternFillId?: string;
+  isPinned?: boolean;
+  isInActiveChain?: boolean;
+}
+
+export const COLORS = {
+  ANCHOR_RED: "#EF4444",
+  SELECTION: "#D1D5DB",
+  RIDGE: "#E5E7EB",
+  PIN_HIGHLIGHT: "#4B5563",
+  DEFAULT_FILL: "#111827",
+  FOCUS_RING: "#374151",
+  CHAIN_HIGHLIGHT: "#D1D5DB", // Neutral gray for selected chain
+};
+
+export const Bone: React.FC<BoneProps> = ({
+  rotation,
+  length,
+  width = 15,
+  variant = 'diamond',
+  showPivots = true,
+  visible = true,
+  offset = { x: 0, y: 0 },
+  children,
+  drawsUpwards = false,
+  colorClass = "fill-mono-dark",
+  showLabel = false,
+  label,
+  boneKey,
+  onAnchorMouseDown,
+  isBeingDragged = false,
+  isPausedAndPivotsVisible = false,
+  patternFillId,
+  isPinned = false,
+  isInActiveChain = false,
+}) => {
+
+  const getBonePath = (boneLength: number, boneWidth: number, variant: string, drawsUpwards: boolean): string => {
+    const effectiveLength = drawsUpwards ? -boneLength : boneLength;
+    const halfWidth = boneWidth / 2;
+
+    switch (variant) {
+      case 'head-tall-oval':
+        const topWidth = boneWidth;
+        const baseWidth = boneWidth * 0.4;
+        const headEffectiveLength = -boneLength;
+        return `M ${-baseWidth / 2},0 L ${baseWidth / 2},0 L ${topWidth / 2},${headEffectiveLength} L ${-topWidth / 2},${headEffectiveLength} Z`;
+
+      case 'collar-horizontal-oval-shape':
+        const collarVisHeight = boneLength;
+        const collarBaseWidth = boneWidth;
+        const collarTopWidth = collarBaseWidth * 0.5; 
+        return `M ${collarBaseWidth / 2},0 C ${collarBaseWidth * 0.3},${-collarVisHeight * 0.3} ${collarTopWidth * 0.7},${-collarVisHeight * 0.6} ${collarTopWidth / 2},${-collarVisHeight} L ${-collarTopWidth / 2},${-collarVisHeight} C ${-collarTopWidth * 0.7},${-collarVisHeight * 0.6} ${-collarBaseWidth * 0.3},${-collarVisHeight * 0.3} ${-collarBaseWidth / 2},0 Z`;
+
+      case 'waist-teardrop-pointy-up':
+        const wHeight = boneLength;
+        const wWidth = boneWidth;
+        return `M ${wWidth / 2},0 L ${wWidth * 0.15},${-wHeight} L ${-wWidth * 0.15},${-wHeight} L ${-wWidth / 2},0 Z`;
+
+      case 'torso-teardrop-pointy-down':
+        const tHeight = boneLength;
+        const tWidth = boneWidth;
+        return `M ${tWidth * 0.3},0 C ${tWidth * 0.3},${-tHeight * 0.3} ${tWidth / 2},${-tHeight * 0.7} ${tWidth / 2},${-tHeight} L ${-tWidth / 2},${-tHeight} C ${-tWidth / 2},${-tHeight * 0.7} ${-tWidth * 0.3},${-tHeight * 0.3} ${-tWidth * 0.3},0 Z`;
+
+      case 'deltoid-shape':
+        const dHeight = boneLength;
+        const shoulderWidth = boneWidth; 
+        return `M ${shoulderWidth / 2} 0
+                C ${shoulderWidth / 2} ${dHeight * 0.2} ${shoulderWidth * 1.2 / 2} ${dHeight * 0.4} ${shoulderWidth * 1.2 / 2} ${dHeight * 0.7}
+                L 0 ${dHeight}
+                L ${-shoulderWidth * 1.2 / 2} ${dHeight * 0.7}
+                C ${-shoulderWidth * 1.2 / 2} ${dHeight * 0.4} ${-shoulderWidth / 2} ${dHeight * 0.2} ${-shoulderWidth / 2} 0 Z`;
+
+      case 'limb-tapered':
+        const taperedWidth = boneWidth;
+        const taperedEndWidth = taperedWidth * 0.65;
+        return `M ${taperedWidth / 2},0 L ${taperedEndWidth / 2},${effectiveLength} L ${-taperedEndWidth / 2},${effectiveLength} L ${-taperedWidth / 2},0 Z`;
+      
+      case 'foot-block-shape':
+        const footBaseW = boneWidth;
+        const footEndW = boneWidth * 1.4;
+        return `M ${footBaseW / 2},0 L ${footEndW / 2},${effectiveLength} L ${-footEndW / 2},${effectiveLength} L ${-footBaseW / 2},0 Z`;
+
+      case 'toe-rounded-cap':
+        const toeBaseW = boneWidth * 1.4;
+        return `M ${toeBaseW / 2},0 L 0,${effectiveLength} L ${-toeBaseW / 2},0 Z`;
+
+      case 'hand-foot-arrowhead-shape':
+        const handFootWidth = boneWidth;
+        return `M ${-handFootWidth / 2},0 L ${handFootWidth / 2},0 L 0,${effectiveLength} Z`;
+
+      default:
+        const defaultWidth = boneWidth;
+        const split = effectiveLength * 0.4;
+        return `M 0 0 L ${defaultWidth / 2} ${split} L 0 ${effectiveLength} L ${-defaultWidth / 2} ${split} Z`;
+    }
+  };
+
+  const visualEndPoint = drawsUpwards ? -length : length;
+  const transform = (offset.x !== 0 || offset.y !== 0)
+    ? `translate(${offset.x}, ${offset.y}) rotate(${rotation})`
+    : `rotate(${rotation})`;
+
+  const cursorStyle = isPausedAndPivotsVisible 
+    ? (isBeingDragged ? 'cursor-grabbing' : 'cursor-grab')
+    : 'cursor-default';
+
+  const handleInteractionStart = (e: React.MouseEvent) => {
+    if (isPausedAndPivotsVisible && boneKey && onAnchorMouseDown) {
+      e.stopPropagation();
+      onAnchorMouseDown(boneKey, e);
+    }
+  };
+  
+  const finalColorClass = isInActiveChain ? 'fill-mono-light' : colorClass;
+
+  return (
+    <g transform={transform} className={finalColorClass}>
+      {visible && (
+        <React.Fragment>
+          <path
+            d={getBonePath(length, width, variant, drawsUpwards)}
+            fill={patternFillId || "currentColor"}
+            stroke={COLORS.RIDGE}
+            strokeWidth={0.5}
+            paintOrder="stroke"
+            className={`${cursorStyle} hover:opacity-80 transition-opacity`}
+            onMouseDown={handleInteractionStart}
+          />
+          {showPivots && (
+            <line x1="0" y1="0" x2="0" y2={visualEndPoint} stroke="rgba(150, 150, 150, 0.15)" strokeWidth="1" opacity={0.5} strokeLinecap="round" />
+          )}
+           {showLabel && label && (
+            <text x={width / 2 + 5} y={visualEndPoint / 2} 
+                  className="fill-mono-mid text-[7px] font-mono select-none opacity-40 tracking-tighter uppercase pointer-events-none"
+                  data-is-label="true">
+              {label}
+            </text>
+          )}
+        </React.Fragment>
+      )}
+
+      <g transform={`translate(0, ${visualEndPoint})`}>{children}</g>
+
+      {showPivots && visible && boneKey && onAnchorMouseDown && (
+        <g>
+          <circle 
+            cx="0" cy="0" r={4} 
+            fill={COLORS.ANCHOR_RED} 
+            stroke="white"
+            strokeWidth="1"
+            className={`drop-shadow-sm ${cursorStyle} hover:scale-125 transition-transform`} 
+            data-no-export="true"
+            onMouseDown={handleInteractionStart}
+          />
+          {isPinned && (
+              <circle
+                  cx="0" cy="0" r={10}
+                  fill="none"
+                  stroke={COLORS.PIN_HIGHLIGHT}
+                  strokeWidth="1.5"
+                  strokeDasharray="3 3"
+                  data-no-export="true"
+              >
+                  <animateTransform
+                      attributeName="transform"
+                      type="rotate"
+                      from="0 0 0"
+                      to="360 0 0"
+                      dur="3s"
+                      repeatCount="indefinite"
+                  />
+              </circle>
+          )}
+        </g>
+      )}
+    </g>
+  );
+};
