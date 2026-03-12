@@ -427,8 +427,8 @@ const App: React.FC = () => {
   };
 
   const toggleJointDisabled = (key: keyof WalkingEnginePivotOffsets) => {
+    const nextDisabled = !currentCanvas.disabledJoints[key];
     updateCanvasWith(prev => {
-      const nextDisabled = !prev.disabledJoints[key];
       return {
         ...prev,
         disabledJoints: { ...prev.disabledJoints, [key]: nextDisabled },
@@ -436,7 +436,7 @@ const App: React.FC = () => {
         jointModes: nextDisabled ? { ...prev.jointModes, [key]: 'standard' } : prev.jointModes,
       };
     });
-    addLog(`[SYSTEM]: JOINT_${currentCanvas.disabledJoints[key] ? 'ENABLED' : 'DISABLED'} - ${key.toUpperCase()}`);
+    addLog(`[SYSTEM]: JOINT_${nextDisabled ? 'DISABLED' : 'ENABLED'} - ${key.toUpperCase()}`);
   };
 
   const runTween = useCallback((target: SavedPoseEntry) => {
