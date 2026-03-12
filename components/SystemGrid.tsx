@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Vector2D } from '../types'; // Assuming Vector2D is defined in types.ts
 import { ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT, GROUND_STRIP_HEIGHT_RAW_H_UNIT } from '../constants'; // Import ANATOMY and new ground constants
 
-const GROUND_STRIP_COLOR = '#F3F4F6'; // A very subtle light grey for the ground strip on a white background.
+const GROUND_STRIP_COLOR = '#2D2D2D'; // Dark grey for ground strip on dark background.
 
 interface AdvancedGridProps {
   origin: Vector2D;
