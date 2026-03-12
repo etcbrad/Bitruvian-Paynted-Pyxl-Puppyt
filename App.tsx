@@ -463,7 +463,7 @@ const App: React.FC = () => {
     }));
   }, [activeCanvasId]);
 
-  const [isConsoleVisible, setIsConsoleVisible] = useState(false);
+  const [isConsoleVisible, setIsConsoleVisible] = useState(true);
   const [activeControlTab, setActiveControlTab] = useState<'pose' | 'proportions' | 'library' | 'masks' | 'animation' | 'builder'>('pose');
   const [systemLogs, setSystemLogs] = useState<{ timestamp: string; message: string }[]>([]);
   const [isCalibrated, setIsCalibrated] = useState(false);
