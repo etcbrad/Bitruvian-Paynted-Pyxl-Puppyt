@@ -1176,6 +1176,14 @@ const App: React.FC = () => {
           )}
         </svg>
       </div>
+
+      <input
+        ref={maskUploadInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleMaskUploadInput}
+      />
     </div>
   );
 };
