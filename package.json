@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "autocommit": "node scripts/autocommit.mjs"
+    "autocommit": "node scripts/autocommit.mjs",
+    "dev:vite": "vite"
   },
   "dependencies": {
     "file-saver": "2.0.5",
