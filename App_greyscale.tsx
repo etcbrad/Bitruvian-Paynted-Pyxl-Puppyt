@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { BoneVariant, WalkingEnginePivotOffsets, WalkingEngineProportions, Vector2D } from './types';
+import { BoneVariant, WalkingEnginePivotOffsets, WalkingEngineProportions, Vector2D, WalkingEnginePose, JointMode } from './types';
 import { ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT, RIGGING } from './constants'; 
 import { Mannequin, getMannequinWorldTransformsHelper, partDefinitions } from './components/Mannequin';
 import { Scanlines, SystemGuides } from './components/SystemGrid';
