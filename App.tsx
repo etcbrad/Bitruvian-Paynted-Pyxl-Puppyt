@@ -1291,6 +1291,8 @@ const App: React.FC = () => {
               jointModes={currentCanvas.jointModes}
               disabledJoints={currentCanvas.disabledJoints}
               hiddenBoneKeys={hiddenBoneKeys}
+              partShapes={currentCanvas.partShapes}
+              partColors={currentCanvas.partColors}
             />
             {currentCanvas.masksEnabled && Object.entries(currentCanvas.bodyPartMaskLayers).map(([jointId, layer]) => {
               const typedJoint = jointId as keyof WalkingEnginePivotOffsets;
