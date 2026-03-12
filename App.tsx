@@ -340,8 +340,10 @@ const App: React.FC = () => {
   }, [currentCanvas.pinningMode, currentCanvas.pivotOffsets, currentCanvas.props, updatePinOffset]);
 
   const handleAnchorMouseDown = useCallback((boneKey: keyof WalkingEnginePivotOffsets) => {
-    setDraggingBoneKey(boneKey);
-  }, []);
+    const effectiveKey = getEffectiveBoneKey(boneKey);
+    if (!effectiveKey) return;
+    setDraggingBoneKey(effectiveKey);
+  }, [getEffectiveBoneKey]);
 
   const handleDrag = useCallback((e: MouseEvent) => {
     if (draggingBoneKey && !currentCanvas.isTweening && svgRef.current) {
