@@ -590,6 +590,13 @@ const App: React.FC = () => {
     addLog(`[SYSTEM]: JOINT_${nextDisabled ? 'DISABLED' : 'ENABLED'} - ${key.toUpperCase()}`);
   };
 
+  const toggleBoneVisibility = (key: keyof WalkingEnginePivotOffsets) => {
+    updateCanvasWith(prev => ({
+      ...prev,
+      boneVisibility: { ...prev.boneVisibility, [key]: !prev.boneVisibility[key] },
+    }));
+  };
+
   const setCurrentFrame = useCallback((frame: number) => {
     const clamped = Math.max(0, Math.min(currentCanvas.animation.frameCount - 1, frame));
     const sampled = samplePoseAtFrame(clamped);
