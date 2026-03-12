@@ -119,6 +119,55 @@ const EASING_FUNCTIONS = {
   snapOut: snapOutEase,
 };
 
+const toIso = () => new Date().toISOString();
+
+const convertPaperRigToManifest = (parts: PaperBodyPart[], pose: PaperPoseState): RigManifestV1 => {
+  const byId = new Map(parts.map(p => [p.id, p]));
+  const joints = parts.map(part => {
+    const parent = part.parentId ? byId.get(part.parentId) : null;
+    const defaultOffset = parent
+      ? { x: part.canvasX - parent.canvasX, y: part.canvasY - parent.canvasY }
+      : { x: part.canvasX, y: part.canvasY };
+    const poseEntry = pose[part.id];
+    return {
+      id: part.id,
+      parentId: part.parentId,
+      drivesPartId: part.id,
+      defaultOffset,
+      defaultRotation: poseEntry?.rotation ?? 0,
+      rigidCluster: false,
+    };
+  });
+  const jointsPose: RigManifestPose['joints'] = {};
+  parts.forEach(part => {
+    const poseEntry = pose[part.id];
+    jointsPose[part.id] = {
+      rotation: poseEntry?.rotation ?? 0,
+      offsetX: poseEntry?.x ?? 0,
+      offsetY: poseEntry?.y ?? 0,
+    };
+  });
+  return {
+    version: '1',
+    metadata: { source: 'Pixel-Puppyt-Maker', createdAt: toIso() },
+    parts: parts.map(part => ({
+      id: part.id,
+      name: part.name,
+      src: part.imageUrl,
+      width: part.width,
+      height: part.height,
+      pivot: { ...part.pivot },
+      ballPoint: { ...part.ballPoint },
+      zIndex: part.zIndex,
+      physics: part.physics,
+      tags: [],
+    })),
+    joints,
+    pose: { joints: jointsPose },
+    constraints: { rigidClusters: [] },
+  };
+};
+
 interface HistoryState {
   pivotOffsets: WalkingEnginePivotOffsets;
   props: WalkingEngineProportions;
