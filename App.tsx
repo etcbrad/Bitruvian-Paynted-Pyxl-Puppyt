@@ -889,22 +889,35 @@ const App: React.FC = () => {
   }, [draggingDynamicJointId, rigManifest, dynamicJointMap, dynamicTransforms]);
 
   useEffect(() => {
-    const hu = () => { setDraggingBoneKey(null); draggingBoneKeyRef.current = null; };
+    const handleMouseUp = () => { 
+      setDraggingBoneKey(null); 
+      draggingBoneKeyRef.current = null; 
+    };
+    
     if (draggingBoneKey) {
       draggingBoneKeyRef.current = draggingBoneKey;
       window.addEventListener('mousemove', handleDrag);
-      window.addEventListener('mouseup', hu);
+      window.addEventListener('mouseup', handleMouseUp);
     }
-    return () => { window.removeEventListener('mousemove', handleDrag); window.removeEventListener('mouseup', hu); };
+    
+    return () => { 
+      window.removeEventListener('mousemove', handleDrag); 
+      window.removeEventListener('mouseup', handleMouseUp); 
+    };
   }, [draggingBoneKey, handleDrag]);
 
   useEffect(() => {
-    const hu = () => setDraggingDynamicJointId(null);
+    const handleMouseUp = () => setDraggingDynamicJointId(null);
+    
     if (draggingDynamicJointId) {
       window.addEventListener('mousemove', handleDynamicDrag);
-      window.addEventListener('mouseup', hu);
+      window.addEventListener('mouseup', handleMouseUp);
     }
-    return () => { window.removeEventListener('mousemove', handleDynamicDrag); window.removeEventListener('mouseup', hu); };
+    
+    return () => { 
+      window.removeEventListener('mousemove', handleDynamicDrag); 
+      window.removeEventListener('mouseup', handleMouseUp); 
+    };
   }, [draggingDynamicJointId, handleDynamicDrag]);
 
   const setJointMode = (key: keyof WalkingEnginePivotOffsets, mode: JointMode) => {
@@ -997,17 +1010,56 @@ const App: React.FC = () => {
     maskUploadInputRef.current?.click();
   }, [setActiveMaskJoint]);
 
+  const validateImageFile = (file: File): { isValid: boolean; error?: string } => {
+    // Check file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      return { isValid: false, error: 'Invalid file type. Please upload an image file.' };
+    }
+    
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return { isValid: false, error: 'File too large. Please upload an image smaller than 10MB.' };
+    }
+    
+    // Check file name length
+    if (file.name.length > 255) {
+      return { isValid: false, error: 'File name too long.' };
+    }
+    
+    return { isValid: true };
+  };
+
   const handleMaskUploadInput = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     const jointId = currentCanvas.activeMaskJointId;
+    
     if (!file || !jointId) return;
+    
+    // Validate file
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      addLog(`[ERROR]: ${validation.error}`);
+      event.target.value = '';
+      return;
+    }
+    
     const reader = new FileReader();
     reader.onload = () => {
       const src = typeof reader.result === 'string' ? reader.result : null;
-      if (!src) return;
+      if (!src) {
+        addLog('[ERROR]: Failed to read file');
+        return;
+      }
       patchMaskLayer(jointId, { src, visible: true });
       addLog(`[SYSTEM]: MASK_UPLOADED - ${jointId.toUpperCase()}`);
     };
+    
+    reader.onerror = () => {
+      addLog('[ERROR]: Failed to read file');
+    };
+    
     reader.readAsDataURL(file);
     event.target.value = '';
   }, [currentCanvas.activeMaskJointId, patchMaskLayer, addLog]);
