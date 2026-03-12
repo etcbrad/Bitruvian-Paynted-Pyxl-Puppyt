@@ -1,19 +1,23 @@
 
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BoneVariant, Vector2D, WalkingEnginePivotOffsets, WalkingEngineProportions } from '../types';
+import { adjustBrightness } from '../utils/color-utils';
 
 export interface BoneProps { 
   rotation: number;
   length: number; 
   width?: number; 
   variant?: BoneVariant;
-  showPivots: boolean;
+  showPivots?: boolean;
+  showOverlay?: boolean;
   visible?: boolean;
   offset?: Vector2D;
+  className?: string;
   children?: React.ReactNode;
   drawsUpwards?: boolean;
   colorClass?: string;
+  fillOverride?: string;
   showLabel?: boolean;
   label?: string;
   boneKey?: keyof WalkingEnginePivotOffsets; 
@@ -24,16 +28,30 @@ export interface BoneProps {
   patternFillId?: string;
   isPinned?: boolean;
   isInActiveChain?: boolean;
+  isSelected?: boolean;
+  renderMode?: 'default' | 'wireframe' | 'silhouette' | 'backlight';
+  partCategory?: string;
+  jointConstraintMode?: 'fk' | 'ik' | 'stretch' | 'curl';
 }
 
 export const COLORS = {
-  ANCHOR_RED: "#EF4444",
-  SELECTION: "#D1D5DB",
-  RIDGE: "#E5E7EB",
-  PIN_HIGHLIGHT: "#4B5563",
-  DEFAULT_FILL: "#111827",
+  ANCHOR_RED: "#F87171", // Anchor dots explicitly red
+  SELECTION: "#D1D5DB", // Changed from yellow to a light monochrome shade
+  RIDGE: "#333333", // For wireframe stroke - kept dark
+  PIN_HIGHLIGHT: "#D1D5DB", // Changed from green to light monochrome for active pin
+  DEFAULT_FILL: "#000000", // Fallback / solid black for silhouette
   FOCUS_RING: "#374151",
   CHAIN_HIGHLIGHT: "#D1D5DB", // Neutral gray for selected chain
+  BACKLIGHT_OPACITY: 0.25, // New constant for backlight mode opacity
+  
+  // Kinetic Colors - Reintroduced for visual feedback
+  GREEN_CURL: adjustBrightness("#A3E635", 0.6),    // Desaturated green for Curl
+  PURPLE_STRETCH: adjustBrightness("#8B7EC1", 0.8), // Desaturated purple for Stretch
+  
+  // Categorical Colors - all default to a dark monochrome for the doll itself
+  LIGHT_MONO_HEAD_HAND_FOOT: "#FFFFFF", // Changed to white as requested for head, hands, and feet
+  DARK_MONO_BODY_PARTS: "#000000", // Changed to black as requested
+  OLIVE: '#000000', // Changed to black as requested for the collar
 };
 
 export const Bone: React.FC<BoneProps> = ({
