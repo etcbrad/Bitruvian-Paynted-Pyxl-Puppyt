@@ -802,8 +802,11 @@ const App: React.FC = () => {
   ), [currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.baseH, currentCanvas.isReversed, currentCanvas.jointModes, currentCanvas.disabledJoints]);
 
   const hiddenBoneKeys = useMemo(() => {
-    if (!currentCanvas.masksEnabled || !currentCanvas.hideBoneShapesWithMasks) return new Set<keyof WalkingEnginePivotOffsets>();
     const hidden = new Set<keyof WalkingEnginePivotOffsets>();
+    JOINT_KEYS.forEach(jointId => {
+      if (!currentCanvas.boneVisibility[jointId]) hidden.add(jointId);
+    });
+    if (!currentCanvas.masksEnabled || !currentCanvas.hideBoneShapesWithMasks) return hidden;
     JOINT_KEYS.forEach(jointId => {
       let current: keyof WalkingEnginePivotOffsets | null = jointId;
       while (current) {
@@ -816,7 +819,7 @@ const App: React.FC = () => {
       }
     });
     return hidden;
-  }, [currentCanvas.masksEnabled, currentCanvas.hideBoneShapesWithMasks, currentCanvas.bodyPartMaskLayers, JOINT_PARENTS]);
+  }, [currentCanvas.boneVisibility, currentCanvas.masksEnabled, currentCanvas.hideBoneShapesWithMasks, currentCanvas.bodyPartMaskLayers, JOINT_PARENTS]);
 
   return (
     <div className="flex h-full w-full bg-paper font-mono text-ink overflow-hidden select-none">
