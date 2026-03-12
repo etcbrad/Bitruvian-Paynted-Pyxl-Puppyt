@@ -105,6 +105,11 @@ interface CanvasState {
   baseH: number;
   jointModes: Record<keyof WalkingEnginePivotOffsets, JointMode>;
   disabledJoints: Record<keyof WalkingEnginePivotOffsets, boolean>;
+  masksEnabled: boolean;
+  maskControlsVisible: boolean;
+  hideBoneShapesWithMasks: boolean;
+  activeMaskJointId: keyof WalkingEnginePivotOffsets | null;
+  bodyPartMaskLayers: Record<keyof WalkingEnginePivotOffsets, BodyPartMaskLayer>;
   isReversed: boolean;
   pinningMode: 'none' | 'rightFoot' | 'dual';
   pinOffset: Vector2D;
@@ -117,7 +122,41 @@ interface CanvasState {
   globalBoneWidthMultiplier: number;
   globalLimbLengthMultiplier: number;
   mannequinOffsetY: number;
+  animation: {
+    frameCount: number;
+    fps: number;
+    currentFrame: number;
+    isPlaying: boolean;
+    keyframes: PoseKeyframe[];
+  };
 }
+
+interface PoseKeyframe {
+  id: string;
+  frame: number;
+  pose: {
+    pivotOffsets: WalkingEnginePivotOffsets;
+    props: WalkingEngineProportions;
+    jointModes: Record<keyof WalkingEnginePivotOffsets, JointMode>;
+    disabledJoints: Record<keyof WalkingEnginePivotOffsets, boolean>;
+  };
+}
+
+const DEFAULT_MASK_LAYER: BodyPartMaskLayer = {
+  src: null,
+  visible: true,
+  opacity: 1,
+  scale: 100,
+  mode: 'projection',
+  rotationDeg: 0,
+  skewXDeg: 0,
+  skewYDeg: 0,
+  offsetX: 0,
+  offsetY: 0,
+  blendMode: 'source-over',
+  filter: 'none',
+  layerOrder: 'front',
+};
 
 const createInitialCanvasState = (): CanvasState => ({
   showPivots: true,
@@ -125,6 +164,11 @@ const createInitialCanvasState = (): CanvasState => ({
   baseH: 150,
   jointModes: Object.fromEntries(JOINT_KEYS.map(k => [k, 'standard'])) as any,
   disabledJoints: Object.fromEntries(JOINT_KEYS.map(k => [k, false])) as any,
+  masksEnabled: true,
+  maskControlsVisible: true,
+  hideBoneShapesWithMasks: false,
+  activeMaskJointId: null,
+  bodyPartMaskLayers: Object.fromEntries(JOINT_KEYS.map(k => [k, { ...DEFAULT_MASK_LAYER }])) as any,
   isReversed: false,
   pinningMode: 'none',
   pinOffset: { x: 0, y: 0 },
@@ -137,6 +181,24 @@ const createInitialCanvasState = (): CanvasState => ({
   globalBoneWidthMultiplier: 1,
   globalLimbLengthMultiplier: 1,
   mannequinOffsetY: -50,
+  animation: {
+    frameCount: 12,
+    fps: 12,
+    currentFrame: 0,
+    isPlaying: false,
+    keyframes: [
+      {
+        id: 'frame-0',
+        frame: 0,
+        pose: {
+          pivotOffsets: INITIAL_CHALLENGE_POSE,
+          props: DEFAULT_PROPORTIONS,
+          jointModes: Object.fromEntries(JOINT_KEYS.map(k => [k, 'standard'])) as any,
+          disabledJoints: Object.fromEntries(JOINT_KEYS.map(k => [k, false])) as any,
+        },
+      },
+    ],
+  },
 });
 
 const rotateVec = (vec: Vector2D, angleDeg: number): Vector2D => {
