@@ -775,7 +775,18 @@ const App: React.FC = () => {
       {isConsoleVisible && (
         <div className="w-80 border-r border-ridge bg-mono-darker p-4 flex flex-col gap-4 custom-scrollbar overflow-y-auto z-50">
           <div className="flex justify-between items-center border-b border-ridge pb-2">
-            <h1 className="text-xl font-archaic tracking-widest uppercase italic">Bitruvius.Core</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-archaic tracking-widest uppercase italic">Bitruvius.Core</h1>
+              <button
+                onClick={() => updateCanvas({ maskControlsVisible: !currentCanvas.maskControlsVisible })}
+                className={`w-7 h-7 flex items-center justify-center rounded-full border transition-all ${currentCanvas.maskControlsVisible ? 'bg-accent-green text-paper border-accent-green' : 'bg-paper/10 border-ridge text-mono-light'}`}
+                title={`Toggle mask controls ${currentCanvas.maskControlsVisible ? 'off' : 'on'}`}
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 6l2 9a6 6 0 0 0 12 0l2-9M9 21h6" />
+                </svg>
+              </button>
+            </div>
           </div>
           
           <div className="flex flex-col gap-2">
