@@ -39,6 +39,7 @@ process.on('SIGTERM', shutdown);
 const repoRoot = process.cwd();
 const autocommitScript = resolve(repoRoot, 'scripts/autocommit.mjs');
 const viteBin = resolve(repoRoot, 'node_modules/vite/bin/vite.js');
+const viteArgs = [viteBin, '--host', '0.0.0.0', '--port', '5173'];
 
 runWithRestart('autocommit', process.execPath, [autocommitScript]);
-runWithRestart('vite', process.execPath, [viteBin]);
+runWithRestart('vite', process.execPath, viteArgs);
