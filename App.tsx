@@ -390,6 +390,7 @@ const App: React.FC = () => {
         
         const currentGlobalRot = jointTransform.rotation;
         const currentLocal = latestPivotOffsets[draggingBoneKey];
+        if (currentCanvas.disabledJoints[draggingBoneKey]) return prev;
         const mode = jointModesRef.current[draggingBoneKey] || 'standard';
         const multiplier = mode === 'bend' ? 1.5 : (mode === 'stretch' ? 0.5 : 1);
         
