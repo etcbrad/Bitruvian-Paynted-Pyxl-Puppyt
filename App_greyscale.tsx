@@ -38,7 +38,7 @@ interface PanelRect {
 }
 
 const App: React.FC = () => {
-  const [activePose, setActivePose] = useState<WalkingEnginePivotOffsets>(RESTING_BASE_POSE);
+  const [activePose, setActivePose] = useState<WalkingEnginePose>(RESTING_BASE_POSE);
   const [baseUnitH] = useState(60);
   const [showPivots, setShowPivots] = useState(true);
   const [showLabels, setShowLabels] = useState(false);
