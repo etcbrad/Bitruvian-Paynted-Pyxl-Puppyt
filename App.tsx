@@ -548,6 +548,49 @@ const App: React.FC = () => {
     addLog(`[SYSTEM]: JOINT_${nextDisabled ? 'DISABLED' : 'ENABLED'} - ${key.toUpperCase()}`);
   };
 
+  const setCurrentFrame = useCallback((frame: number) => {
+    const clamped = Math.max(0, Math.min(currentCanvas.animation.frameCount - 1, frame));
+    const sampled = samplePoseAtFrame(clamped);
+    updateCanvasWith(prev => ({
+      ...prev,
+      animation: { ...prev.animation, currentFrame: clamped },
+      ...(sampled ? {
+        pivotOffsets: sampled.pivotOffsets,
+        props: sampled.props,
+        jointModes: sampled.jointModes,
+        disabledJoints: sampled.disabledJoints,
+      } : {}),
+    }));
+  }, [currentCanvas.animation.frameCount, samplePoseAtFrame, updateCanvasWith]);
+
+  const addKeyframeAtCurrent = useCallback(() => {
+    const pose = createPoseSnapshot();
+    updateCanvasWith(prev => {
+      const frame = prev.animation.currentFrame;
+      const id = `frame-${frame}`;
+      const filtered = prev.animation.keyframes.filter(kf => kf.frame !== frame);
+      return {
+        ...prev,
+        animation: {
+          ...prev.animation,
+          keyframes: [...filtered, { id, frame, pose }].sort((a, b) => a.frame - b.frame),
+        },
+      };
+    });
+    addLog(`[SYSTEM]: KEYFRAME_SET - FRAME ${currentCanvas.animation.currentFrame}`);
+  }, [createPoseSnapshot, updateCanvasWith, addLog, currentCanvas.animation.currentFrame]);
+
+  const removeKeyframeAtCurrent = useCallback(() => {
+    updateCanvasWith(prev => ({
+      ...prev,
+      animation: {
+        ...prev.animation,
+        keyframes: prev.animation.keyframes.filter(kf => kf.frame !== prev.animation.currentFrame || kf.frame === 0),
+      },
+    }));
+    addLog(`[SYSTEM]: KEYFRAME_REMOVED - FRAME ${currentCanvas.animation.currentFrame}`);
+  }, [updateCanvasWith, addLog, currentCanvas.animation.currentFrame]);
+
   const runTween = useCallback((target: SavedPoseEntry) => {
     if (currentCanvas.isTweening) return;
     updateCanvas({ isTweening: true });
