@@ -379,7 +379,7 @@ const App: React.FC = () => {
           <g>
             <Mannequin
               pose={activePose}
-              pivotOffsets={activePose}
+              pivotOffsets={pivotOffsets}
               props={DEFAULT_PROPORTIONS}
               showPivots={showPivots}
               showLabels={showLabels}
