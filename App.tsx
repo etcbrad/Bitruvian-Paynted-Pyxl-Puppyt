@@ -538,16 +538,16 @@ const App: React.FC = () => {
                                         key={m} 
                                         onClick={() => setJointMode(k, m)}
                                         title={m.toUpperCase()}
-                                        className={`w-5 h-5 flex items-center justify-center rounded-sm text-[8px] font-bold border transition-all hover:scale-110 active:scale-90 ${lastPoppedKey === `${k}-${m}` ? 'animate-pop' : ''} ${jointModes[k] === m ? 'bg-selection text-paper border-selection shadow-md translate-y-[-1px]' : 'border-ridge text-mono-mid opacity-40 hover:opacity-100'}`}
+                                        className={`w-5 h-5 flex items-center justify-center rounded-sm text-[8px] font-bold border transition-all hover:scale-110 active:scale-90 ${lastPoppedKey === `${k}-${m}` ? 'animate-pop' : ''} ${currentCanvas.jointModes[k] === m ? 'bg-selection text-paper border-selection shadow-md translate-y-[-1px]' : 'border-ridge text-mono-mid opacity-40 hover:opacity-100'}`}
                                     >
                                         {m === 'bend' ? 'B' : '2'}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <span className="text-[8px] font-mono text-mono-mid tabular-nums">{Math.round(pivotOffsets[k])}°</span>
+                        <span className="text-[8px] font-mono text-mono-mid tabular-nums">{Math.round(currentCanvas.pivotOffsets[k])}°</span>
                     </div>
-                    <input type="range" min="-180" max="180" value={pivotOffsets[k]} onChange={e => !isTweening && setPivotOffsets(p => ({...p, [k]: parseInt(e.target.value)}))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                    <input type="range" min="-180" max="180" value={currentCanvas.pivotOffsets[k]} onChange={e => !currentCanvas.isTweening && updateCanvasWith(prev => ({ ...prev, pivotOffsets: { ...prev.pivotOffsets, [k]: parseInt(e.target.value) } }))} className="w-full accent-selection h-1 cursor-ew-resize" />
                   </div>
                 ))}
               </div>
@@ -557,23 +557,23 @@ const App: React.FC = () => {
                     <div className="p-2 border border-ridge/20 rounded">
                         <div className="flex justify-between items-center mb-1">
                             <span className="text-[10px] uppercase font-bold text-ink">Global Scale</span>
-                            <span className="text-[8px] font-mono text-mono-mid tabular-nums">{Math.round(globalScale)}</span>
+                            <span className="text-[8px] font-mono text-mono-mid tabular-nums">{Math.round(currentCanvas.globalScale)}</span>
                         </div>
-                        <input type="range" min="50" max="250" value={globalScale} onChange={e => setGlobalScale(parseInt(e.target.value))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                        <input type="range" min="50" max="250" value={currentCanvas.globalScale} onChange={e => updateCanvas({ globalScale: parseInt(e.target.value) })} className="w-full accent-selection h-1 cursor-ew-resize" />
                     </div>
                     <div className="p-2 border border-ridge/20 rounded">
                         <div className="flex justify-between items-center mb-1">
                             <span className="text-[10px] uppercase font-bold text-ink">Limb Width</span>
-                            <span className="text-[8px] font-mono text-mono-mid tabular-nums">{(globalBoneWidthMultiplier).toFixed(2)}x</span>
+                            <span className="text-[8px] font-mono text-mono-mid tabular-nums">{(currentCanvas.globalBoneWidthMultiplier).toFixed(2)}x</span>
                         </div>
-                        <input type="range" min="0.5" max="2" step="0.05" value={globalBoneWidthMultiplier} onChange={e => setGlobalBoneWidthMultiplier(parseFloat(e.target.value))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                        <input type="range" min="0.5" max="2" step="0.05" value={currentCanvas.globalBoneWidthMultiplier} onChange={e => updateCanvas({ globalBoneWidthMultiplier: parseFloat(e.target.value) })} className="w-full accent-selection h-1 cursor-ew-resize" />
                     </div>
                     <div className="p-2 border border-ridge/20 rounded">
                         <div className="flex justify-between items-center mb-1">
                             <span className="text-[10px] uppercase font-bold text-ink">Limb Length</span>
-                            <span className="text-[8px] font-mono text-mono-mid tabular-nums">{(globalLimbLengthMultiplier).toFixed(2)}x</span>
+                            <span className="text-[8px] font-mono text-mono-mid tabular-nums">{(currentCanvas.globalLimbLengthMultiplier).toFixed(2)}x</span>
                         </div>
-                        <input type="range" min="0.5" max="2" step="0.05" value={globalLimbLengthMultiplier} onChange={e => setGlobalLimbLengthMultiplier(parseFloat(e.target.value))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                        <input type="range" min="0.5" max="2" step="0.05" value={currentCanvas.globalLimbLengthMultiplier} onChange={e => updateCanvas({ globalLimbLengthMultiplier: parseFloat(e.target.value) })} className="w-full accent-selection h-1 cursor-ew-resize" />
                     </div>
                 </div>
             )}
