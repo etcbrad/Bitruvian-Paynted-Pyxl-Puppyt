@@ -39,6 +39,14 @@ export const RIGGING = {
 };
 
 export const GROUND_STRIP_HEIGHT_RAW_H_UNIT = 0.4;
+export const GROUND_STRIP_COLOR = '#2D2D2D'; // Dark grey for ground strip on dark background
+
+// FK Greyscale additional constants
+export const SCALE_FACTOR = 3.5;
+export const HEAD_UNIT = 50 * SCALE_FACTOR;
+export const FLOOR_HEIGHT = 1000 * SCALE_FACTOR;
+export const GROUND_SINK_BUFFER = 50 * SCALE_FACTOR;
+export const GROUND_SINK_REMAINING_PROPORTION = 0.45;
 
 export const LOGICAL_CHAINS: Record<string, (keyof import('./types').WalkingEnginePivotOffsets)[]> = {
   spine: ['waist', 'torso', 'collar', 'neck'],
