@@ -129,54 +129,116 @@ const EASING_FUNCTIONS = {
 
 const toIso = () => new Date().toISOString();
 
-const convertPaperRigToManifest = (parts: PaperBodyPart[], pose: PaperPoseState): RigManifestV1 => {
-  const byId = new Map(parts.map(p => [p.id, p]));
-  const joints = parts.map(part => {
-    const parent = part.parentId ? byId.get(part.parentId) : null;
-    const defaultOffset = parent
-      ? { x: part.canvasX - parent.canvasX, y: part.canvasY - parent.canvasY }
-      : { x: part.canvasX, y: part.canvasY };
-    const poseEntry = pose[part.id];
-    return {
-      id: part.id,
-      parentId: part.parentId,
-      drivesPartId: part.id,
-      defaultOffset,
-      defaultRotation: poseEntry?.rotation ?? 0,
-      rigidCluster: false,
-    };
-  });
-  const jointsPose: RigManifestPose['joints'] = {};
-  parts.forEach(part => {
-    const poseEntry = pose[part.id];
-    jointsPose[part.id] = {
-      rotation: poseEntry?.rotation ?? 0,
-      offsetX: poseEntry?.x ?? 0,
-      offsetY: poseEntry?.y ?? 0,
-    };
-  });
-  return {
-    version: '1',
-    metadata: { source: 'Pixel-Puppyt-Maker', createdAt: toIso() },
-    parts: parts.map(part => ({
-      id: part.id,
-      name: part.name,
-      src: part.imageUrl,
-      width: part.width,
-      height: part.height,
-      pivot: { ...part.pivot },
-      ballPoint: { ...part.ballPoint },
-      zIndex: part.zIndex,
-      physics: part.physics,
-      tags: [],
-      shape: undefined,
-      colorClass: 'fill-mono-dark',
-    })),
-    joints,
-    pose: { joints: jointsPose },
-    constraints: { rigidClusters: [] },
+  const validateRigManifest = (manifest: any): { isValid: boolean; error?: string } => {
+    if (!manifest || typeof manifest !== 'object') {
+      return { isValid: false, error: 'Invalid manifest format' };
+    }
+    
+    if (manifest.version !== '1') {
+      return { isValid: false, error: 'Unsupported manifest version' };
+    }
+    
+    if (!Array.isArray(manifest.parts)) {
+      return { isValid: false, error: 'Invalid parts array' };
+    }
+    
+    if (!Array.isArray(manifest.joints)) {
+      return { isValid: false, error: 'Invalid joints array' };
+    }
+    
+    if (!manifest.pose || typeof manifest.pose !== 'object') {
+      return { isValid: false, error: 'Invalid pose data' };
+    }
+    
+    // Validate each part
+    for (const part of manifest.parts) {
+      if (!part.id || typeof part.id !== 'string') {
+        return { isValid: false, error: 'Invalid part: missing or invalid id' };
+      }
+      if (!part.name || typeof part.name !== 'string') {
+        return { isValid: false, error: 'Invalid part: missing or invalid name' };
+      }
+      if (typeof part.width !== 'number' || part.width <= 0) {
+        return { isValid: false, error: 'Invalid part: invalid width' };
+      }
+      if (typeof part.height !== 'number' || part.height <= 0) {
+        return { isValid: false, error: 'Invalid part: invalid height' };
+      }
+    }
+    
+    // Validate each joint
+    for (const joint of manifest.joints) {
+      if (!joint.id || typeof joint.id !== 'string') {
+        return { isValid: false, error: 'Invalid joint: missing or invalid id' };
+      }
+      if (joint.parentId !== null && typeof joint.parentId !== 'string') {
+        return { isValid: false, error: 'Invalid joint: invalid parentId' };
+      }
+      if (!joint.defaultOffset || typeof joint.defaultOffset !== 'object') {
+        return { isValid: false, error: 'Invalid joint: invalid defaultOffset' };
+      }
+    }
+    
+    return { isValid: true };
   };
-};
+
+  const convertPaperRigToManifest = (parts: PaperBodyPart[], pose: PaperPoseState): RigManifestV1 => {
+    const byId = new Map(parts.map(p => [p.id, p]));
+    const joints = parts.map(part => {
+      const parent = part.parentId ? byId.get(part.parentId) : null;
+      const defaultOffset = parent
+        ? { x: part.canvasX - parent.canvasX, y: part.canvasY - parent.canvasY }
+        : { x: part.canvasX, y: part.canvasY };
+      const poseEntry = pose[part.id];
+      return {
+        id: part.id,
+        parentId: part.parentId,
+        drivesPartId: part.id,
+        defaultOffset,
+        defaultRotation: poseEntry?.rotation ?? 0,
+        rigidCluster: false,
+      };
+    });
+    const jointsPose: RigManifestPose['joints'] = {};
+    parts.forEach(part => {
+      const poseEntry = pose[part.id];
+      jointsPose[part.id] = {
+        rotation: poseEntry?.rotation ?? 0,
+        offsetX: poseEntry?.x ?? 0,
+        offsetY: poseEntry?.y ?? 0,
+      };
+    });
+    const manifest = {
+      version: '1' as const,
+      metadata: { source: 'Pixel-Puppyt-Maker', createdAt: toIso() },
+      parts: parts.map(part => ({
+        id: part.id,
+        name: part.name,
+        src: part.imageUrl,
+        width: part.width,
+        height: part.height,
+        pivot: { ...part.pivot },
+        ballPoint: { ...part.ballPoint },
+        zIndex: part.zIndex,
+        physics: part.physics,
+        tags: [],
+        shape: undefined,
+        colorClass: 'fill-mono-dark',
+      })),
+      joints,
+      pose: { joints: jointsPose },
+      constraints: { rigidClusters: [] },
+    };
+    
+    // Validate the created manifest
+    const validation = validateRigManifest(manifest);
+    if (!validation.isValid) {
+      console.error('Invalid rig manifest created:', validation.error);
+      addLog(`[ERROR]: ${validation.error}`);
+    }
+    
+    return manifest;
+  };
 
 interface HistoryState {
   pivotOffsets: WalkingEnginePivotOffsets;
@@ -704,16 +766,44 @@ const App: React.FC = () => {
       const storedPoses = localStorage.getItem('bitruvian_library');
       if (storedPoses) {
         const parsed = JSON.parse(storedPoses);
-        if (Array.isArray(parsed)) setSavedPoses(parsed);
+        if (Array.isArray(parsed)) {
+          // Validate each pose entry
+          const validPoses = parsed.filter((pose: any) => 
+            pose && 
+            typeof pose.id === 'number' && 
+            typeof pose.name === 'string' && 
+            pose.pivotOffsets && 
+            pose.props && 
+            pose.jointModes
+          );
+          setSavedPoses(validPoses);
+        }
       }
-    } catch (e) { console.error("Error loading library", e); }
-  }, []);
+    } catch (e) { 
+      console.error("Error loading library", e);
+      addLog('[ERROR]: Failed to load saved poses from storage');
+    }
+  }, [addLog]);
 
   useEffect(() => {
     try {
       localStorage.setItem('bitruvian_library', JSON.stringify(savedPoses));
-    } catch (e) { console.error("Error saving library", e); }
-  }, [savedPoses]);
+    } catch (e) { 
+      console.error("Error saving library", e);
+      addLog('[ERROR]: Storage quota exceeded. Please clear some saved poses.');
+      
+      // Try to clear old entries to make space
+      try {
+        const recentPoses = savedPoses.slice(-5); // Keep only last 5 poses
+        localStorage.setItem('bitruvian_library', JSON.stringify(recentPoses));
+        setSavedPoses(recentPoses);
+        addLog('[SYSTEM]: Cleared old poses to free up storage space');
+      } catch (clearError) {
+        console.error('Failed to clear storage', clearError);
+        addLog('[ERROR]: Unable to free up storage space');
+      }
+    }
+  }, [savedPoses, addLog]);
 
   const awardTokens = useCallback((sourceBone: string) => {
     const timeSinceLastInteraction = Date.now() - lastInteractionTimeRef.current;
