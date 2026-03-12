@@ -106,7 +106,60 @@ export const Bone: React.FC<BoneProps> = ({
   jointConstraintMode = 'fk',
 }) => {
 
-  const getBonePath = (boneLength: number, boneWidth: number, variant: BoneVariant, drawsUpwards: boolean): string => {
+  const partCategoryColor = getPartCategoryColor(partCategory);
+
+  const pathFill = useMemo(() => {
+    if (renderMode === 'wireframe') return 'none';
+    if (renderMode === 'silhouette') return COLORS.DEFAULT_FILL; // Solid black fill for silhouette
+    if (renderMode === 'backlight') return COLORS.DEFAULT_FILL; // Black fill for backlight mode
+
+    // Default mode: use categorical color, which is now monochrome.
+    return fillOverride || patternFillId || partCategoryColor || colorClass;
+  }, [renderMode, fillOverride, patternFillId, partCategoryColor, colorClass]);
+
+  const pathOpacity = useMemo(() => {
+    if (renderMode === 'backlight') return COLORS.BACKLIGHT_OPACITY;
+    return 1; // Default to opaque
+  }, [renderMode]);
+
+  const pathStroke = useMemo(() => {
+    if (isSelected) return COLORS.SELECTION; // Selection always has priority for stroke color
+    
+    if (renderMode === 'wireframe') return COLORS.RIDGE;
+    if (renderMode === 'backlight') return COLORS.RIDGE; // Outline for backlight mode
+    
+    // In silhouette mode, no stroke unless selected
+    if (renderMode === 'silhouette') {
+      return 'none';
+    }
+    
+    return 'none'; // Default behavior for 'default' mode (no stroke by default)
+  }, [isSelected, renderMode]);
+
+  const pathStrokeWidth = useMemo(() => {
+    if (isSelected) return 3; // Selected parts get a thicker stroke
+    
+    if (renderMode === 'wireframe' || renderMode === 'backlight') return 0.5; // Thinner stroke for wireframe and backlight
+    
+    // In silhouette mode, no stroke width unless selected
+    if (renderMode === 'silhouette') {
+      return 0;
+    }
+    
+    return 0; // Default behavior for 'default' mode (no stroke width by default)
+  }, [isSelected, renderMode]);
+
+  const overlayLineStroke = useMemo(() => {
+    if (renderMode === 'default' && showOverlay) {
+      if (jointConstraintMode === 'stretch') return COLORS.PURPLE_STRETCH;
+      if (jointConstraintMode === 'curl') return COLORS.GREEN_CURL;
+    }
+    // For backlight, use a distinct color for the axis lines to stand out
+    if (renderMode === 'backlight') return COLORS.SELECTION;
+    return COLORS.RIDGE; // Default for FK or other modes
+  }, [renderMode, showOverlay, jointConstraintMode]);
+
+  const finalColorClass = isInActiveChain ? 'fill-mono-light' : colorClass;
     const effectiveLength = drawsUpwards ? -boneLength : boneLength;
     const halfWidth = boneWidth / 2;
 
