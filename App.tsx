@@ -477,9 +477,18 @@ const App: React.FC = () => {
 
   const getEffectiveBoneKey = useCallback((boneKey: keyof WalkingEnginePivotOffsets): keyof WalkingEnginePivotOffsets | null => {
     let current: keyof WalkingEnginePivotOffsets | null = boneKey;
+    const visited = new Set<keyof WalkingEnginePivotOffsets>();
+    
+    // Add cycle detection to prevent infinite loops
     while (current && currentCanvas.disabledJoints[current]) {
+      if (visited.has(current)) {
+        console.warn(`Circular reference detected in joint hierarchy: ${current}`);
+        return null;
+      }
+      visited.add(current);
       current = JOINT_PARENTS[current];
     }
+    
     if (!current) return null;
     if (ROOT_DRAGGING_DISABLED && current === getRootJointKey()) return null;
     return current;
@@ -495,10 +504,20 @@ const App: React.FC = () => {
   const samplePoseAtFrame = useCallback((frame: number): PoseKeyframe['pose'] | null => {
     const keyframes = [...currentCanvas.animation.keyframes].sort((a, b) => a.frame - b.frame);
     if (!keyframes.length) return null;
+    
+    // Bounds checking
+    if (frame < 0 || frame >= currentCanvas.animation.frameCount) {
+      console.warn(`Frame ${frame} is out of bounds [0, ${currentCanvas.animation.frameCount - 1}]`);
+      return null;
+    }
+    
     const exact = keyframes.find(kf => kf.frame === frame);
     if (exact) return exact.pose;
+    
     let from = keyframes[0];
     let to = keyframes[keyframes.length - 1];
+    
+    // Safe array iteration with bounds checking
     for (let i = 0; i < keyframes.length - 1; i++) {
       if (frame >= keyframes[i].frame && frame <= keyframes[i + 1].frame) {
         from = keyframes[i];
@@ -506,14 +525,20 @@ const App: React.FC = () => {
         break;
       }
     }
+    
     if (from === to) return from.pose;
+    
+    // Prevent division by zero
     const span = Math.max(1, to.frame - from.frame);
     const t = Math.min(1, Math.max(0, (frame - from.frame) / span));
+    
     const lerp = (a: number, b: number) => a + (b - a) * t;
     const nextPivot = { ...from.pose.pivotOffsets } as WalkingEnginePivotOffsets;
+    
     JOINT_KEYS.forEach(key => {
       nextPivot[key] = lerp(from.pose.pivotOffsets[key], to.pose.pivotOffsets[key]);
     });
+    
     const nextProps = { ...from.pose.props } as WalkingEngineProportions;
     PROP_KEYS.forEach(key => {
       nextProps[key] = {
@@ -521,6 +546,7 @@ const App: React.FC = () => {
         h: lerp(from.pose.props[key]?.h || 1, to.pose.props[key]?.h || 1),
       };
     });
+    
     const adoptFrom = t < 0.5 ? from : to;
     return {
       pivotOffsets: nextPivot,
@@ -528,7 +554,7 @@ const App: React.FC = () => {
       jointModes: { ...adoptFrom.pose.jointModes },
       disabledJoints: { ...adoptFrom.pose.disabledJoints },
     };
-  }, [currentCanvas.animation.keyframes]);
+  }, [currentCanvas.animation.keyframes, currentCanvas.animation.frameCount]);
 
   const handleRigExport = useCallback((parts: PaperBodyPart[], pose: PaperPoseState) => {
     const manifest = convertPaperRigToManifest(parts, pose);
@@ -722,15 +748,22 @@ const App: React.FC = () => {
   const togglePinning = useCallback(() => {
     setLastPoppedKey('pin-foot');
     setTimeout(() => setLastPoppedKey(null), 300);
+    
     if (currentCanvas.pinningMode === 'none') {
       const local = calculateAnklePos(currentCanvas.pivotOffsets, currentCanvas.props);
-      pinnedWorldPosRef.current = { x: local.x + currentCanvas.pinOffset.x, y: local.y - 50 + currentCanvas.pinOffset.y };
+      const newPinnedWorldPos = { x: local.x + currentCanvas.pinOffset.x, y: local.y - 50 + currentCanvas.pinOffset.y };
+      
+      // Atomic update: update both ref and state together
+      pinnedWorldPosRef.current = newPinnedWorldPos;
       updateCanvas({ pinningMode: 'rightFoot' });
       addLog(`[SYSTEM]: PINNING ENABLED - RIGHT ANKLE ANCHORED.`);
     } else {
-      updateCanvas({ pinningMode: 'none' });
+      // Atomic update: clear both ref and state together
       pinnedWorldPosRef.current = null;
-      updateCanvas({ pinOffset: { x: 0, y: 0 } });
+      updateCanvas({ 
+        pinningMode: 'none',
+        pinOffset: { x: 0, y: 0 }
+      });
       addLog(`[SYSTEM]: PINNING DISABLED.`);
     }
   }, [currentCanvas.pinningMode, currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.pinOffset, calculateAnklePos, addLog, updateCanvas]);
@@ -1147,24 +1180,45 @@ const App: React.FC = () => {
     if (!rigManifest) return new Map<string, { position: Vector2D; rotation: number }>();
     const pose = dynamicPose ?? rigManifest.pose;
     const transforms = new Map<string, { position: Vector2D; rotation: number }>();
+    const visited = new Set<string>();
+    
     const compute = (jointId: string, parent: { position: Vector2D; rotation: number } | null) => {
+      // Prevent infinite loops from circular references
+      if (visited.has(jointId)) {
+        console.warn(`Circular reference detected in joint hierarchy: ${jointId}`);
+        return;
+      }
+      visited.add(jointId);
+      
       const joint = dynamicJointMap.get(jointId);
-      if (!joint) return;
+      if (!joint) {
+        visited.delete(jointId);
+        return;
+      }
+      
       const poseEntry = pose.joints[jointId];
       const localOffset = {
         x: joint.defaultOffset.x + (poseEntry?.offsetX ?? 0),
         y: joint.defaultOffset.y + (poseEntry?.offsetY ?? 0),
       };
       const localRot = (joint.defaultRotation ?? 0) + (poseEntry?.rotation ?? 0);
+      
+      // Safe parent access with null checks
       const parentRot = parent?.rotation ?? 0;
       const parentPos = parent?.position ?? { x: 0, y: 0 };
+      
       const rotatedOffset = rotateVec(localOffset, parentRot);
       const position = { x: parentPos.x + rotatedOffset.x, y: parentPos.y + rotatedOffset.y };
       const rotation = parentRot + localRot;
+      
       transforms.set(jointId, { position, rotation });
+      
       const children = dynamicChildMap.get(jointId) ?? [];
       children.forEach(childId => compute(childId, { position, rotation }));
+      
+      visited.delete(jointId);
     };
+    
     const roots = dynamicChildMap.get(null) ?? [];
     roots.forEach(rootId => compute(rootId, null));
     return transforms;
