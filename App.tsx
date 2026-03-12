@@ -236,6 +236,64 @@ const App: React.FC = () => {
             </label>
           </div>
 
+          {/* Part Color Controls */}
+          <div className="flex flex-col gap-1">
+            <span className="text-white/40 text-[8px] uppercase">Part_Colors</span>
+            <div className="grid grid-cols-2 gap-1 max-h-32 overflow-y-auto custom-scrollbar">
+              {Object.entries(partColors).map(([partKey, color]) => (
+                <div key={partKey} className="flex items-center gap-1">
+                  <span className="text-[7px] truncate flex-1">{partKey}</span>
+                  <select
+                    value={color}
+                    onChange={(e) => handlePartColorChange(partKey as keyof WalkingEngineProportions, e.target.value)}
+                    className="text-[7px] bg-white/10 border border-white/20 rounded px-1 py-0.5 flex-1"
+                  >
+                    <option value="fill-mono-dark">Dark</option>
+                    <option value="fill-mono-mid">Mid</option>
+                    <option value="fill-mono-light">Light</option>
+                    <option value="fill-selection">Selection</option>
+                    <option value="fill-olive">Olive</option>
+                    <option value="fill-accent-red">Red</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Part Shape Controls */}
+          <div className="flex flex-col gap-1">
+            <span className="text-white/40 text-[8px] uppercase">Part_Shapes</span>
+            <div className="grid grid-cols-2 gap-1 max-h-32 overflow-y-auto custom-scrollbar">
+              {Object.entries(partShapes).map(([partKey, shape]) => (
+                <div key={partKey} className="flex items-center gap-1">
+                  <span className="text-[7px] truncate flex-1">{partKey}</span>
+                  <select
+                    value={shape}
+                    onChange={(e) => handlePartShapeChange(partKey as keyof WalkingEngineProportions, e.target.value as BoneVariant)}
+                    className="text-[7px] bg-white/10 border border-white/20 rounded px-1 py-0.5 flex-1"
+                  >
+                    <option value="diamond">Diamond</option>
+                    <option value="capsule">Capsule</option>
+                    <option value="triangle">Triangle</option>
+                    <option value="triangle-up">Triangle Up</option>
+                    <option value="trapezoid">Trapezoid</option>
+                    <option value="trapezoid-up">Trapezoid Up</option>
+                    <option value="pentagon">Pentagon</option>
+                    <option value="head-tall-oval">Head Oval</option>
+                    <option value="collar-horizontal-oval-shape">Collar Oval</option>
+                    <option value="torso-teardrop-pointy-down">Torso Teardrop</option>
+                    <option value="waist-teardrop-pointy-up">Waist Teardrop</option>
+                    <option value="deltoid-shape">Deltoid</option>
+                    <option value="limb-tapered">Limb Tapered</option>
+                    <option value="hand-foot-arrowhead-shape">Arrowhead</option>
+                    <option value="foot-block-shape">Foot Block</option>
+                    <option value="toe-rounded-cap">Toe Cap</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Pose Controls */}
           <div className="flex flex-col gap-1">
             <span className="text-white/40 text-[8px] uppercase">Pose_Controls</span>
