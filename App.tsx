@@ -406,7 +406,7 @@ const App: React.FC = () => {
       
       awardTokens(draggingBoneKey);
     }
-  }, [draggingBoneKey, currentCanvas.isTweening, awardTokens, calculateAnklePos, updateCanvasWith]);
+  }, [draggingBoneKey, currentCanvas.isTweening, currentCanvas.disabledJoints, awardTokens, calculateAnklePos, updateCanvasWith]);
 
   useEffect(() => {
     const hu = () => { setDraggingBoneKey(null); draggingBoneKeyRef.current = null; };
