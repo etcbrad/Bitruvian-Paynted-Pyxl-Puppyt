@@ -921,6 +921,214 @@ const App: React.FC = () => {
                 </button>
               </div>
             )}
+            {activeControlTab === 'masks' && (
+              <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar py-2 pr-1">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => updateCanvas({ masksEnabled: !currentCanvas.masksEnabled })}
+                    className={`flex-1 text-[9px] px-3 py-2 border font-bold uppercase ${currentCanvas.masksEnabled ? 'bg-accent-green text-paper border-accent-green' : 'bg-paper/10 border-ridge text-mono-light'}`}
+                  >
+                    Masks {currentCanvas.masksEnabled ? 'On' : 'Off'}
+                  </button>
+                  <button
+                    onClick={() => updateCanvas({ hideBoneShapesWithMasks: !currentCanvas.hideBoneShapesWithMasks })}
+                    disabled={!currentCanvas.masksEnabled}
+                    className={`flex-1 text-[9px] px-3 py-2 border font-bold uppercase ${currentCanvas.hideBoneShapesWithMasks ? 'bg-selection text-paper border-selection' : 'bg-paper/10 border-ridge text-mono-light'} ${!currentCanvas.masksEnabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+                  >
+                    Hide Shapes {currentCanvas.hideBoneShapesWithMasks ? 'On' : 'Off'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {JOINT_KEYS.map(k => {
+                    const layer = currentCanvas.bodyPartMaskLayers[k];
+                    const isActive = currentCanvas.activeMaskJointId === k;
+                    const hasMask = Boolean(layer?.src);
+                    return (
+                      <button
+                        key={`mask-joint-${k}`}
+                        onClick={() => setActiveMaskJoint(k)}
+                        className={`text-[9px] px-2 py-2 border uppercase transition-all ${isActive ? 'bg-selection text-paper border-selection' : 'bg-paper/10 border-ridge text-mono-light'} ${hasMask ? 'shadow-md' : ''}`}
+                      >
+                        {k.replace(/_/g, ' ')}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {currentCanvas.activeMaskJointId && (
+                  <div className="p-2 border border-ridge/30 rounded">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] uppercase font-bold text-ink">
+                        {currentCanvas.activeMaskJointId.replace(/_/g, ' ')}
+                      </span>
+                      <span className="text-[8px] text-mono-mid">{currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId]?.src ? 'Loaded' : 'Empty'}</span>
+                    </div>
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        onClick={() => openMaskUpload(currentCanvas.activeMaskJointId!)}
+                        className="flex-1 text-[9px] px-2 py-2 border border-selection bg-selection text-paper uppercase"
+                      >
+                        Upload
+                      </button>
+                      <button
+                        onClick={() => clearMaskLayer(currentCanvas.activeMaskJointId!)}
+                        disabled={!currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.src}
+                        className={`flex-1 text-[9px] px-2 py-2 border uppercase ${currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.src ? 'bg-accent-red text-paper border-accent-red' : 'bg-paper/10 border-ridge text-mono-light opacity-40 cursor-not-allowed'}`}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <label className="flex items-center justify-between text-[9px] uppercase">
+                      Visible
+                      <input
+                        type="checkbox"
+                        checked={Boolean(currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.visible)}
+                        onChange={(e) => patchMaskLayer(currentCanvas.activeMaskJointId!, { visible: e.target.checked })}
+                      />
+                    </label>
+                    <div className="mt-2">
+                      <div className="flex justify-between text-[8px] text-mono-mid">
+                        <span>Opacity</span>
+                        <span>{Math.round((currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.opacity ?? 1) * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={Math.round((currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.opacity ?? 1) * 100)}
+                        onChange={(e) => patchMaskLayer(currentCanvas.activeMaskJointId!, { opacity: Number(e.target.value) / 100 })}
+                        className="w-full accent-selection h-1 cursor-ew-resize"
+                      />
+                    </div>
+                    <div className="mt-2">
+                      <div className="flex justify-between text-[8px] text-mono-mid">
+                        <span>Scale</span>
+                        <span>{Math.round(currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.scale ?? 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="20"
+                        max="300"
+                        value={Math.round(currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.scale ?? 100)}
+                        onChange={(e) => patchMaskLayer(currentCanvas.activeMaskJointId!, { scale: Number(e.target.value) })}
+                        className="w-full accent-selection h-1 cursor-ew-resize"
+                      />
+                    </div>
+                    <div className="mt-2">
+                      <div className="flex justify-between text-[8px] text-mono-mid">
+                        <span>Rotation</span>
+                        <span>{Math.round(currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.rotationDeg ?? 0)}°</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-180"
+                        max="180"
+                        value={Math.round(currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.rotationDeg ?? 0)}
+                        onChange={(e) => patchMaskLayer(currentCanvas.activeMaskJointId!, { rotationDeg: Number(e.target.value) })}
+                        className="w-full accent-selection h-1 cursor-ew-resize"
+                      />
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <div>
+                        <div className="flex justify-between text-[8px] text-mono-mid">
+                          <span>Offset X</span>
+                          <span>{Math.round(currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.offsetX ?? 0)}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="-200"
+                          max="200"
+                          value={Math.round(currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.offsetX ?? 0)}
+                          onChange={(e) => patchMaskLayer(currentCanvas.activeMaskJointId!, { offsetX: Number(e.target.value) })}
+                          className="w-full accent-selection h-1 cursor-ew-resize"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-[8px] text-mono-mid">
+                          <span>Offset Y</span>
+                          <span>{Math.round(currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.offsetY ?? 0)}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="-200"
+                          max="200"
+                          value={Math.round(currentCanvas.bodyPartMaskLayers[currentCanvas.activeMaskJointId!]?.offsetY ?? 0)}
+                          onChange={(e) => patchMaskLayer(currentCanvas.activeMaskJointId!, { offsetY: Number(e.target.value) })}
+                          className="w-full accent-selection h-1 cursor-ew-resize"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {activeControlTab === 'animation' && (
+              <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar py-2 pr-1">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => updateCanvasWith(prev => ({ ...prev, animation: { ...prev.animation, isPlaying: !prev.animation.isPlaying } }))}
+                    className={`flex-1 text-[9px] px-3 py-2 border font-bold uppercase ${currentCanvas.animation.isPlaying ? 'bg-accent-red text-paper border-accent-red' : 'bg-selection text-paper border-selection'}`}
+                  >
+                    {currentCanvas.animation.isPlaying ? 'Pause' : 'Play'}
+                  </button>
+                  <button
+                    onClick={addKeyframeAtCurrent}
+                    className="flex-1 text-[9px] px-3 py-2 border border-selection bg-selection text-paper font-bold uppercase"
+                  >
+                    Set Key
+                  </button>
+                  <button
+                    onClick={removeKeyframeAtCurrent}
+                    className="flex-1 text-[9px] px-3 py-2 border bg-paper/10 border-ridge text-mono-light font-bold uppercase"
+                  >
+                    Clear Key
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 border border-ridge/20 rounded">
+                    <div className="flex justify-between text-[8px] text-mono-mid">
+                      <span>Frames</span>
+                      <span>{currentCanvas.animation.frameCount}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="4"
+                      max="48"
+                      value={currentCanvas.animation.frameCount}
+                      onChange={(e) => updateCanvasWith(prev => ({ ...prev, animation: { ...prev.animation, frameCount: Number(e.target.value) } }))}
+                      className="w-full accent-selection h-1 cursor-ew-resize"
+                    />
+                  </div>
+                  <div className="p-2 border border-ridge/20 rounded">
+                    <div className="flex justify-between text-[8px] text-mono-mid">
+                      <span>FPS</span>
+                      <span>{currentCanvas.animation.fps}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="6"
+                      max="30"
+                      value={currentCanvas.animation.fps}
+                      onChange={(e) => updateCanvasWith(prev => ({ ...prev, animation: { ...prev.animation, fps: Number(e.target.value) } }))}
+                      className="w-full accent-selection h-1 cursor-ew-resize"
+                    />
+                  </div>
+                </div>
+                <div className="p-2 border border-ridge/20 rounded">
+                  <div className="flex justify-between text-[8px] text-mono-mid mb-2">
+                    <span>Current Frame</span>
+                    <span>{currentCanvas.animation.currentFrame}</span>
+                  </div>
+                  <TimelineStrip
+                    frameCount={currentCanvas.animation.frameCount}
+                    keyframeFrames={currentCanvas.animation.keyframes.map(kf => kf.frame)}
+                    currentFrame={currentCanvas.animation.currentFrame}
+                    onSetCurrentFrame={setCurrentFrame}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-auto pt-4"><SystemLogger logs={systemLogs} isVisible={true} historyCount={tokens} /></div>
