@@ -944,40 +944,6 @@ const App: React.FC = () => {
     setDraggingDynamicJointId(jointId);
   }, [dynamicDisabledJoints]);
 
-  const handleDynamicDrag = useCallback((e: MouseEvent) => {
-    if (!draggingDynamicJointId || !rigManifest || !svgRef.current) return;
-    const joint = dynamicJointMap.get(draggingDynamicJointId);
-    if (!joint) return;
-    const parent = joint.parentId ? dynamicTransforms.get(joint.parentId) : null;
-    const svg = svgRef.current;
-    const pt = svg.createSVGPoint();
-    pt.x = e.clientX;
-    pt.y = e.clientY;
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return;
-    const svgP = pt.matrixTransform(ctm.inverse());
-    const parentPos = parent?.position ?? { x: 0, y: 0 };
-    const parentRot = parent?.rotation ?? 0;
-    const dx = svgP.x - parentPos.x;
-    const dy = svgP.y - parentPos.y;
-    let targetGlobalRot = Math.atan2(dy, dx) * 180 / Math.PI;
-    let localRot = targetGlobalRot - parentRot;
-    while (localRot > 180) localRot -= 360;
-    while (localRot < -180) localRot += 360;
-    setDynamicPose(prev => {
-      const basePose = prev ?? rigManifest.pose;
-      return {
-        joints: {
-          ...basePose.joints,
-          [draggingDynamicJointId]: {
-            ...(basePose.joints[draggingDynamicJointId] ?? { rotation: 0 }),
-            rotation: localRot - (joint.defaultRotation ?? 0),
-          },
-        },
-      };
-    });
-  }, [draggingDynamicJointId, rigManifest, dynamicJointMap, dynamicTransforms]);
-
   useEffect(() => {
     const handleMouseUp = () => { 
       setDraggingBoneKey(null); 
