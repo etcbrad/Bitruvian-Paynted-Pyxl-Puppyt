@@ -245,7 +245,7 @@ export const partDefinitions: Record<keyof WalkingEngineProportions, any> = {
 const Mannequin: React.FC<MannequinProps> = ({
   pivotOffsets, props, showPivots, showLabels, baseUnitH,
   onAnchorMouseDown, draggingBoneKey, isPaused, pinningMode,
-  maskImage, maskTransform, offset, isReversed, jointModes, activeChain
+  maskImage, maskTransform, offset, isReversed, jointModes, disabledJoints, activeChain
 }) => {
     const getScaledDimension = useCallback((raw: number, key: keyof WalkingEngineProportions, axis: 'w' | 'h') => {
         return raw * baseUnitH * (props[key]?.[axis] || 1);
@@ -253,9 +253,9 @@ const Mannequin: React.FC<MannequinProps> = ({
 
     const globalTransforms = useMemo(() => {
       return getMannequinWorldTransformsHelper(
-        pivotOffsets, props, baseUnitH, isReversed, jointModes
+        pivotOffsets, props, baseUnitH, isReversed, jointModes, disabledJoints
       );
-    }, [pivotOffsets, props, baseUnitH, isReversed, jointModes]);
+    }, [pivotOffsets, props, baseUnitH, isReversed, jointModes, disabledJoints]);
 
     return (
         <g>
