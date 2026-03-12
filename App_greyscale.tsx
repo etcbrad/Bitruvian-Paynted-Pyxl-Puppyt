@@ -271,11 +271,17 @@ const App: React.FC = () => {
               onAnchorMouseDown={handleAnchorMouseDown}
               draggingBoneKey={null}
               isPaused={isPaused}
-              pinningMode={false}
+              pinningMode="none"
               offset={{ x: 0, y: 0 }}
               isReversed={false}
-              jointModes={{}}
-              disabledJoints={{}}
+              jointModes={Object.keys(DEFAULT_PROPORTIONS).reduce((acc, key) => ({ 
+                ...acc, 
+                [key]: 'fk' as JointMode 
+              }), {} as Record<keyof WalkingEngineProportions, JointMode>)}
+              disabledJoints={Object.keys(DEFAULT_PROPORTIONS).reduce((acc, key) => ({ 
+                ...acc, 
+                [key]: false 
+              }), {} as Record<keyof WalkingEngineProportions, boolean>)}
               hiddenBoneKeys={new Set()}
               partShapes={partShapes}
               partColors={partColors}
