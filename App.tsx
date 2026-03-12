@@ -1,10 +1,11 @@
 
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { WalkingEnginePose, WalkingEnginePivotOffsets, WalkingEngineProportions, Vector2D, MaskTransform, JointMode } from './types';
+import { WalkingEnginePose, WalkingEnginePivotOffsets, WalkingEngineProportions, Vector2D, MaskTransform, JointMode, BodyPartMaskLayer } from './types';
 import { ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT, RIGGING } from './constants'; 
 import { Mannequin, getMannequinWorldTransformsHelper, partDefinitions } from './components/Mannequin';
 import { SystemLogger } from './components/SystemLogger';
+import TimelineStrip from './components/TimelineStrip';
 
 const T_POSE: WalkingEnginePivotOffsets = {
   waist: 0, neck: 0, collar: 0, torso: 0,
