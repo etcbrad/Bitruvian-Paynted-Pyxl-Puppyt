@@ -130,7 +130,7 @@ const App: React.FC = () => {
     console.log('Anchor clicked:', boneKey);
   }, []);
 
-  const handlePoseUpdate = useCallback((updates: Partial<WalkingEnginePivotOffsets>) => {
+  const handlePoseUpdate = useCallback((updates: Partial<WalkingEnginePose>) => {
     setActivePose(prev => ({ ...prev, ...updates }));
   }, []);
 
