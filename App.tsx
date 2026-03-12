@@ -1270,26 +1270,38 @@ const App: React.FC = () => {
     return mapping;
   }, []);
 
-  const maskTransforms = useMemo(() => (
-    getMannequinWorldTransformsHelper(
+  const maskTransforms = useMemo(() => {
+    if (!currentCanvas.masksEnabled) return {};
+    
+    return getMannequinWorldTransformsHelper(
       currentCanvas.pivotOffsets,
       currentCanvas.props,
       currentCanvas.baseH,
       currentCanvas.isReversed,
       currentCanvas.jointModes,
       currentCanvas.disabledJoints
-    )
-  ), [currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.baseH, currentCanvas.isReversed, currentCanvas.jointModes, currentCanvas.disabledJoints]);
+    );
+  }, [currentCanvas.masksEnabled, currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.baseH, currentCanvas.isReversed, currentCanvas.jointModes, currentCanvas.disabledJoints]);
 
   const hiddenBoneKeys = useMemo(() => {
     const hidden = new Set<keyof WalkingEnginePivotOffsets>();
+    
+    // Only iterate if necessary
+    if (!currentCanvas.boneVisibility) return hidden;
+    
     JOINT_KEYS.forEach(jointId => {
       if (!currentCanvas.boneVisibility[jointId]) hidden.add(jointId);
     });
+    
     if (!currentCanvas.masksEnabled || !currentCanvas.hideBoneShapesWithMasks) return hidden;
+    
     JOINT_KEYS.forEach(jointId => {
       let current: keyof WalkingEnginePivotOffsets | null = jointId;
-      while (current) {
+      const visited = new Set<keyof WalkingEnginePivotOffsets>();
+      
+      // Add cycle detection for mask hierarchy traversal
+      while (current && !visited.has(current)) {
+        visited.add(current);
         const layer = currentCanvas.bodyPartMaskLayers[current];
         if (layer?.src && layer.visible) {
           hidden.add(jointId);
@@ -1298,6 +1310,7 @@ const App: React.FC = () => {
         current = JOINT_PARENTS[current];
       }
     });
+    
     return hidden;
   }, [currentCanvas.boneVisibility, currentCanvas.masksEnabled, currentCanvas.hideBoneShapesWithMasks, currentCanvas.bodyPartMaskLayers, JOINT_PARENTS]);
 
