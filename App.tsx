@@ -426,6 +426,19 @@ const App: React.FC = () => {
     addLog(`[SYSTEM]: JOINT_MODE_UPDATE - ${key.toUpperCase()} SET TO ${nextMode.toUpperCase()}`);
   };
 
+  const toggleJointDisabled = (key: keyof WalkingEnginePivotOffsets) => {
+    updateCanvasWith(prev => {
+      const nextDisabled = !prev.disabledJoints[key];
+      return {
+        ...prev,
+        disabledJoints: { ...prev.disabledJoints, [key]: nextDisabled },
+        pivotOffsets: nextDisabled ? { ...prev.pivotOffsets, [key]: 0 } : prev.pivotOffsets,
+        jointModes: nextDisabled ? { ...prev.jointModes, [key]: 'standard' } : prev.jointModes,
+      };
+    });
+    addLog(`[SYSTEM]: JOINT_${currentCanvas.disabledJoints[key] ? 'ENABLED' : 'DISABLED'} - ${key.toUpperCase()}`);
+  };
+
   const runTween = useCallback((target: SavedPoseEntry) => {
     if (currentCanvas.isTweening) return;
     updateCanvas({ isTweening: true });
@@ -497,8 +510,8 @@ const App: React.FC = () => {
   }, [savedPoses, currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.jointModes, addLog]);
 
   const getMannequinGlobalTransforms = useCallback((reversed: boolean) => {
-    return getMannequinWorldTransformsHelper(currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.baseH, reversed, currentCanvas.jointModes);
-  }, [currentCanvas.baseH, currentCanvas.props, currentCanvas.pivotOffsets, currentCanvas.jointModes]);
+    return getMannequinWorldTransformsHelper(currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.baseH, reversed, currentCanvas.jointModes, currentCanvas.disabledJoints);
+  }, [currentCanvas.baseH, currentCanvas.props, currentCanvas.pivotOffsets, currentCanvas.jointModes, currentCanvas.disabledJoints]);
 
   useEffect(() => {
     const currentTransforms = getMannequinGlobalTransforms(currentCanvas.isReversed);
