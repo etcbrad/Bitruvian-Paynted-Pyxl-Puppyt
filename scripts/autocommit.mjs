@@ -25,6 +25,26 @@ function hasChanges() {
   }
 }
 
+function getChangesSummary() {
+  try {
+    const status = run('git status --porcelain=v1');
+    const changes = status.split('\n').filter(line => line.trim());
+    
+    const added = changes.filter(line => line.startsWith('A') || line.startsWith('??')).length;
+    const modified = changes.filter(line => line.startsWith('M')).length;
+    const deleted = changes.filter(line => line.startsWith('D')).length;
+    
+    const summary = [];
+    if (added > 0) summary.push(`${added} added`);
+    if (modified > 0) summary.push(`${modified} modified`);
+    if (deleted > 0) summary.push(`${deleted} deleted`);
+    
+    return summary.join(', ');
+  } catch {
+    return 'files changed';
+  }
+}
+
 function commitNow() {
   if (!pending) return;
   pending = false;
@@ -32,9 +52,16 @@ function commitNow() {
   if (!hasChanges()) return;
 
   const ts = new Date().toISOString().replace('T', ' ').replace('Z', ' UTC');
+  const changesSummary = getChangesSummary();
+  
   try {
     run('git add -A');
-    run(`git commit -m "Auto-commit: ${ts}"`);
+    run(`git commit -m "Auto-commit: ${ts}
+
+Changes: ${changesSummary}
+
+[auto-sync] Ready for CodeRabbit review"`);
+    
     // Best-effort auto-push; ignore failures (offline, auth, no remote)
     try {
       run('git push');
@@ -42,7 +69,7 @@ function commitNow() {
     } catch {
       process.stderr.write('[autocommit] push failed\n');
     }
-    process.stdout.write(`[autocommit] committed at ${ts}\n`);
+    process.stdout.write(`[autocommit] committed at ${ts} (${changesSummary})\n`);
   } catch (err) {
     process.stderr.write('[autocommit] commit failed\n');
   }
