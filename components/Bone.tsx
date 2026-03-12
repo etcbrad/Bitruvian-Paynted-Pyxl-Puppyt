@@ -275,8 +275,6 @@ export const Bone: React.FC<BoneProps> = ({
       onAnchorMouseDown(boneKey, e);
     }
   };
-  
-  const finalColorClass = isInActiveChain ? 'fill-mono-light' : colorClass;
 
   return (
     <g transform={transform} className={finalColorClass}>
