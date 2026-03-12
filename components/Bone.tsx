@@ -284,17 +284,19 @@ export const Bone: React.FC<BoneProps> = ({
         <React.Fragment>
           <path
             d={getBonePath(length, width, variant, drawsUpwards)}
-            fill={patternFillId || "currentColor"}
-            stroke={COLORS.RIDGE}
-            strokeWidth={0.5}
+            fill={pathFill}
+            stroke={pathStroke}
+            strokeWidth={pathStrokeWidth}
             paintOrder="stroke"
-            className={`${cursorStyle} hover:opacity-80 transition-opacity`}
+            opacity={pathOpacity}
+            className={`${isPausedAndPivotsVisible ? (isBeingDragged ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'} hover:opacity-80 transition-opacity`}
             onMouseDown={handleInteractionStart}
           />
-          {showPivots && (
-            <line x1="0" y1="0" x2="0" y2={visualEndPoint} stroke="rgba(150, 150, 150, 0.15)" strokeWidth="1" opacity={0.5} strokeLinecap="round" />
+          {/* Overlay line for axis, only in default mode, now with kinetic color */}
+          {showOverlay && renderMode !== 'wireframe' && (
+            <line x1="0" y1="0" x2="0" y2={visualEndPoint} stroke={overlayLineStroke} strokeWidth={1} opacity={0.5} strokeLinecap="round" />
           )}
-           {showLabel && label && (
+          {showLabel && label && (
             <text x={width / 2 + 5} y={visualEndPoint / 2} 
                   className="fill-mono-mid text-[7px] font-mono select-none opacity-40 tracking-tighter uppercase pointer-events-none"
                   data-is-label="true">
@@ -306,14 +308,15 @@ export const Bone: React.FC<BoneProps> = ({
 
       <g transform={`translate(0, ${visualEndPoint})`}>{children}</g>
 
-      {showPivots && visible && boneKey && onAnchorMouseDown && (
+      {/* Anchor (red dot) at the start of the bone */}
+      {showOverlay && visible && (
         <g>
           <circle 
-            cx="0" cy="0" r={4} 
+            cx="0" cy="0" r={isSelected ? 7 : (showPivots ? 5 : 0)} 
             fill={COLORS.ANCHOR_RED} 
             stroke="white"
             strokeWidth="1"
-            className={`drop-shadow-sm ${cursorStyle} hover:scale-125 transition-transform`} 
+            className={`${isPausedAndPivotsVisible ? (isBeingDragged ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'} drop-shadow-sm hover:scale-125 transition-transform`} 
             data-no-export="true"
             onMouseDown={handleInteractionStart}
           />
