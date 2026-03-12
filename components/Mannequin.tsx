@@ -213,6 +213,7 @@ interface MannequinProps {
   isReversed?: boolean;
   jointModes?: Record<keyof WalkingEnginePivotOffsets, JointMode>;
   disabledJoints?: Record<keyof WalkingEnginePivotOffsets, boolean>;
+  hiddenBoneKeys?: Set<keyof WalkingEnginePivotOffsets>;
   activeChain?: (keyof WalkingEnginePivotOffsets)[] | null;
 }
 
@@ -245,7 +246,7 @@ export const partDefinitions: Record<keyof WalkingEngineProportions, any> = {
 const Mannequin: React.FC<MannequinProps> = ({
   pivotOffsets, props, showPivots, showLabels, baseUnitH,
   onAnchorMouseDown, draggingBoneKey, isPaused, pinningMode,
-  maskImage, maskTransform, offset, isReversed, jointModes, disabledJoints, activeChain
+  maskImage, maskTransform, offset, isReversed, jointModes, disabledJoints, hiddenBoneKeys, activeChain
 }) => {
     const getScaledDimension = useCallback((raw: number, key: keyof WalkingEngineProportions, axis: 'w' | 'h') => {
         return raw * baseUnitH * (props[key]?.[axis] || 1);
@@ -287,6 +288,7 @@ const Mannequin: React.FC<MannequinProps> = ({
                             colorClass={colorClass}
                             isPinned={pinningMode === 'rightFoot' && partKey === 'r_foot'}
                             isInActiveChain={activeChain?.includes(p.boneKey)}
+                            visible={!hiddenBoneKeys?.has(p.boneKey)}
                         />
                     </g>
                 );
