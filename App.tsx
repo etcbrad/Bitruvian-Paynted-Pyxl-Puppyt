@@ -962,20 +962,6 @@ const App: React.FC = () => {
     };
   }, [draggingBoneKey, handleDrag]);
 
-  useEffect(() => {
-    const handleMouseUp = () => setDraggingDynamicJointId(null);
-    
-    if (draggingDynamicJointId) {
-      window.addEventListener('mousemove', handleDynamicDrag);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-    
-    return () => { 
-      window.removeEventListener('mousemove', handleDynamicDrag); 
-      window.removeEventListener('mouseup', handleMouseUp); 
-    };
-  }, [draggingDynamicJointId, handleDynamicDrag]);
-
   const setJointMode = (key: keyof WalkingEnginePivotOffsets, mode: JointMode) => {
     setLastPoppedKey(`${key}-${mode}`);
     setTimeout(() => setLastPoppedKey(null), 300);
