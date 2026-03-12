@@ -45,7 +45,7 @@ export const AdvancedGrid: React.FC<AdvancedGridProps> = ({ origin, gridSize, vi
         y1={viewBox.y}
         x2={x}
         y2={viewBox.y + viewBox.height}
-        stroke={isMajor ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.05)'} // Changed to monochrome rgba
+        stroke={isMajor ? 'rgba(80, 80, 80, 0.3)' : 'rgba(80, 80, 80, 0.15)'} // Changed to darker monochrome rgba
         strokeWidth={isMajor ? 1 : 0.5}
       />
     );
@@ -63,7 +63,7 @@ export const AdvancedGrid: React.FC<AdvancedGridProps> = ({ origin, gridSize, vi
         y1={y}
         x2={viewBox.x + viewBox.width}
         y2={y}
-        stroke={isMajor ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.05)'} // Changed to monochrome rgba
+        stroke={isMajor ? 'rgba(80, 80, 80, 0.3)' : 'rgba(80, 80, 80, 0.15)'} // Changed to darker monochrome rgba
         strokeWidth={isMajor ? 1 : 0.5}
       />
     );
