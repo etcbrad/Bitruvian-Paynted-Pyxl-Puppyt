@@ -255,6 +255,7 @@ const App: React.FC = () => {
   
   const svgRef = useRef<SVGSVGElement>(null);
   const maskUploadInputRef = useRef<HTMLInputElement>(null);
+  const playbackTimeRef = useRef<number | null>(null);
   const pivotOffsetsRef = useRef(currentCanvas.pivotOffsets);
   const propsRef = useRef(currentCanvas.props);
   const baseHRef = useRef(currentCanvas.baseH);
@@ -671,6 +672,28 @@ const App: React.FC = () => {
     const targetTorsoY = -200;
     updateCanvas({ mannequinOffsetY: targetTorsoY - currentTorsoY });
   }, [currentCanvas.isReversed, getMannequinGlobalTransforms, updateCanvas]);
+
+  useEffect(() => {
+    if (!currentCanvas.animation.isPlaying) return;
+    let raf = 0;
+    const step = (time: number) => {
+      if (playbackTimeRef.current === null) playbackTimeRef.current = time;
+      const frameDuration = 1000 / Math.max(1, currentCanvas.animation.fps);
+      const elapsed = time - playbackTimeRef.current;
+      if (elapsed >= frameDuration) {
+        const advanceBy = Math.floor(elapsed / frameDuration);
+        const nextFrame = (currentCanvas.animation.currentFrame + advanceBy) % Math.max(1, currentCanvas.animation.frameCount);
+        playbackTimeRef.current = time;
+        setCurrentFrame(nextFrame);
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(raf);
+      playbackTimeRef.current = null;
+    };
+  }, [currentCanvas.animation.isPlaying, currentCanvas.animation.fps, currentCanvas.animation.currentFrame, currentCanvas.animation.frameCount, setCurrentFrame]);
 
   return (
     <div className="flex h-full w-full bg-paper font-mono text-ink overflow-hidden select-none">
