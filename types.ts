@@ -11,6 +11,24 @@ export type MaskTransform = {
 
 export type JointMode = 'standard' | 'bend' | 'stretch';
 
+export type BoneVariant =
+  | 'diamond'
+  | 'waist-teardrop-pointy-up'
+  | 'torso-teardrop-pointy-down'
+  | 'collar-horizontal-oval-shape'
+  | 'deltoid-shape'
+  | 'limb-tapered'
+  | 'head-tall-oval'
+  | 'hand-foot-arrowhead-shape'
+  | 'foot-block-shape'
+  | 'toe-rounded-cap'
+  | 'capsule'
+  | 'triangle'
+  | 'triangle-up'
+  | 'trapezoid'
+  | 'trapezoid-up'
+  | 'pentagon';
+
 export type BodyPartMaskLayer = {
   src: string | null;
   visible: boolean;
