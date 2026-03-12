@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { WalkingEnginePose, WalkingEnginePivotOffsets, WalkingEngineProportions, Vector2D, MaskTransform, JointMode, BodyPartMaskLayer } from './types';
+import { BoneVariant, WalkingEnginePose, WalkingEnginePivotOffsets, WalkingEngineProportions, Vector2D, MaskTransform, JointMode, BodyPartMaskLayer } from './types';
 import { ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT, RIGGING } from './constants'; 
 import { Mannequin, getMannequinWorldTransformsHelper, partDefinitions } from './components/Mannequin';
 import { SystemLogger } from './components/SystemLogger';
@@ -57,6 +57,10 @@ const PROP_KEYS: (keyof WalkingEngineProportions)[] = [
   'r_upper_leg', 'r_lower_leg', 'r_foot', 'r_toe'
 ];
 
+const DEFAULT_PART_SHAPES: Record<keyof WalkingEngineProportions, BoneVariant> = Object.fromEntries(
+  PROP_KEYS.map(key => [key, (partDefinitions as any)[key]?.variant || 'diamond'])
+) as any;
+
 const JOINT_KEYS: (keyof WalkingEnginePivotOffsets)[] = [
   'waist', 'torso', 'collar', 'neck',
   'l_shoulder', 'l_elbow', 'l_hand',
@@ -105,6 +109,9 @@ interface CanvasState {
   baseH: number;
   jointModes: Record<keyof WalkingEnginePivotOffsets, JointMode>;
   disabledJoints: Record<keyof WalkingEnginePivotOffsets, boolean>;
+  boneVisibility: Record<keyof WalkingEnginePivotOffsets, boolean>;
+  partShapes: Record<keyof WalkingEngineProportions, BoneVariant>;
+  partColors: Record<keyof WalkingEngineProportions, string | null>;
   masksEnabled: boolean;
   maskControlsVisible: boolean;
   hideBoneShapesWithMasks: boolean;
@@ -164,6 +171,9 @@ const createInitialCanvasState = (): CanvasState => ({
   baseH: 150,
   jointModes: Object.fromEntries(JOINT_KEYS.map(k => [k, 'standard'])) as any,
   disabledJoints: Object.fromEntries(JOINT_KEYS.map(k => [k, false])) as any,
+  boneVisibility: Object.fromEntries(JOINT_KEYS.map(k => [k, true])) as any,
+  partShapes: { ...DEFAULT_PART_SHAPES },
+  partColors: Object.fromEntries(PROP_KEYS.map(k => [k, null])) as any,
   masksEnabled: true,
   maskControlsVisible: true,
   hideBoneShapesWithMasks: false,
