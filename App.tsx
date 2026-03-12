@@ -1475,7 +1475,7 @@ const App: React.FC = () => {
           <div className="text-2xl font-archaic text-ink">{tokens.toLocaleString()}</div>
         </div>
 
-        {currentCanvas.maskControlsVisible && (
+        {workspaceMode === 'core' && currentCanvas.maskControlsVisible && (
           <div className="absolute top-16 left-4 z-40 bg-mono-darker/90 border border-ridge px-3 py-2 rounded shadow-lg text-[9px] uppercase text-mono-light">
             <div className="flex items-center justify-between gap-2">
               <span>Masks</span>
