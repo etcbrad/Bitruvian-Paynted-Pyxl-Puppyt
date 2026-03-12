@@ -697,6 +697,7 @@ const App: React.FC = () => {
               offset={currentCanvas.pinOffset} 
               isReversed={currentCanvas.isReversed}
               jointModes={currentCanvas.jointModes}
+              disabledJoints={currentCanvas.disabledJoints}
             />
           </g>
           {anomaly && (
