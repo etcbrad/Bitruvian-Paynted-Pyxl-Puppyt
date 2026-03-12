@@ -1,7 +1,7 @@
 
 
 import React, { useMemo, useCallback } from 'react';
-import { Bone } from './Bone';
+import { Bone } from '../Bone';
 import { ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT, RIGGING } from '../constants';
 import { BoneVariant, WalkingEnginePose, WalkingEngineProportions, WalkingEnginePivotOffsets, Vector2D, MaskTransform, JointMode } from '../types';
 
