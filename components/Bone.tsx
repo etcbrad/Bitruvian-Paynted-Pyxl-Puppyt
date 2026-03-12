@@ -160,6 +160,8 @@ export const Bone: React.FC<BoneProps> = ({
   }, [renderMode, showOverlay, jointConstraintMode]);
 
   const finalColorClass = isInActiveChain ? 'fill-mono-light' : colorClass;
+
+  const getBonePath = (boneLength: number, boneWidth: number, variant: BoneVariant, drawsUpwards: boolean): string => {
     const effectiveLength = drawsUpwards ? -boneLength : boneLength;
     const halfWidth = boneWidth / 2;
 
