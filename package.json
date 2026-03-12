@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "autocommit": "node scripts/autocommit.mjs",
+    "autocommit:coderabbit": "node scripts/autocommit.mjs",
     "dev:vite": "vite --host 0.0.0.0 --port 5173"
   },
   "dependencies": {
