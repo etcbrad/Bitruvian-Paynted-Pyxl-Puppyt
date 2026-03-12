@@ -7,38 +7,71 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bitruvius Anatomical Model (Standalone)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=VT323&display=block" rel="stylesheet">
-    <style>
-      :root {
-        --background: 255 255 255;
-        --foreground: 17 24 39;
-        --card: 255 255 255;
-        --card-foreground: 17 24 39;
-        --popover: 255 255 255;
-        --popover-foreground: 17 24 39;
-        --primary: 17 24 39;
-        --primary-foreground: 255 255 255;
-        --secondary: 243 244 246;
-        --secondary-foreground: 17 24 39;
-        --muted: 243 244 246;
-        --muted-foreground: 107 114 128;
-        --accent: 17 24 39;
-        --accent-foreground: 255 255 255;
-        --destructive: 239 68 68;
-        --destructive-foreground: 255 255 255;
-        --border: 229 231 235;
-        --input: 229 231 235;
-        --ring: 55 65 81;
-        --chart-1: 12 74 110;
-        --chart-2: 239 68 68;
-        --chart-3: 34 197 94;
-        --chart-4: 168 85 247;
-        --chart-5: 236 72 153;
-        --radius: 0.5rem;
+    <!-- Babel Standalone for client-side TSX/JSX transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+      // Configure Babel to recognize React JSX and TypeScript
+      // Using Babel.availablePresets instead of the incorrect Babel.getPreset
+      if (window.Babel) {
+        Babel.registerPreset('react-and-typescript', {
+          presets: [
+            [Babel.availablePresets['react'], { runtime: 'automatic' }],
+            Babel.availablePresets['typescript'],
+          ],
+        });
       }
-      
+    </script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              mono: ['"JetBrains Mono"', 'monospace'],
+              archaic: ['"VT323"', 'monospace'],
+            },
+            backgroundImage: {
+              'triangle-grid': `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3e%3cpath d='M12 0 L0 12 L12 24 L24 12 Z M0 0 L12 24 L24 0 Z' stroke='rgba(20, 20, 20, 0.1)' stroke-width='1' fill='none'/%3e%3c/svg%3e")`,
+            },
+            colors: {
+              paper: '#2D2D2D',
+              ink: '#D1D5DB',
+              'mono-light': '#E5E7EB',
+              'mono-mid': '#9CA3AF',
+              'mono-dark': '#2D2D2D',
+              'mono-darker': '#2D2D2D',
+              selection: '#D1D5DB', // Changed from #A3E635 (green) to a light monochrome shade
+              'selection-light': '#E5E7EB', // Changed from #BEF264 to a lighter monochrome shade
+              'selection-super-light': '#F3F4F6', // Changed from #ECFCCB to a very light monochrome shade
+              'limb-highlight': '#9CA3AF', // Changed from #8B7EC1 (purple) to a mid monochrome shade
+              'accent-purple': '#9CA3AF', // Changed from #8B7EC1 (purple) to a mid monochrome shade
+              'accent-green': '#9CA3AF', // Changed from #A3E635 (green) to a mid monochrome shade
+              'accent-red': '#F87171', // Kept as red for errors/vital messages
+              'shell': '#2D2D2D',
+              'black': '#000000',
+              'ridge': '#333333',
+              'focus-ring': '#E5E7EB', // Changed from #FACC15 (yellow) to a light monochrome shade
+              'olive': '#000000', // Updated to black as requested for the collar
+            },
+            animation: {
+                'terminal-boot': 'terminal-boot 2s steps(1, end) forwards',
+            },
+            keyframes: {
+                'terminal-boot': {
+                    '0%': { opacity: '0' },
+                    '10%, 20%, 30%, 50%, 70%, 90%': { opacity: '1' },
+                    '15%, 25%, 55%, 75%': { opacity: '0.3' },
+                    '100%': { opacity: '0' },
+                }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
       html, body {
         height: 100%;
         margin: 0;
@@ -48,7 +81,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: #F3F4F6; /* Fallback body color */
+        background-color: #2D2D2D;
       }
       #root {
         width: 100%;
@@ -58,19 +91,16 @@
         width: 6px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
-        background: #e5e7eb;
+        background: #f1f1f1;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #9ca3af;
+        background: #888;
         border-radius: 3px;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #6b7280;
+        background: #555;
       }
-      .slider-vertical {
-        writing-mode: vertical-lr;
-        direction: rtl;
-      }
+      /* Removed deprecated .slider-vertical rule */
       #orientation-lock-message {
         display: none !important;
       }
