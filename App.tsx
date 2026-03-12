@@ -82,6 +82,14 @@ const SHAPE_OPTIONS: Array<{ value: BoneVariant; label: string }> = [
   { value: 'toe-rounded-cap', label: 'Toe Cap' },
 ];
 
+const SIMPLE_RIG_SHAPE_PRESETS: Record<string, BoneVariant> = {
+  core: 'pentagon',
+  head: 'head-tall-oval',
+  neck: 'capsule',
+  arm: 'limb-tapered',
+  leg: 'limb-tapered',
+};
+
 const COLOR_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'default', label: 'Default' },
   { value: 'fill-mono-dark', label: 'Mono Dark' },
@@ -161,6 +169,8 @@ const convertPaperRigToManifest = (parts: PaperBodyPart[], pose: PaperPoseState)
       zIndex: part.zIndex,
       physics: part.physics,
       tags: [],
+      shape: undefined,
+      colorClass: 'fill-mono-dark',
     })),
     joints,
     pose: { joints: jointsPose },
@@ -231,6 +241,21 @@ interface PoseKeyframe {
   };
 }
 
+interface SimpleRigConfig {
+  coreSegments: number;
+  armSegments: number;
+  legSegments: number;
+  hasNeck: boolean;
+  hasHead: boolean;
+  includeArms: boolean;
+  includeLegs: boolean;
+  coreShape: BoneVariant;
+  armShape: BoneVariant;
+  legShape: BoneVariant;
+  headShape: BoneVariant;
+  neckShape: BoneVariant;
+}
+
 const DEFAULT_MASK_LAYER: BodyPartMaskLayer = {
   src: null,
   visible: true,
@@ -293,6 +318,21 @@ const createInitialCanvasState = (): CanvasState => ({
   },
 });
 
+const DEFAULT_SIMPLE_RIG: SimpleRigConfig = {
+  coreSegments: 2,
+  armSegments: 2,
+  legSegments: 2,
+  hasNeck: true,
+  hasHead: true,
+  includeArms: true,
+  includeLegs: true,
+  coreShape: SIMPLE_RIG_SHAPE_PRESETS.core,
+  armShape: SIMPLE_RIG_SHAPE_PRESETS.arm,
+  legShape: SIMPLE_RIG_SHAPE_PRESETS.leg,
+  headShape: SIMPLE_RIG_SHAPE_PRESETS.head,
+  neckShape: SIMPLE_RIG_SHAPE_PRESETS.neck,
+};
+
 const rotateVec = (vec: Vector2D, angleDeg: number): Vector2D => {
   const r = angleDeg * Math.PI / 180;
   const c = Math.cos(r);
@@ -301,13 +341,48 @@ const rotateVec = (vec: Vector2D, angleDeg: number): Vector2D => {
 };
 const addVec = (v1: Vector2D, v2: Vector2D): Vector2D => ({ x: v1.x + v2.x, y: v1.y + v2.y });
 
+const getDynamicShapePath = (width: number, height: number, variant: BoneVariant): string => {
+  const halfW = width / 2;
+  const halfH = height / 2;
+  switch (variant) {
+    case 'capsule':
+      return `M ${-halfW} ${-halfH} L ${halfW} ${-halfH} L ${halfW} ${halfH} L ${-halfW} ${halfH} Z`;
+    case 'triangle':
+      return `M 0 ${-halfH} L ${halfW} ${halfH} L ${-halfW} ${halfH} Z`;
+    case 'triangle-up':
+      return `M 0 ${halfH} L ${halfW} ${-halfH} L ${-halfW} ${-halfH} Z`;
+    case 'trapezoid': {
+      const topW = width * 0.6;
+      return `M ${-topW / 2} ${-halfH} L ${topW / 2} ${-halfH} L ${halfW} ${halfH} L ${-halfW} ${halfH} Z`;
+    }
+    case 'trapezoid-up': {
+      const bottomW = width * 0.6;
+      return `M ${-halfW} ${-halfH} L ${halfW} ${-halfH} L ${bottomW / 2} ${halfH} L ${-bottomW / 2} ${halfH} Z`;
+    }
+    case 'pentagon':
+      return `M 0 ${-halfH} L ${halfW} ${-halfH * 0.2} L ${halfW * 0.6} ${halfH} L ${-halfW * 0.6} ${halfH} L ${-halfW} ${-halfH * 0.2} Z`;
+    case 'head-tall-oval':
+    case 'collar-horizontal-oval-shape':
+    case 'torso-teardrop-pointy-down':
+    case 'waist-teardrop-pointy-up':
+    case 'deltoid-shape':
+    case 'limb-tapered':
+    case 'hand-foot-arrowhead-shape':
+    case 'foot-block-shape':
+    case 'toe-rounded-cap':
+    default:
+      return `M ${-halfW} ${-halfH} L ${halfW} ${-halfH} L ${halfW} ${halfH} L ${-halfW} ${halfH} Z`;
+  }
+};
+
 const App: React.FC = () => {
   const ROOT_DRAGGING_DISABLED = true;
-  const [workspaceMode, setWorkspaceMode] = useState<'rig-studio' | 'core'>('rig-studio');
+  const [workspaceMode, setWorkspaceMode] = useState<'rig-studio' | 'core'>('core');
   const [rigManifest, setRigManifest] = useState<RigManifestV1 | null>(null);
   const [dynamicPose, setDynamicPose] = useState<RigManifestPose | null>(null);
   const [dynamicDisabledJoints, setDynamicDisabledJoints] = useState<Record<string, boolean>>({});
   const [draggingDynamicJointId, setDraggingDynamicJointId] = useState<string | null>(null);
+  const [simpleRig, setSimpleRig] = useState<SimpleRigConfig>(DEFAULT_SIMPLE_RIG);
   const [activeCanvasId] = useState<CanvasId>('primary'); // Future-ready: switch per-canvas state here.
   const [canvasStates, setCanvasStates] = useState<Record<CanvasId, CanvasState>>({
     primary: createInitialCanvasState(),
@@ -327,7 +402,7 @@ const App: React.FC = () => {
   }, [activeCanvasId]);
 
   const [isConsoleVisible, setIsConsoleVisible] = useState(false);
-  const [activeControlTab, setActiveControlTab] = useState<'pose' | 'proportions' | 'library' | 'masks' | 'animation'>('pose');
+  const [activeControlTab, setActiveControlTab] = useState<'pose' | 'proportions' | 'library' | 'masks' | 'animation' | 'builder'>('pose');
   const [systemLogs, setSystemLogs] = useState<{ timestamp: string; message: string }[]>([]);
   const [isCalibrated, setIsCalibrated] = useState(false);
   const [tokens, setTokens] = useState(0);
@@ -477,6 +552,109 @@ const App: React.FC = () => {
     });
     setDynamicPose({ joints });
   }, [rigManifest]);
+
+  const buildSimpleRigManifest = useCallback((config: SimpleRigConfig): RigManifestV1 => {
+    const parts: RigManifestV1['parts'] = [];
+    const joints: RigManifestV1['joints'] = [];
+    const pose: RigManifestPose['joints'] = {};
+    let zIndex = 0;
+
+    const makePart = (id: string, name: string, width: number, height: number, shape: BoneVariant, colorClass: string) => {
+      parts.push({
+        id,
+        name,
+        src: null,
+        width,
+        height,
+        pivot: { x: width / 2, y: height / 2 },
+        ballPoint: { x: width / 2, y: height },
+        zIndex: zIndex++,
+        tags: [],
+        shape,
+        colorClass,
+      });
+    };
+
+    const makeJoint = (id: string, parentId: string | null, offset: Vector2D) => {
+      joints.push({
+        id,
+        parentId,
+        drivesPartId: id,
+        defaultOffset: offset,
+        defaultRotation: 0,
+        rigidCluster: false,
+      });
+      pose[id] = { rotation: 0, offsetX: 0, offsetY: 0 };
+    };
+
+    const coreWidth = 120;
+    const coreHeight = 140;
+    const limbWidth = 60;
+    const limbHeight = 90;
+    const headSize = 120;
+    const neckHeight = 50;
+
+    let previousCoreId: string | null = null;
+    for (let i = 0; i < config.coreSegments; i++) {
+      const id = `core_${i}`;
+      makePart(id, `Core ${i + 1}`, coreWidth, coreHeight, config.coreShape, 'fill-mono-dark');
+      makeJoint(id, previousCoreId, { x: 0, y: i === 0 ? 0 : -coreHeight });
+      previousCoreId = id;
+    }
+
+    const topCoreId = previousCoreId;
+
+    let neckId: string | null = null;
+    if (config.hasNeck) {
+      neckId = 'neck_0';
+      makePart(neckId, 'Neck', 60, neckHeight, config.neckShape, 'fill-mono-mid');
+      makeJoint(neckId, topCoreId, { x: 0, y: -coreHeight });
+    }
+
+    if (config.hasHead) {
+      const headId = 'head_0';
+      makePart(headId, 'Head', headSize, headSize, config.headShape, 'fill-mono-light');
+      makeJoint(headId, neckId ?? topCoreId, { x: 0, y: config.hasNeck ? -neckHeight : -coreHeight });
+    }
+
+    const addLimbChain = (prefix: string, parentId: string | null, segments: number, shape: BoneVariant, colorClass: string, lateral: number) => {
+      let prev = parentId;
+      for (let i = 0; i < segments; i++) {
+        const id = `${prefix}_${i}`;
+        makePart(id, `${prefix.toUpperCase()} ${i + 1}`, limbWidth, limbHeight, shape, colorClass);
+        makeJoint(id, prev, { x: i === 0 ? lateral : 0, y: i === 0 ? 0 : limbHeight });
+        prev = id;
+      }
+    };
+
+    if (config.includeArms) {
+      addLimbChain('arm_l', topCoreId, config.armSegments, config.armShape, 'fill-mono-mid', -coreWidth * 0.6);
+      addLimbChain('arm_r', topCoreId, config.armSegments, config.armShape, 'fill-mono-mid', coreWidth * 0.6);
+    }
+
+    if (config.includeLegs) {
+      addLimbChain('leg_l', 'core_0', config.legSegments, config.legShape, 'fill-mono-mid', -coreWidth * 0.3);
+      addLimbChain('leg_r', 'core_0', config.legSegments, config.legShape, 'fill-mono-mid', coreWidth * 0.3);
+    }
+
+    return {
+      version: '1',
+      metadata: { source: 'Bitruvius Simple Builder', createdAt: toIso() },
+      parts,
+      joints,
+      pose: { joints: pose },
+      constraints: { rigidClusters: [] },
+    };
+  }, []);
+
+  const applySimpleRig = useCallback(() => {
+    const manifest = buildSimpleRigManifest(simpleRig);
+    setRigManifest(manifest);
+    setDynamicPose(manifest.pose);
+    setDynamicDisabledJoints({});
+    setWorkspaceMode('core');
+    addLog(`[SYSTEM]: SIMPLE_RIG_BUILT - ${manifest.parts.length} PARTS`);
+  }, [buildSimpleRigManifest, simpleRig, addLog]);
 
   useEffect(() => {
     updateCanvas({ baseH: currentCanvas.globalScale });
@@ -1069,7 +1247,7 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex border-b border-ridge flex-wrap">
-            {(['pose', 'proportions', 'library', 'masks', 'animation'] as const).map(tab => (
+            {(['pose', 'proportions', 'library', 'masks', 'animation', 'builder'] as const).map(tab => (
               <button key={tab} onClick={() => setActiveControlTab(tab)} className={`flex-1 text-[9px] py-2 font-bold transition-all ${activeControlTab === tab ? 'text-selection border-b-2 border-selection bg-white/40' : 'opacity-40 hover:opacity-100'}`}>{tab.toUpperCase()}</button>
             ))}
           </div>
@@ -1463,6 +1641,89 @@ const App: React.FC = () => {
                 </div>
               </div>
             )}
+            {activeControlTab === 'builder' && (
+              <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar py-2 pr-1">
+                <div className="text-[10px] uppercase text-mono-mid">Simple Builder</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 border border-ridge/20 rounded">
+                    <div className="flex justify-between text-[8px] text-mono-mid">
+                      <span>Core Segments</span>
+                      <span>{simpleRig.coreSegments}</span>
+                    </div>
+                    <input type="range" min="1" max="3" value={simpleRig.coreSegments} onChange={e => setSimpleRig(prev => ({ ...prev, coreSegments: Number(e.target.value) }))} className="w-full accent-selection h-1 cursor-ew-resize" />
+                  </div>
+                  <div className="p-2 border border-ridge/20 rounded">
+                    <div className="flex justify-between text-[8px] text-mono-mid">
+                      <span>Arm Segments</span>
+                      <span>{simpleRig.armSegments}</span>
+                    </div>
+                    <input type="range" min="1" max="5" value={simpleRig.armSegments} onChange={e => setSimpleRig(prev => ({ ...prev, armSegments: Number(e.target.value) }))} disabled={!simpleRig.includeArms} className={`w-full accent-selection h-1 cursor-ew-resize ${!simpleRig.includeArms ? 'opacity-30' : ''}`} />
+                  </div>
+                  <div className="p-2 border border-ridge/20 rounded">
+                    <div className="flex justify-between text-[8px] text-mono-mid">
+                      <span>Leg Segments</span>
+                      <span>{simpleRig.legSegments}</span>
+                    </div>
+                    <input type="range" min="1" max="5" value={simpleRig.legSegments} onChange={e => setSimpleRig(prev => ({ ...prev, legSegments: Number(e.target.value) }))} disabled={!simpleRig.includeLegs} className={`w-full accent-selection h-1 cursor-ew-resize ${!simpleRig.includeLegs ? 'opacity-30' : ''}`} />
+                  </div>
+                  <div className="p-2 border border-ridge/20 rounded flex items-center justify-between">
+                    <span className="text-[8px] text-mono-mid">Neck</span>
+                    <button onClick={() => setSimpleRig(prev => ({ ...prev, hasNeck: !prev.hasNeck }))} className={`text-[8px] px-2 py-1 border uppercase ${simpleRig.hasNeck ? 'bg-selection text-paper border-selection' : 'bg-paper/10 border-ridge text-mono-light'}`}>{simpleRig.hasNeck ? 'On' : 'Off'}</button>
+                  </div>
+                  <div className="p-2 border border-ridge/20 rounded flex items-center justify-between">
+                    <span className="text-[8px] text-mono-mid">Head</span>
+                    <button onClick={() => setSimpleRig(prev => ({ ...prev, hasHead: !prev.hasHead }))} className={`text-[8px] px-2 py-1 border uppercase ${simpleRig.hasHead ? 'bg-selection text-paper border-selection' : 'bg-paper/10 border-ridge text-mono-light'}`}>{simpleRig.hasHead ? 'On' : 'Off'}</button>
+                  </div>
+                  <div className="p-2 border border-ridge/20 rounded flex items-center justify-between">
+                    <span className="text-[8px] text-mono-mid">Arms</span>
+                    <button onClick={() => setSimpleRig(prev => ({ ...prev, includeArms: !prev.includeArms }))} className={`text-[8px] px-2 py-1 border uppercase ${simpleRig.includeArms ? 'bg-selection text-paper border-selection' : 'bg-paper/10 border-ridge text-mono-light'}`}>{simpleRig.includeArms ? 'On' : 'Off'}</button>
+                  </div>
+                  <div className="p-2 border border-ridge/20 rounded flex items-center justify-between">
+                    <span className="text-[8px] text-mono-mid">Legs</span>
+                    <button onClick={() => setSimpleRig(prev => ({ ...prev, includeLegs: !prev.includeLegs }))} className={`text-[8px] px-2 py-1 border uppercase ${simpleRig.includeLegs ? 'bg-selection text-paper border-selection' : 'bg-paper/10 border-ridge text-mono-light'}`}>{simpleRig.includeLegs ? 'On' : 'Off'}</button>
+                  </div>
+                </div>
+
+                <div className="text-[10px] uppercase text-mono-mid mt-2">Shapes</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-[8px] uppercase text-mono-mid">
+                    Core
+                    <select value={simpleRig.coreShape} onChange={e => setSimpleRig(prev => ({ ...prev, coreShape: e.target.value as BoneVariant }))} className="w-full mt-1 bg-paper/10 border border-ridge text-[8px] px-1 py-1">
+                      {SHAPE_OPTIONS.map(opt => <option key={`shape-core-${opt.value}`} value={opt.value}>{opt.label}</option>)}
+                    </select>
+                  </label>
+                  <label className="text-[8px] uppercase text-mono-mid">
+                    Head
+                    <select value={simpleRig.headShape} onChange={e => setSimpleRig(prev => ({ ...prev, headShape: e.target.value as BoneVariant }))} className="w-full mt-1 bg-paper/10 border border-ridge text-[8px] px-1 py-1">
+                      {SHAPE_OPTIONS.map(opt => <option key={`shape-head-${opt.value}`} value={opt.value}>{opt.label}</option>)}
+                    </select>
+                  </label>
+                  <label className="text-[8px] uppercase text-mono-mid">
+                    Neck
+                    <select value={simpleRig.neckShape} onChange={e => setSimpleRig(prev => ({ ...prev, neckShape: e.target.value as BoneVariant }))} className="w-full mt-1 bg-paper/10 border border-ridge text-[8px] px-1 py-1">
+                      {SHAPE_OPTIONS.map(opt => <option key={`shape-neck-${opt.value}`} value={opt.value}>{opt.label}</option>)}
+                    </select>
+                  </label>
+                  <label className="text-[8px] uppercase text-mono-mid">
+                    Arms
+                    <select value={simpleRig.armShape} onChange={e => setSimpleRig(prev => ({ ...prev, armShape: e.target.value as BoneVariant }))} className="w-full mt-1 bg-paper/10 border border-ridge text-[8px] px-1 py-1">
+                      {SHAPE_OPTIONS.map(opt => <option key={`shape-arm-${opt.value}`} value={opt.value}>{opt.label}</option>)}
+                    </select>
+                  </label>
+                  <label className="text-[8px] uppercase text-mono-mid">
+                    Legs
+                    <select value={simpleRig.legShape} onChange={e => setSimpleRig(prev => ({ ...prev, legShape: e.target.value as BoneVariant }))} className="w-full mt-1 bg-paper/10 border border-ridge text-[8px] px-1 py-1">
+                      {SHAPE_OPTIONS.map(opt => <option key={`shape-leg-${opt.value}`} value={opt.value}>{opt.label}</option>)}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="flex gap-2 mt-2">
+                  <button onClick={applySimpleRig} className="flex-1 text-[9px] px-3 py-2 border border-selection bg-selection text-paper font-bold uppercase">Build Rig</button>
+                  <button onClick={() => setWorkspaceMode('rig-studio')} className="flex-1 text-[9px] px-3 py-2 border bg-paper/10 border-ridge text-mono-light font-bold uppercase">Advanced Rig Studio</button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-auto pt-4"><SystemLogger logs={systemLogs} isVisible={true} historyCount={tokens} /></div>
@@ -1527,6 +1788,11 @@ const App: React.FC = () => {
           </div>
         )}
         
+        {workspaceMode === 'rig-studio' && (
+          <PaperRigStudioEmbed onRigExport={handleRigExport} onPoseUpdate={handlePoseUpdate} />
+        )}
+
+        {workspaceMode === 'core' && (
         <svg ref={svgRef} viewBox="-500 -700 1000 1400" className="w-full h-full overflow-visible relative z-10 drop-shadow-2xl">
           <g transform={`translate(${currentCanvas.pinOffset.x}, ${currentCanvas.mannequinOffsetY + currentCanvas.pinOffset.y})`}>
             {currentCanvas.masksEnabled && Object.entries(currentCanvas.bodyPartMaskLayers).map(([jointId, layer]) => {
@@ -1558,25 +1824,72 @@ const App: React.FC = () => {
                 </g>
               );
             })}
-            <Mannequin 
-              pose={RESTING_BASE_POSE} 
-              pivotOffsets={{...currentCanvas.pivotOffsets, l_hand_flash: lHandFlash, r_hand_flash: rHandFlash} as any} 
-              props={currentCanvas.props} 
-              showPivots={currentCanvas.showPivots && isCalibrated} 
-              showLabels={currentCanvas.showLabels} 
-              baseUnitH={currentCanvas.baseH} 
-              onAnchorMouseDown={(k) => handleAnchorMouseDown(k)} 
-              draggingBoneKey={draggingBoneKey} 
-              isPaused={true} 
-              pinningMode={currentCanvas.pinningMode} 
-              offset={currentCanvas.pinOffset} 
-              isReversed={currentCanvas.isReversed}
-              jointModes={currentCanvas.jointModes}
-              disabledJoints={currentCanvas.disabledJoints}
-              hiddenBoneKeys={hiddenBoneKeys}
-              partShapes={currentCanvas.partShapes}
-              partColors={currentCanvas.partColors}
-            />
+            {rigManifest ? (
+              <>
+                {rigManifest.parts
+                  .slice()
+                  .sort((a, b) => a.zIndex - b.zIndex)
+                  .map(part => {
+                    const joint = rigManifest.joints.find(j => j.drivesPartId === part.id);
+                    if (!joint) return null;
+                    if (dynamicDisabledJoints[joint.id]) return null;
+                    const transform = dynamicTransforms.get(joint.id);
+                    if (!transform) return null;
+                    const opacity = part.src ? 1 : 0.65;
+                    return (
+                      <g key={`rig-part-${part.id}`} transform={`translate(${transform.position.x}, ${transform.position.y}) rotate(${transform.rotation})`}>
+                        {part.src ? (
+                          <image
+                            href={part.src}
+                            x={-part.pivot.x}
+                            y={-part.pivot.y}
+                            width={part.width}
+                            height={part.height}
+                            opacity={opacity}
+                            preserveAspectRatio="xMidYMid meet"
+                          />
+                        ) : (
+                          <path
+                            d={getDynamicShapePath(part.width, part.height, part.shape ?? 'capsule')}
+                            fill="rgba(255,255,255,0.18)"
+                            stroke="rgba(255,255,255,0.5)"
+                          />
+                        )}
+                        <circle
+                          cx={0}
+                          cy={0}
+                          r={4}
+                          fill="#EF4444"
+                          stroke="white"
+                          strokeWidth={1}
+                          onMouseDown={(e) => { e.stopPropagation(); handleDynamicAnchorMouseDown(joint.id); }}
+                          className="cursor-grab"
+                        />
+                      </g>
+                    );
+                  })}
+              </>
+            ) : (
+              <Mannequin 
+                pose={RESTING_BASE_POSE} 
+                pivotOffsets={{...currentCanvas.pivotOffsets, l_hand_flash: lHandFlash, r_hand_flash: rHandFlash} as any} 
+                props={currentCanvas.props} 
+                showPivots={currentCanvas.showPivots && isCalibrated} 
+                showLabels={currentCanvas.showLabels} 
+                baseUnitH={currentCanvas.baseH} 
+                onAnchorMouseDown={(k) => handleAnchorMouseDown(k)} 
+                draggingBoneKey={draggingBoneKey} 
+                isPaused={true} 
+                pinningMode={currentCanvas.pinningMode} 
+                offset={currentCanvas.pinOffset} 
+                isReversed={currentCanvas.isReversed}
+                jointModes={currentCanvas.jointModes}
+                disabledJoints={currentCanvas.disabledJoints}
+                hiddenBoneKeys={hiddenBoneKeys}
+                partShapes={currentCanvas.partShapes}
+                partColors={currentCanvas.partColors}
+              />
+            )}
             {currentCanvas.masksEnabled && Object.entries(currentCanvas.bodyPartMaskLayers).map(([jointId, layer]) => {
               const typedJoint = jointId as keyof WalkingEnginePivotOffsets;
               if (!layer?.src || !layer.visible) return null;
@@ -1613,6 +1926,7 @@ const App: React.FC = () => {
             </g>
           )}
         </svg>
+        )}
       </div>
 
       <input

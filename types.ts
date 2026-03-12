@@ -75,6 +75,8 @@ export type RigManifestPart = {
     shadowEnabled: boolean;
   };
   tags?: string[];
+  shape?: BoneVariant;
+  colorClass?: string;
 };
 
 export type RigManifestJoint = {
