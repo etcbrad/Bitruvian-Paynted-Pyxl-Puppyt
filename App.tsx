@@ -254,6 +254,7 @@ const App: React.FC = () => {
   const [draggingBoneKey, setDraggingBoneKey] = useState<keyof WalkingEnginePivotOffsets | null>(null);
   
   const svgRef = useRef<SVGSVGElement>(null);
+  const maskUploadInputRef = useRef<HTMLInputElement>(null);
   const pivotOffsetsRef = useRef(currentCanvas.pivotOffsets);
   const propsRef = useRef(currentCanvas.props);
   const baseHRef = useRef(currentCanvas.baseH);
@@ -310,6 +311,51 @@ const App: React.FC = () => {
     if (ROOT_DRAGGING_DISABLED && current === getRootJointKey()) return null;
     return current;
   }, [currentCanvas.disabledJoints, JOINT_PARENTS, ROOT_DRAGGING_DISABLED, getRootJointKey]);
+
+  const createPoseSnapshot = useCallback((): PoseKeyframe['pose'] => ({
+    pivotOffsets: { ...currentCanvas.pivotOffsets },
+    props: { ...currentCanvas.props },
+    jointModes: { ...currentCanvas.jointModes },
+    disabledJoints: { ...currentCanvas.disabledJoints },
+  }), [currentCanvas.pivotOffsets, currentCanvas.props, currentCanvas.jointModes, currentCanvas.disabledJoints]);
+
+  const samplePoseAtFrame = useCallback((frame: number): PoseKeyframe['pose'] | null => {
+    const keyframes = [...currentCanvas.animation.keyframes].sort((a, b) => a.frame - b.frame);
+    if (!keyframes.length) return null;
+    const exact = keyframes.find(kf => kf.frame === frame);
+    if (exact) return exact.pose;
+    let from = keyframes[0];
+    let to = keyframes[keyframes.length - 1];
+    for (let i = 0; i < keyframes.length - 1; i++) {
+      if (frame >= keyframes[i].frame && frame <= keyframes[i + 1].frame) {
+        from = keyframes[i];
+        to = keyframes[i + 1];
+        break;
+      }
+    }
+    if (from === to) return from.pose;
+    const span = Math.max(1, to.frame - from.frame);
+    const t = Math.min(1, Math.max(0, (frame - from.frame) / span));
+    const lerp = (a: number, b: number) => a + (b - a) * t;
+    const nextPivot = { ...from.pose.pivotOffsets } as WalkingEnginePivotOffsets;
+    JOINT_KEYS.forEach(key => {
+      nextPivot[key] = lerp(from.pose.pivotOffsets[key], to.pose.pivotOffsets[key]);
+    });
+    const nextProps = { ...from.pose.props } as WalkingEngineProportions;
+    PROP_KEYS.forEach(key => {
+      nextProps[key] = {
+        w: lerp(from.pose.props[key]?.w || 1, to.pose.props[key]?.w || 1),
+        h: lerp(from.pose.props[key]?.h || 1, to.pose.props[key]?.h || 1),
+      };
+    });
+    const adoptFrom = t < 0.5 ? from : to;
+    return {
+      pivotOffsets: nextPivot,
+      props: nextProps,
+      jointModes: { ...adoptFrom.pose.jointModes },
+      disabledJoints: { ...adoptFrom.pose.disabledJoints },
+    };
+  }, [currentCanvas.animation.keyframes]);
 
   useEffect(() => {
     updateCanvas({ baseH: currentCanvas.globalScale });
