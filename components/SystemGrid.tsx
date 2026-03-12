@@ -20,7 +20,7 @@ export const Scanlines: React.FC = () => (
   <svg width="100%" height="100%" className="absolute inset-0 z-10 pointer-events-none opacity-20">
     <defs>
       <pattern id="scanlines" patternUnits="userSpaceOnUse" width="1" height="4">
-        <line x1="0" y1="1" x2="1" y2="1" stroke="#E5E7EB" strokeWidth="1" />
+        <line x1="0" y1="1" x2="1" y2="1" stroke="#2D2D2D" strokeWidth="1" />
       </pattern>
     </defs>
     <rect width="100%" height="100%" fill="url(#scanlines)" />
