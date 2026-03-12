@@ -1371,6 +1371,20 @@ const App: React.FC = () => {
     });
   }, [draggingDynamicJointId, rigManifest, dynamicJointMap, dynamicTransforms]);
 
+  useEffect(() => {
+    const handleMouseUp = () => setDraggingDynamicJointId(null);
+    
+    if (draggingDynamicJointId) {
+      window.addEventListener('mousemove', handleDynamicDrag);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    
+    return () => { 
+      window.removeEventListener('mousemove', handleDynamicDrag); 
+      window.removeEventListener('mouseup', handleMouseUp); 
+    };
+  }, [draggingDynamicJointId, handleDynamicDrag]);
+
   return (
     <div className="flex h-full w-full bg-paper font-mono text-ink overflow-hidden select-none">
       {isConsoleVisible && (
