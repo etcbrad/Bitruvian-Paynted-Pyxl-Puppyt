@@ -21,6 +21,7 @@ export function getMannequinWorldTransformsHelper(
   baseUnitH: number,
   isReversed: boolean,
   jointModes?: Record<keyof WalkingEnginePivotOffsets, JointMode>,
+  disabledJoints?: Record<keyof WalkingEnginePivotOffsets, boolean>,
 ): Partial<Record<keyof WalkingEngineProportions | 'headJoint' | 'collarJoint' | 'waistJoint' | 'torsoJoint' | 'collarEndPoint', { position: Vector2D; rotation: number, length?: number }>> {
     const trans: Partial<Record<keyof WalkingEngineProportions | 'headJoint' | 'collarJoint' | 'waistJoint' | 'torsoJoint' | 'collarEndPoint', { position: Vector2D; rotation: number, length?: number }>> = {};
 
@@ -29,6 +30,7 @@ export function getMannequinWorldTransformsHelper(
     };
 
     const calculateJointRotation = (boneKey: string, parentRot: number) => {
+        if (disabledJoints?.[boneKey as keyof WalkingEnginePivotOffsets]) return parentRot;
         const local = (pivotOffsets[boneKey as keyof WalkingEnginePivotOffsets] || 0);
         const mode = jointModes?.[boneKey as keyof WalkingEnginePivotOffsets] || 'standard';
         
