@@ -2216,11 +2216,20 @@ const App: React.FC = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[9px] uppercase font-bold text-white/70">Slice Helper</span>
                     <span className="text-[8px] text-white/40">
-                      {Object.values(PartName).filter(p => maskLayers[p].src).length}/{Object.values(PartName).length}
+                      {JOINT_ORDER.filter(p => maskLayers[p].src).length}/{JOINT_ORDER.length}
                     </span>
                   </div>
+                  <button
+                    onClick={() => {
+                      const next = JOINT_ORDER.find(p => !maskLayers[p].src);
+                      if (next) selectSinglePart(next);
+                    }}
+                    className="w-full mb-2 text-[9px] px-2 py-1 border uppercase bg-white/10 border-white/20 text-white/70 hover:bg-white/20"
+                  >
+                    Next Empty Joint
+                  </button>
                   <div className="grid grid-cols-1 gap-1 max-h-52 overflow-y-auto custom-scrollbar">
-                    {Object.values(PartName).map(part => {
+                    {JOINT_ORDER.map(part => {
                       const hasMask = Boolean(maskLayers[part].src);
                       return (
                         <button
