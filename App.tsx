@@ -890,10 +890,12 @@ const App: React.FC = () => {
       lumaThreshold: Math.round(80 + normalized * 160),
       alphaThreshold: Math.round(40 - normalized * 30),
       minArea: Math.round(30 + (1 - normalized) * 260),
-      mergeDistance: Math.round(normalized * 2),
+      mergeDistance: clamp(Math.round(cutoutMergeGap), 0, 8),
       colorDistanceThreshold: 0.08 + normalized * 0.35,
+      textFillRatioThreshold: 0.14,
+      textAreaMax: 1800,
     };
-  }, []);
+  }, [cutoutMergeGap]);
 
   const buildCutoutPreviews = useCallback((
     labels: Int32Array,
