@@ -582,6 +582,7 @@ const App: React.FC = () => {
   const handleMouseDownOnPart = useCallback((part: PartName, e: React.MouseEvent<SVGGElement>) => {
     e.stopPropagation();
     if (!svgRef.current) return;
+    if (workflowStep === 'slice' && cutoutRegionMode) return;
 
     isDragging.current = true;
     dragStartPose.current = activePose;
@@ -617,7 +618,7 @@ const App: React.FC = () => {
         pointerX: transformedPoint.x, pointerY: transformedPoint.y, initialPinnedPos: null // Not used in Bitruvius 0.2
       };
     }
-  }, [activePose, activePins, kinematicMode, jointModes]);
+  }, [activePose, activePins, kinematicMode, jointModes, workflowStep, cutoutRegionMode]);
 
   const cycleKinematicMode = useCallback(() => {
     setKinematicMode(prev => {
