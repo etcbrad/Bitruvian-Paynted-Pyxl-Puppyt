@@ -112,7 +112,7 @@ export const RotationWheelControl: React.FC<RotationWheelControlProps> = ({
   }, [currentAngleForIndicator]);
 
   return (
-    <div className={`flex items-center justify-center gap-2 ${className} ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div className={`flex items-center justify-center gap-2 ${className} ${isDisabled ? 'pointer-events-none cursor-not-allowed' : ''}`}>
       <button
         onClick={() => handleStepChange(false)}
         className="w-8 h-8 flex items-center justify-center border border-white/20 text-white/70 hover:bg-white/10 transition-colors text-lg font-bold"
