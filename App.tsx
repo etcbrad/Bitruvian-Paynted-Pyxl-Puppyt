@@ -82,6 +82,21 @@ const App: React.FC = () => {
   const [cutoutOpacity, setCutoutOpacity] = useState(0.45);
   const [cutoutScale, setCutoutScale] = useState(1);
   const [cutoutOffset, setCutoutOffset] = useState({ x: 0, y: 0 });
+  const [cutoutSensitivity, setCutoutSensitivity] = useState(0.6);
+  const [cutoutPieces, setCutoutPieces] = useState<Array<{
+    id: string;
+    labelId: number;
+    bbox: { x: number; y: number; w: number; h: number };
+    area: number;
+    previewSrc: string;
+    center: { x: number; y: number };
+  }>>([]);
+  const [selectedCutoutPieceId, setSelectedCutoutPieceId] = useState<string | null>(null);
+  const [isAdjustingSensitivity, setIsAdjustingSensitivity] = useState(false);
+  const cutoutImageRef = useRef<HTMLImageElement | null>(null);
+  const cutoutImageDataRef = useRef<ImageData | null>(null);
+  const cutoutLabelMapRef = useRef<{ labels: Int32Array; width: number; height: number } | null>(null);
+  const sensitivityDragRef = useRef<{ startY: number; startSensitivity: number } | null>(null);
 
   // Animation State
   const [animation, setAnimation] = useState<AnimationState>({
