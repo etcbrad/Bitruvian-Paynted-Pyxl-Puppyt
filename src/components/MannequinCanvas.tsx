@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stage, Layer } from 'react-konva';
-import { Pose, PartName, RenderMode, ViewMode } from '../types';
+import { Pose, PartName, RenderMode, ViewMode } from '../types/types';
 import { Mannequin } from './mannequin/Mannequin';
 import { SystemGuides, Scanlines } from './layout/SystemGrid';
 

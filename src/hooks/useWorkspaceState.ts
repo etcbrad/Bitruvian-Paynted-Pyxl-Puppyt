@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { BackgroundPreset } from '../types';
+import { BackgroundPreset } from '../types/types';
 
 export const useWorkspaceState = () => {
   const [backgroundPreset, setBackgroundPreset] = useState<BackgroundPreset>('grid');
