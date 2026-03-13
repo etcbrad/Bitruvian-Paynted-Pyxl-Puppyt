@@ -1185,6 +1185,23 @@ const App: React.FC = () => {
     }
   }, [applyCutoutPieceToPart, selectedCutoutPieceId]);
 
+  const handleExportMasks = useCallback(() => {
+    const payload = {
+      version: 1,
+      cutoutSheet,
+      masks: Object.fromEntries(
+        Object.entries(maskLayers).filter(([, layer]) => Boolean(layer.src))
+      ),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'cutout-masks.json';
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [cutoutSheet, maskLayers]);
+
   
 
   return (
