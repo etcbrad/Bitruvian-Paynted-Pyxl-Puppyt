@@ -1132,7 +1132,7 @@ const App: React.FC = () => {
   const buildCutoutPreviews = useCallback((
     labels: Int32Array,
     imageData: ImageData,
-    pieces: Array<{ labelId: number; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number }; fillRatio: number }>
+    pieces: Array<{ labelId: number; shapeId: string; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number }; fillRatio: number }>
   ) => {
     const { width, height, data } = imageData;
     return pieces.map(piece => {
@@ -1178,6 +1178,65 @@ const App: React.FC = () => {
         previewSrc: canvas.toDataURL('image/png'),
       };
     });
+  }, []);
+
+  const buildShapeMask = useCallback((shape: { type: 'rect' | 'circle' | 'freehand'; bbox: { x: number; y: number; w: number; h: number }; points?: Array<{ x: number; y: number }> }, width: number, height: number) => {
+    const mask = new Uint8Array(width * height);
+    if (shape.type === 'rect') {
+      const x0 = clamp(Math.floor(shape.bbox.x), 0, width - 1);
+      const y0 = clamp(Math.floor(shape.bbox.y), 0, height - 1);
+      const x1 = clamp(Math.ceil(shape.bbox.x + shape.bbox.w), 0, width);
+      const y1 = clamp(Math.ceil(shape.bbox.y + shape.bbox.h), 0, height);
+      for (let y = y0; y < y1; y += 1) {
+        const row = y * width;
+        for (let x = x0; x < x1; x += 1) {
+          mask[row + x] = 1;
+        }
+      }
+      return mask;
+    }
+    if (shape.type === 'circle') {
+      const cx = shape.bbox.x + shape.bbox.w / 2;
+      const cy = shape.bbox.y + shape.bbox.h / 2;
+      const rx = Math.max(1, shape.bbox.w / 2);
+      const ry = Math.max(1, shape.bbox.h / 2);
+      const x0 = clamp(Math.floor(shape.bbox.x), 0, width - 1);
+      const y0 = clamp(Math.floor(shape.bbox.y), 0, height - 1);
+      const x1 = clamp(Math.ceil(shape.bbox.x + shape.bbox.w), 0, width);
+      const y1 = clamp(Math.ceil(shape.bbox.y + shape.bbox.h), 0, height);
+      for (let y = y0; y < y1; y += 1) {
+        const dy = (y - cy) / ry;
+        const row = y * width;
+        for (let x = x0; x < x1; x += 1) {
+          const dx = (x - cx) / rx;
+          if (dx * dx + dy * dy <= 1) {
+            mask[row + x] = 1;
+          }
+        }
+      }
+      return mask;
+    }
+    if (shape.type === 'freehand' && shape.points && shape.points.length > 2) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return mask;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(shape.points[0].x, shape.points[0].y);
+      for (let i = 1; i < shape.points.length; i += 1) {
+        ctx.lineTo(shape.points[i].x, shape.points[i].y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      const maskData = ctx.getImageData(0, 0, width, height).data;
+      for (let i = 0; i < width * height; i += 1) {
+        mask[i] = maskData[i * 4 + 3] > 10 ? 1 : 0;
+      }
+      return mask;
+    }
+    return mask;
   }, []);
 
   const runCutoutDetection = useCallback((img: HTMLImageElement, sensitivity: number) => {
@@ -1244,21 +1303,6 @@ const App: React.FC = () => {
       foreground[i] = isForeground ? 1 : 0;
     }
 
-    if (cutoutRegion) {
-      const regionX0 = clamp(Math.floor(cutoutRegion.x), 0, width - 1);
-      const regionY0 = clamp(Math.floor(cutoutRegion.y), 0, height - 1);
-      const regionX1 = clamp(Math.ceil(cutoutRegion.x + cutoutRegion.w), 0, width);
-      const regionY1 = clamp(Math.ceil(cutoutRegion.y + cutoutRegion.h), 0, height);
-      for (let y = 0; y < height; y += 1) {
-        const row = y * width;
-        for (let x = 0; x < width; x += 1) {
-          const idx = row + x;
-          const inRegion = x >= regionX0 && x <= regionX1 && y >= regionY0 && y <= regionY1;
-          if (!inRegion) foreground[idx] = 0;
-        }
-      }
-    }
-
     if (params.mergeDistance > 0) {
       let current = foreground;
       for (let iter = 0; iter < params.mergeDistance; iter += 1) {
@@ -1289,77 +1333,89 @@ const App: React.FC = () => {
     labels.fill(-1);
     const queueX: number[] = [];
     const queueY: number[] = [];
-    const pieces: Array<{ labelId: number; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number }; fillRatio: number }> = [];
+    const pieces: Array<{ labelId: number; shapeId: string; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number }; fillRatio: number }> = [];
     let labelId = 0;
+    const shapes = cutoutShapes.length > 0
+      ? cutoutShapes
+      : [{
+        id: 'full-sheet',
+        type: 'rect' as const,
+        bbox: { x: 0, y: 0, w: width, h: height },
+      }];
 
-    for (let y = 0; y < height; y += 1) {
-      for (let x = 0; x < width; x += 1) {
-        const idx = y * width + x;
-        if (!foreground[idx] || labels[idx] !== -1) continue;
-        let minX = x;
-        let maxX = x;
-        let minY = y;
-        let maxY = y;
-        let area = 0;
-        let sumX = 0;
-        let sumY = 0;
-        queueX.length = 0;
-        queueY.length = 0;
-        queueX.push(x);
-        queueY.push(y);
-        labels[idx] = labelId;
-        while (queueX.length) {
-          const qx = queueX.pop()!;
-          const qy = queueY.pop()!;
-          const qIdx = qy * width + qx;
-          area += 1;
-          sumX += qx;
-          sumY += qy;
-          if (qx < minX) minX = qx;
-          if (qx > maxX) maxX = qx;
-          if (qy < minY) minY = qy;
-          if (qy > maxY) maxY = qy;
-          const neighbors = [
-            [qx - 1, qy],
-            [qx + 1, qy],
-            [qx, qy - 1],
-            [qx, qy + 1],
-          ];
-          for (const [nx, ny] of neighbors) {
-            if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
-            const nIdx = ny * width + nx;
-            if (!foreground[nIdx] || labels[nIdx] !== -1) continue;
-            labels[nIdx] = labelId;
-            queueX.push(nx);
-            queueY.push(ny);
+    shapes.forEach(shape => {
+      const mask = buildShapeMask(shape, width, height);
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const idx = y * width + x;
+          if (!foreground[idx] || labels[idx] !== -1 || mask[idx] === 0) continue;
+          let minX = x;
+          let maxX = x;
+          let minY = y;
+          let maxY = y;
+          let area = 0;
+          let sumX = 0;
+          let sumY = 0;
+          queueX.length = 0;
+          queueY.length = 0;
+          queueX.push(x);
+          queueY.push(y);
+          labels[idx] = labelId;
+          while (queueX.length) {
+            const qx = queueX.pop()!;
+            const qy = queueY.pop()!;
+            const qIdx = qy * width + qx;
+            if (mask[qIdx] === 0) continue;
+            area += 1;
+            sumX += qx;
+            sumY += qy;
+            if (qx < minX) minX = qx;
+            if (qx > maxX) maxX = qx;
+            if (qy < minY) minY = qy;
+            if (qy > maxY) maxY = qy;
+            const neighbors = [
+              [qx - 1, qy],
+              [qx + 1, qy],
+              [qx, qy - 1],
+              [qx, qy + 1],
+            ];
+            for (const [nx, ny] of neighbors) {
+              if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+              const nIdx = ny * width + nx;
+              if (!foreground[nIdx] || labels[nIdx] !== -1 || mask[nIdx] === 0) continue;
+              labels[nIdx] = labelId;
+              queueX.push(nx);
+              queueY.push(ny);
+            }
           }
-        }
-        if (area >= params.minArea) {
-          const w = maxX - minX + 1;
-          const h = maxY - minY + 1;
-          const fillRatio = area / (w * h);
-          const isLikelyText = cutoutIgnoreText && area < params.textAreaMax && fillRatio < params.textFillRatioThreshold;
-          if (isLikelyText) {
-            labelId += 1;
-            continue;
+          if (area >= params.minArea) {
+            const w = maxX - minX + 1;
+            const h = maxY - minY + 1;
+            const fillRatio = area / (w * h);
+            const isLikelyText = cutoutIgnoreText && area < params.textAreaMax && fillRatio < params.textFillRatioThreshold;
+            if (isLikelyText) {
+              labelId += 1;
+              continue;
+            }
+            pieces.push({
+              labelId,
+              shapeId: shape.id,
+              bbox: { x: minX, y: minY, w, h },
+              area,
+              center: { x: sumX / area, y: sumY / area },
+              fillRatio,
+            });
           }
-          pieces.push({
-            labelId,
-            bbox: { x: minX, y: minY, w, h },
-            area,
-            center: { x: sumX / area, y: sumY / area },
-            fillRatio,
-          });
+          labelId += 1;
         }
-        labelId += 1;
       }
-    }
+    });
 
     cutoutLabelMapRef.current = { labels, width, height };
     const previews = buildCutoutPreviews(labels, imageData, pieces);
     previews.sort((a, b) => b.area - a.area);
     setCutoutPieces(previews);
-  }, [buildCutoutPreviews, cutoutIgnoreText, cutoutRegion, getCutoutDetectionParams]);
+  }, [buildCutoutPreviews, buildShapeMask, cutoutIgnoreText, cutoutShapes, getCutoutDetectionParams]);
 
   const applyCutoutPieceToPart = useCallback((pieceId: string, part: PartName) => {
     const piece = cutoutPieces.find(p => p.id === pieceId);
