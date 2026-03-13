@@ -2166,7 +2166,17 @@ const App: React.FC = () => {
           </div>
         </aside>
 
-        <div className="flex-1 bg-selection-super-light bg-triangle-grid flex items-center justify-center relative">
+        <div
+          className={`flex-1 flex items-center justify-center relative ${activeBackground.className || ''}`}
+          style={
+            activeBackground.className
+              ? undefined
+              : {
+                  backgroundColor: activeBackground.color,
+                  backgroundImage: 'none',
+                }
+          }
+        >
           <Scanlines />
           {showSplash && (
             <div className="absolute top-[8%] left-0 right-0 z-30 flex items-center justify-center pointer-events-none">
