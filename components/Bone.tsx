@@ -224,6 +224,7 @@ export const Bone: React.FC<BoneProps> = ({
     const offsetY = Number.isFinite(maskLayer.offsetY) ? maskLayer.offsetY : 0;
     const rotationDeg = Number.isFinite(maskLayer.rotationDeg) ? maskLayer.rotationDeg : 0;
     const opacity = Number.isFinite(maskLayer.opacity) ? maskLayer.opacity : 1;
+    const anchors = maskLayer.jointAnchors || [];
 
     const mirror = maskLayer.mirrorX ? -1 : 1;
     return (
@@ -238,6 +239,39 @@ export const Bone: React.FC<BoneProps> = ({
             opacity={opacity}
             preserveAspectRatio="xMidYMid meet"
           />
+          {anchors.length > 0 && (
+            <g>
+              {anchors.length === 1 && (
+                <circle
+                  cx={anchors[0].x + offsetX}
+                  cy={anchors[0].y + offsetY}
+                  r={6}
+                  fill="rgba(255,255,255,0.85)"
+                  stroke="rgba(0,0,0,0.6)"
+                  strokeWidth={1}
+                />
+              )}
+              {anchors.length === 2 && (
+                <line
+                  x1={anchors[0].x + offsetX}
+                  y1={anchors[0].y + offsetY}
+                  x2={anchors[1].x + offsetX}
+                  y2={anchors[1].y + offsetY}
+                  stroke="rgba(255,255,255,0.85)"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                />
+              )}
+              {anchors.length >= 3 && (
+                <polygon
+                  points={anchors.slice(0, 3).map(p => `${p.x + offsetX},${p.y + offsetY}`).join(' ')}
+                  fill="rgba(255,255,255,0.18)"
+                  stroke="rgba(255,255,255,0.85)"
+                  strokeWidth={2}
+                />
+              )}
+            </g>
+          )}
         </g>
       </g>
     );
