@@ -762,7 +762,7 @@ const App: React.FC = () => {
         pointerX: transformedPoint.x, pointerY: transformedPoint.y, initialPinnedPos: null // Not used in Bitruvius 0.2
       };
     }
-  }, [activePose, activePins, kinematicMode, jointModes, workflowStep]);
+  }, [activePose, activePins, dragMaskMode, getWorldRotationForPart, jointModes, kinematicMode, maskLayers, proportionScales, rotateVec, toSvgPoint, workflowStep]);
 
   const cycleKinematicMode = useCallback(() => {
     setKinematicMode(prev => {
