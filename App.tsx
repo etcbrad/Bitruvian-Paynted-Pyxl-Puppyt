@@ -7,6 +7,7 @@ import { useWorkspaceState } from './src/hooks/useWorkspaceState';
 import { useAnimationState } from './src/hooks/useAnimationState';
 import { MannequinCanvas } from './src/components/MannequinCanvas';
 import { ControlPanel } from './src/components/ControlPanel';
+import './src/App.css';
 
 const App: React.FC = () => {
   const { activePose, ghostPose, setActivePose, updatePose, undo, redo, resetPose } = usePoseState(RESET_POSE);

@@ -21,5 +21,4 @@ jobs:
       - name: CodeRabbit Review
         uses: coderabbitai/ai-pr-reviewer@latest
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           debug: false
