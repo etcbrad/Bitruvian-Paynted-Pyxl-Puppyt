@@ -1306,6 +1306,20 @@ const App: React.FC = () => {
     const payload = {
       version: 1,
       cutoutSheet,
+      detection: {
+        sensitivity: cutoutSensitivity,
+        mergeGap: cutoutMergeGap,
+        ignoreText: cutoutIgnoreText,
+        region: cutoutRegion,
+      },
+      pieces: cutoutPieces.map(piece => ({
+        id: piece.id,
+        labelId: piece.labelId,
+        bbox: piece.bbox,
+        area: piece.area,
+        center: piece.center,
+        fillRatio: piece.fillRatio,
+      })),
       masks: Object.fromEntries(
         Object.entries(maskLayers).filter(([, layer]) => Boolean(layer.src))
       ),
@@ -1317,7 +1331,7 @@ const App: React.FC = () => {
     anchor.download = 'cutout-masks.json';
     anchor.click();
     URL.revokeObjectURL(url);
-  }, [cutoutSheet, maskLayers]);
+  }, [cutoutIgnoreText, cutoutMergeGap, cutoutPieces, cutoutRegion, cutoutSensitivity, cutoutSheet, maskLayers]);
 
   
 
