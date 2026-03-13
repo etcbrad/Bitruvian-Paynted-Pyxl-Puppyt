@@ -86,6 +86,25 @@ const App: React.FC = () => {
     Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: { ...DEFAULT_MASK_LAYER } }), {} as Record<PartName, BodyPartMaskLayer>)
   );
 
+  const JOINT_ORDER: PartName[] = [
+    PartName.Head,
+    PartName.Collar,
+    PartName.Torso,
+    PartName.Waist,
+    PartName.RShoulder,
+    PartName.RElbow,
+    PartName.RWrist,
+    PartName.LShoulder,
+    PartName.LElbow,
+    PartName.LWrist,
+    PartName.RThigh,
+    PartName.RSkin,
+    PartName.RAnkle,
+    PartName.LThigh,
+    PartName.LSkin,
+    PartName.LAnkle,
+  ];
+
   const maskUploadInputRef = useRef<HTMLInputElement>(null);
   const cutoutUploadInputRef = useRef<HTMLInputElement>(null);
   const [cutoutSheet, setCutoutSheet] = useState<{ src: string; width: number; height: number } | null>(null);
