@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { Pose, PartName, PartSelection, PartVisibility, AnchorName, partNameToPoseKey, JointConstraint, RenderMode, Vector2D, ViewMode, AnimationState, AnimationKeyframe, SavedPose, KinematicMode, BodyPartMaskLayer } from './types';
+import { Pose, PartName, PartSelection, PartVisibility, AnchorName, partNameToPoseKey, JointConstraint, RenderMode, Vector2D, ViewMode, AnimationState, AnimationKeyframe, SavedPose, KinematicMode, BodyPartMaskLayer, PARENT_MAP } from './types';
 import { RESET_POSE, FLOOR_HEIGHT, JOINT_LIMITS, ANATOMY, GROUND_STRIP_HEIGHT } from './constants'; 
-import { getJointPositions, getShortestAngleDiffDeg, interpolatePoses, solveIK, solveAdvancedIK } from './utils/kinematics';
+import { getJointPositions, getShortestAngleDiffDeg, interpolatePoses, solveIK, solveAdvancedIK, getTotalRotation } from './utils/kinematics';
 import { Scanlines, SystemGuides } from './components/SystemGrid';
 import { Mannequin, getPartCategory, getPartCategoryDisplayName } from './components/Mannequin'; 
 import { COLORS_BY_CATEGORY, COLORS } from './components/Bone';
@@ -62,6 +62,11 @@ const App: React.FC = () => {
   const [hideBonesWithMasks, setHideBonesWithMasks] = useState(false);
   const [torsoUnitEnabled, setTorsoUnitEnabled] = useState(true);
   const [torsoUnitAngle, setTorsoUnitAngle] = useState(0);
+  const [autoMirrorLimbs, setAutoMirrorLimbs] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [gridSize, setGridSize] = useState(10);
+  const [placingJoint, setPlacingJoint] = useState(false);
+  const [showJointLabels, setShowJointLabels] = useState(false);
 
   const DEFAULT_MASK_LAYER: BodyPartMaskLayer = {
     src: null,
@@ -74,6 +79,7 @@ const App: React.FC = () => {
     offsetX: 0,
     offsetY: 0,
     layerOrder: 'front',
+    mirrorX: false,
   };
 
   const [maskLayers, setMaskLayers] = useState<Record<PartName, BodyPartMaskLayer>>(() =>
