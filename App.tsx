@@ -895,6 +895,35 @@ const App: React.FC = () => {
                 </div>
               )}
 
+              {/* Torso Unit */}
+              <div className="flex flex-col gap-2 w-full text-left border-b border-white/10 pb-2 mb-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] uppercase font-bold text-white/70">Torso Unit</span>
+                  <button
+                    onClick={() => setTorsoUnitEnabled(prev => !prev)}
+                    className={`text-[8px] px-2 py-1 border uppercase ${
+                      torsoUnitEnabled ? 'bg-accent-green/20 border-accent-green/40 text-accent-green' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    {torsoUnitEnabled ? 'Rigid' : 'Independent'}
+                  </button>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between text-[8px] text-white/40">
+                    <span>Master Angle</span>
+                    <span>{Math.round(torsoUnitAngle)}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={JOINT_LIMITS.torso?.min ?? -180}
+                    max={JOINT_LIMITS.torso?.max ?? 180}
+                    value={torsoUnitAngle}
+                    onChange={e => handleTorsoUnitChange(Number(e.target.value))}
+                    className="w-full accent-selection"
+                  />
+                </div>
+              </div>
+
               {/* Section: Joint Control */}
               <div className="flex flex-col gap-1 w-full text-left border-b border-white/10 pb-2 mb-2">
             <button 
