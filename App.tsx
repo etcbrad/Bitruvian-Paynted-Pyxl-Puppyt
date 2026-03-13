@@ -92,7 +92,7 @@ const App: React.FC = () => {
   });
 
   const [kinematicMode, setKinematicMode] = useState<KinematicMode>('fk');
-  const [isPoweredOn, setIsPoweredOn] = useState(true);
+  const [isPoweredOn] = useState(true);
 
   const animationTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -842,10 +842,10 @@ const App: React.FC = () => {
   
 
   return (
-    <div className={`w-full h-full bg-mono-darker shadow-2xl flex flex-col relative touch-none fixed inset-0 z-50 overflow-hidden text-ink font-mono ${!isPoweredOn ? 'grayscale brightness-50' : ''}`}>
+    <div className="w-full h-full bg-mono-darker shadow-2xl flex flex-col relative touch-none fixed inset-0 z-50 overflow-hidden text-ink font-mono">
       <div className="flex h-full w-full">
         <aside
-          className="w-72 flex flex-col overflow-hidden z-20 flex-shrink-0 border-r border-white/10"
+          className="w-72 flex flex-col overflow-hidden z-10 flex-shrink-0 border-r border-white/10"
           style={{ background: 'rgba(13,17,23,0.88)', backdropFilter: 'blur(12px)' }}
         >
           <div className="p-4 border-b border-white/10">
@@ -872,13 +872,17 @@ const App: React.FC = () => {
                   {kinematicMode.toUpperCase()}
                 </button>
                 <button
-                  onClick={() => setIsPoweredOn(!isPoweredOn)}
+                  onClick={cycleRenderMode}
                   className={`p-2 rounded border transition-all ${
-                    isPoweredOn
-                      ? 'bg-accent-green/30 border-accent-green text-accent-green'
-                      : 'bg-accent-red/30 border-accent-red text-accent-red opacity-50'
+                    renderMode === 'default'
+                      ? 'bg-white/10 border-white/20 text-white/70 hover:bg-white/20'
+                      : renderMode === 'wireframe'
+                        ? 'bg-accent-green/20 border-accent-green/50 text-accent-green'
+                        : renderMode === 'silhouette'
+                          ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
+                          : 'bg-accent-red/20 border-accent-red/50 text-accent-red'
                   }`}
-                  aria-label={isPoweredOn ? "System Shutdown" : "System Activation"}
+                  aria-label={`Cycle Display Mode. Current: ${getRenderModeDisplayName(renderMode)}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -1688,7 +1692,7 @@ const App: React.FC = () => {
             width="100%" 
             height="100%" 
             viewBox={autoViewBox} 
-            className="overflow-visible relative z-10" 
+            className="overflow-visible relative z-30" 
           >
             <SystemGuides floorY={FLOOR_HEIGHT} /> 
             <g>
@@ -1732,6 +1736,7 @@ const App: React.FC = () => {
           </svg>
         </div>
       </div>
+      <div className="pointer-events-none absolute inset-0 bg-black/45 z-20" />
     </div>
   );
 };
