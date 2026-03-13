@@ -710,6 +710,24 @@ const App: React.FC = () => {
     if (!svgRef.current) return;
     if (workflowStep === 'slice') return;
 
+    if (dragMaskMode && maskLayers[part]?.src) {
+      const point = toSvgPoint(e.clientX, e.clientY);
+      if (!point) return;
+      const joints = getJointPositions(activePose, activePins, proportionScales);
+      const jointPos = joints[part];
+      if (!jointPos) return;
+      const rot = getWorldRotationForPart(part, activePose);
+      const local = rotateVec(point.x - jointPos.x, point.y - jointPos.y, -rot);
+      maskDragInfo.current = {
+        startLocalX: local.x,
+        startLocalY: local.y,
+        startOffsetX: maskLayers[part].offsetX || 0,
+        startOffsetY: maskLayers[part].offsetY || 0,
+      };
+      setSelectedParts(prev => ({ ...prev, [part]: true }));
+      return;
+    }
+
     isDragging.current = true;
     dragStartPose.current = activePose;
     setSelectedParts(prev => {
