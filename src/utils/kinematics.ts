@@ -297,6 +297,9 @@ export const solveFABRIK = (
   }
 
   const origin = { ...points[0] };
+  const currentLengths = originalLengths;
+
+  if (dist(origin, target) >= originalLengths.reduce((a, b) => a + b, 0)) {
     // Standard out-of-reach behavior: extend fully
     for (let i = 0; i < points.length - 1; i++) {
       const r = dist(points[i], target);
