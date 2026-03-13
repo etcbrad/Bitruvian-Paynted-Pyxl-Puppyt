@@ -1615,6 +1615,28 @@ const App: React.FC = () => {
                     </button>
                   ))}
                 </div>
+                <span className="text-white/40 text-[8px] uppercase mt-4">Background</span>
+                <div className="grid grid-cols-3 gap-1 items-center">
+                  {backgroundOptions.map(option => (
+                    <button
+                      key={option.id}
+                      onClick={() => setBackgroundPreset(option.id)}
+                      className={`text-[9px] text-center px-1 py-0.5 transition-all border flex items-center justify-center gap-1 ${
+                        backgroundPreset === option.id
+                          ? 'bg-accent-green/30 border-accent-green text-accent-green'
+                          : 'bg-white/5 border-transparent text-white/50 hover:bg-white/10'
+                      }`}
+                      aria-pressed={backgroundPreset === option.id}
+                      aria-label={`Set background to ${option.label}`}
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-sm border border-white/30"
+                        style={{ backgroundColor: option.color || '#E5E7EB' }}
+                      />
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
