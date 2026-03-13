@@ -414,6 +414,13 @@ const App: React.FC = () => {
     return () => cancelAnimationFrame(rafId);
   }, [ghostPose, isPoweredOn]);
 
+  useEffect(() => {
+    if (!torsoUnitEnabled) return;
+    const baseAngle = activePose.torso || 0;
+    setTorsoUnitAngle(baseAngle);
+    setGhostPose(prev => ({ ...prev, waist: baseAngle, torso: baseAngle, collar: baseAngle }));
+  }, [torsoUnitEnabled]);
+
   const handleUndo = useCallback(() => {
     if (undoStack.current.length > 0) {
       const prev = activePose;
