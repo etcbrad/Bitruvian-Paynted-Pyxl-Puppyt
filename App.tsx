@@ -298,6 +298,8 @@ const App: React.FC = () => {
     return Boolean(primarySelectedPart && [PartName.Waist, PartName.Torso, PartName.Collar].includes(primarySelectedPart));
   }, [primarySelectedPart]);
 
+  const jointPositions = useMemo(() => getJointPositions(activePose, activePins), [activePose, activePins]);
+
   // Dynamically calculate viewBox based on viewMode and windowSize
   const autoViewBox = useMemo(() => {
     const configs = {
