@@ -2116,19 +2116,13 @@ const App: React.FC = () => {
                     Snap {snapToGrid ? 'On' : 'Off'}
                   </button>
                   <button
-                    onClick={() => {
-                      const rightArm: PartName[] = [PartName.RShoulder, PartName.RElbow, PartName.RWrist];
-                      rightArm.forEach(p => updateMaskLayer(p, { ...maskLayers[p], mirrorX: false }));
-                    }}
+                    onClick={() => copyRightToLeft([[PartName.RShoulder, PartName.LShoulder], [PartName.RElbow, PartName.LElbow], [PartName.RWrist, PartName.LWrist]])}
                     className="text-[9px] px-2 py-1 border uppercase bg-white/5 border-white/10 text-white/40 hover:text-white/70"
                   >
                     Copy R→L Arm
                   </button>
                   <button
-                    onClick={() => {
-                      const rightLeg: PartName[] = [PartName.RThigh, PartName.RSkin, PartName.RAnkle];
-                      rightLeg.forEach(p => updateMaskLayer(p, { ...maskLayers[p], mirrorX: false }));
-                    }}
+                    onClick={() => copyRightToLeft([[PartName.RThigh, PartName.LThigh], [PartName.RSkin, PartName.LSkin], [PartName.RAnkle, PartName.LAnkle]])}
                     className="text-[9px] px-2 py-1 border uppercase bg-white/5 border-white/10 text-white/40 hover:text-white/70"
                   >
                     Copy R→L Leg
