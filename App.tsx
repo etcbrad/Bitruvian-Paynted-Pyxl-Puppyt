@@ -244,6 +244,7 @@ const App: React.FC = () => {
     'joint-control': true,
     'pin-options': false,
     'display-modes': false,
+    'cutout-maker': true,
     'animation-engine': false,
     'ab-engine': true,
     'saved-poses': true,
