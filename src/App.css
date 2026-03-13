@@ -1,0 +1,107 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+.app-header {
+  background: #2a2a2a;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tab-navigation {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab-navigation button {
+  background: #444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.tab-navigation button.active {
+  background: #007acc;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.canvas-container {
+  flex: 1;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controls-container {
+  width: 300px;
+  background: #f8f8f8;
+  border-left: 1px solid #ddd;
+  overflow-y: auto;
+}
+
+.control-panel {
+  padding: 1rem;
+}
+
+.control-section {
+  margin-bottom: 1.5rem;
+}
+
+.control-section label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.control-section select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.part-checkbox {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.part-checkbox input {
+  margin-right: 0.5rem;
+}
+
+.app-footer {
+  background: #2a2a2a;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.app-footer button {
+  background: #444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.app-footer button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
