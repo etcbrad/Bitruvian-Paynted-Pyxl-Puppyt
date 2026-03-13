@@ -391,9 +391,10 @@ export const solveAdvancedIK = (
   limbName: 'rArm' | 'lArm' | 'rLeg' | 'lLeg',
   target: Vector2D,
   jointModes: Record<PartName, JointConstraint>,
-  activePins: AnchorName[]
+  activePins: AnchorName[],
+  scales?: Partial<ProportionScales>
 ): Pose => {
-  return solveFABRIK(pose, limbName, target, jointModes, activePins);
+  return solveFABRIK(pose, limbName, target, jointModes, activePins, scales);
 };
 
 /**
@@ -403,7 +404,8 @@ export const solveIK = (
   pose: Pose,
   limbName: 'rArm' | 'lArm' | 'rLeg' | 'lLeg',
   target: Vector2D,
-  iterations: number = 10
+  iterations: number = 10,
+  scales?: Partial<ProportionScales>
 ): Pose => {
   const newPose = { ...pose };
   const chain = LIMB_SEQUENCES[limbName];
@@ -413,7 +415,7 @@ export const solveIK = (
   for (let i = 0; i < iterations; i++) {
     // Iterate from end of chain to start
     for (let j = chain.length - 1; j >= 0; j--) {
-      const joints = getJointPositions(newPose, []);
+      const joints = getJointPositions(newPose, [], scales);
       const currentJoint = chain[j];
       const effector = chain[chain.length - 1];
       
