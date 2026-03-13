@@ -85,6 +85,7 @@ const App: React.FC = () => {
     layerOrder: 'front',
     mirrorX: false,
     scaleLocked: false,
+    jointAnchors: [],
   };
 
   const [maskLayers, setMaskLayers] = useState<Record<PartName, BodyPartMaskLayer>>(() =>
