@@ -3,7 +3,7 @@ import { Pose } from '../types';
 import { interpolatePoses } from '../utils/kinematics';
 
 export const useAnimationState = () => {
-  const [activeTab, setActiveTab] = useState<'model' | 'animation' | 'puppyt'>('model');
+  const [activeTab, setActiveTab] = useState<'model' | 'animation' | 'puppet'>('model');
   const [poseA, setPoseA] = useState<Pose | null>(null);
   const [poseB, setPoseB] = useState<Pose | null>(null);
   const [tweenValue, setTweenValue] = useState(0);
