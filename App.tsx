@@ -1814,7 +1814,9 @@ const App: React.FC = () => {
         sensitivity: cutoutSensitivity,
         mergeGap: cutoutMergeGap,
         ignoreText: cutoutIgnoreText,
-        region: cutoutRegion,
+        tool: cutoutTool,
+        eraseSize: cutoutEraseSize,
+        shapes: cutoutShapes,
       },
       pieces: cutoutPieces.map(piece => ({
         id: piece.id,
