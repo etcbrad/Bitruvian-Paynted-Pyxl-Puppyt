@@ -986,9 +986,9 @@ const App: React.FC = () => {
                             });
                           }
                         }}
-                        disabled={!primarySelectedPart}
+                        disabled={!primarySelectedPart || (torsoUnitEnabled && isTorsoUnitPart)}
                         className={`w-full text-[9px] font-bold text-center px-2 py-1 transition-all border ${
-                          !primarySelectedPart
+                          (!primarySelectedPart || (torsoUnitEnabled && isTorsoUnitPart))
                             ? 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
                             : `bg-white/20 border-white/40 hover:bg-white/30 ${getKineticModeDisplayColorClass(jointModes[primarySelectedPart])}`
                         }`}
