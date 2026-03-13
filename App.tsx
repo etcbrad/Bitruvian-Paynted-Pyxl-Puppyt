@@ -261,6 +261,10 @@ const App: React.FC = () => {
     return (Object.entries(selectedParts).find(([p, sel]) => sel)?.[0]) as PartName | undefined;
   }, [selectedParts]);
 
+  const isTorsoUnitPart = useMemo(() => {
+    return Boolean(primarySelectedPart && [PartName.Waist, PartName.Torso, PartName.Collar].includes(primarySelectedPart));
+  }, [primarySelectedPart]);
+
   // Dynamically calculate viewBox based on viewMode and windowSize
   const autoViewBox = useMemo(() => {
     const configs = {
