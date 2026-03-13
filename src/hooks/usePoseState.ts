@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Pose } from '../types';
+import { Pose } from '../types/types';
 
 export const usePoseState = (initialPose: Pose) => {
   const [activePose, setActivePose] = useState<Pose>(initialPose);
