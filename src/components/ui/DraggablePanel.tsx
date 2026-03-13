@@ -89,8 +89,9 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
       const dxAbs = Math.abs(e.clientX - initialClientPos.current.x);
       const dyAbs = Math.abs(e.clientY - initialClientPos.current.y);
       if (dxAbs > SHAKE_THRESHOLD || dyAbs > SHAKE_THRESHOLD) {
-        isSnappedRef.current = false; // Disable snapping for this drag
-        isDraggingBeyondDisconnectThreshold.current = true; // Also disable eased pull for this drag
+        isSnappedRef.current = false;
+        // Note: Not setting isDraggingBeyondDisconnectThreshold here 
+        // would prevent re-snapping until a gentler disconnect occurs
       }
     }
 
