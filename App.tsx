@@ -1003,6 +1003,12 @@ const App: React.FC = () => {
             >
               ANIMATION
             </button>
+            <button 
+              onClick={() => setActiveTab('puppyt')}
+              className={`flex-1 py-1 text-[9px] font-bold tracking-widest transition-all ${activeTab === 'puppyt' ? 'text-focus-ring border-b-2 border-focus-ring' : 'text-white/40 hover:text-white/70'}`}
+            >
+              PUPPYT
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
