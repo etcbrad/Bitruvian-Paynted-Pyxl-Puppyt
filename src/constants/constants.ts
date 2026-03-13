@@ -1,6 +1,6 @@
 
 
-import { PartName, Pose, Vector2D, JointLimits } from './types';
+import { PartName, Pose, Vector2D, JointLimits } from '../types/types';
 
 export const SCALE_FACTOR = 3.5; // Doubled from 1.75
 
