@@ -124,6 +124,8 @@ const App: React.FC = () => {
   const [cutoutTool, setCutoutTool] = useState<'select' | 'rect' | 'circle' | 'freehand' | 'erase'>('select');
   const [cutoutEraseSize, setCutoutEraseSize] = useState(14);
   const [cutoutIsErasing, setCutoutIsErasing] = useState(false);
+  const [showTPoseTemplate, setShowTPoseTemplate] = useState(true);
+  const [tPoseTemplateOpacity, setTPoseTemplateOpacity] = useState(0.4);
   const [cutoutShapes, setCutoutShapes] = useState<Array<{
     id: string;
     type: 'rect' | 'circle' | 'freehand';
