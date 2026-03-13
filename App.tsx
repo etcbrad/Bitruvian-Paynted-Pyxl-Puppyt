@@ -19,7 +19,7 @@ const App: React.FC = () => {
   redoStack.current = []; // Clear redo stack on mount
 
 
-  const [activeTab, setActiveTab] = useState<'model' | 'animation'>('model');
+  const [activeTab, setActiveTab] = useState<'model' | 'animation' | 'puppyt'>('model');
   const [poseA, setPoseA] = useState<Pose | null>(null);
   const [poseB, setPoseB] = useState<Pose | null>(null);
   const [tweenValue, setTweenValue] = useState(0); // 0 to 100
