@@ -726,6 +726,28 @@ const App: React.FC = () => {
     validateAndApplyPoseUpdate({ bodyRotation: newValue }, null, false);
   }, [validateAndApplyPoseUpdate]);
 
+  const getBoneLengthForPart = useCallback((part: PartName): number => {
+    switch (part) {
+      case PartName.Waist: return ANATOMY.WAIST;
+      case PartName.Torso: return ANATOMY.TORSO;
+      case PartName.Collar: return ANATOMY.COLLAR;
+      case PartName.Head: return ANATOMY.HEAD;
+      case PartName.RShoulder:
+      case PartName.LShoulder: return ANATOMY.UPPER_ARM;
+      case PartName.RElbow:
+      case PartName.LElbow: return ANATOMY.LOWER_ARM;
+      case PartName.RWrist:
+      case PartName.LWrist: return ANATOMY.HAND;
+      case PartName.RThigh:
+      case PartName.LThigh: return ANATOMY.LEG_UPPER;
+      case PartName.RSkin:
+      case PartName.LSkin: return ANATOMY.LEG_LOWER;
+      case PartName.RAnkle:
+      case PartName.LAnkle: return ANATOMY.FOOT;
+      default: return ANATOMY.TORSO;
+    }
+  }, []);
+
   const handleTorsoUnitChange = useCallback((newValue: number) => {
     setTorsoUnitAngle(newValue);
     validateAndApplyPoseUpdate({ waist: newValue, torso: newValue, collar: newValue }, PartName.Torso, false);
@@ -743,13 +765,22 @@ const App: React.FC = () => {
       const src = reader.result as string;
       const img = new Image();
       img.onload = () => {
-        updateMaskLayer(primarySelectedPart, { src, width: img.width, height: img.height });
+        const boneLength = getBoneLengthForPart(primarySelectedPart);
+        const dominantSize = Math.max(img.width, img.height);
+        const baseScale = dominantSize > 0 ? boneLength / dominantSize : 1;
+        updateMaskLayer(primarySelectedPart, {
+          src,
+          width: img.width,
+          height: img.height,
+          baseScale,
+          scale: baseScale,
+        });
       };
       img.src = src;
     };
     reader.readAsDataURL(file);
     e.target.value = '';
-  }, [primarySelectedPart, updateMaskLayer]);
+  }, [primarySelectedPart, updateMaskLayer, getBoneLengthForPart]);
 
   const handleCutoutUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
