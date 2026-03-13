@@ -1860,6 +1860,21 @@ const App: React.FC = () => {
                     </button>
                   ))}
                 </div>
+                <div className="mt-2">
+                  <div className="flex justify-between text-[8px] text-white/40 uppercase">
+                    <span>Background Light</span>
+                    <span>{Math.round(backgroundLight * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(backgroundLight * 100)}
+                    onChange={e => setBackgroundLight(Math.min(1, Math.max(0, Number(e.target.value) / 100)))}
+                    className="w-full accent-selection"
+                    aria-label="Background light overlay"
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -2202,6 +2217,37 @@ const App: React.FC = () => {
                   </p>
                 </div>
               )}
+
+              <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[9px] uppercase font-bold text-white/70">Joint Previews</span>
+                  <span className="text-[8px] text-white/40">Click to select</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {JOINT_ORDER.map(part => {
+                    const layer = maskLayers[part];
+                    const hasMask = Boolean(layer.src);
+                    return (
+                      <button
+                        key={`preview-${part}`}
+                        onClick={() => selectSinglePart(part)}
+                        className={`flex flex-col items-center gap-1 p-1 border text-[7px] uppercase ${
+                          hasMask ? 'border-accent-green/40 bg-accent-green/10 text-accent-green' : 'border-white/10 bg-white/5 text-white/40'
+                        }`}
+                      >
+                        <div className="w-10 h-10 bg-black/20 border border-white/10 flex items-center justify-center overflow-hidden">
+                          {hasMask ? (
+                            <img src={layer.src!} alt={part} className="w-full h-full object-contain" />
+                          ) : (
+                            <span className="text-[8px]">Empty</span>
+                          )}
+                        </div>
+                        <span className="truncate w-full text-center">{part.replace(/([A-Z])/g, ' $1')}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {(workflowStep === 'rig' || workflowStep === 'pose') && (
                 <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
