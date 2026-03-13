@@ -1089,12 +1089,12 @@ const App: React.FC = () => {
     return Math.round(value / gridSize) * gridSize;
   }, [snapToGrid, gridSize]);
 
-  const rotateVec = useCallback((x: number, y: number, angleDeg: number) => {
+  function rotateVec(x: number, y: number, angleDeg: number) {
     const r = angleDeg * Math.PI / 180;
     const c = Math.cos(r);
     const s = Math.sin(r);
     return { x: x * c - y * s, y: x * s + y * c };
-  }, []);
+  }
 
   function getWorldRotationForPart(part: PartName, pose: Pose) {
     const chain: PartName[] = [];
