@@ -1011,6 +1011,16 @@ const App: React.FC = () => {
                         <span>{cutoutScale.toFixed(2)}x</span>
                       </div>
                       <input type="range" min={50} max={200} value={Math.round(cutoutScale * 100)} onChange={e => setCutoutScale(Number(e.target.value) / 100)} className="w-full accent-selection" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <div className="flex justify-between text-[8px] text-white/50"><span>Offset X</span><span>{Math.round(cutoutOffset.x)}</span></div>
+                          <input type="range" min={-500} max={500} value={Math.round(cutoutOffset.x)} onChange={e => setCutoutOffset(prev => ({ ...prev, x: Number(e.target.value) }))} className="w-full accent-selection" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-[8px] text-white/50"><span>Offset Y</span><span>{Math.round(cutoutOffset.y)}</span></div>
+                          <input type="range" min={-500} max={500} value={Math.round(cutoutOffset.y)} onChange={e => setCutoutOffset(prev => ({ ...prev, y: Number(e.target.value) }))} className="w-full accent-selection" />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
