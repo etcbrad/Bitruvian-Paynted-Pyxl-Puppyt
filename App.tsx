@@ -85,6 +85,10 @@ const App: React.FC = () => {
   const [cutoutScale, setCutoutScale] = useState(1);
   const [cutoutOffset, setCutoutOffset] = useState({ x: 0, y: 0 });
   const [cutoutSensitivity, setCutoutSensitivity] = useState(0.6);
+  const [cutoutMergeGap, setCutoutMergeGap] = useState(1);
+  const [cutoutIgnoreText, setCutoutIgnoreText] = useState(true);
+  const [cutoutRegionMode, setCutoutRegionMode] = useState(false);
+  const [cutoutRegion, setCutoutRegion] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [cutoutPieces, setCutoutPieces] = useState<Array<{
     id: string;
     labelId: number;
@@ -92,6 +96,7 @@ const App: React.FC = () => {
     area: number;
     previewSrc: string;
     center: { x: number; y: number };
+    fillRatio: number;
   }>>([]);
   const [selectedCutoutPieceId, setSelectedCutoutPieceId] = useState<string | null>(null);
   const [isAdjustingSensitivity, setIsAdjustingSensitivity] = useState(false);
@@ -99,6 +104,7 @@ const App: React.FC = () => {
   const cutoutImageDataRef = useRef<ImageData | null>(null);
   const cutoutLabelMapRef = useRef<{ labels: Int32Array; width: number; height: number } | null>(null);
   const sensitivityDragRef = useRef<{ startY: number; startSensitivity: number } | null>(null);
+  const regionDragRef = useRef<{ startX: number; startY: number } | null>(null);
 
   // Animation State
   const [animation, setAnimation] = useState<AnimationState>({
