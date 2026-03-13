@@ -211,45 +211,6 @@ const App: React.FC = () => {
     innerHeight: window.innerHeight,
   });
 
-  // Panel Z-index management for the single settings panel
-  const [panelZIndices, setPanelZIndices] = useState<Record<string, number>>({
-    'model-settings-panel': 102,
-  });
-  const nextZIndex = useRef<number>(103);
-
-  const bringPanelToFront = useCallback((id: string) => {
-    setPanelZIndices(prev => {
-      const newZIndices = { ...prev };
-      newZIndices[id] = nextZIndex.current++;
-      return newZIndices;
-    });
-  }, []);
-
-  // --- Panel Position/Size Management for the single settings panel ---
-  const [panelRects, setPanelRects] = useState<Record<string, PanelRect>>({
-    'model-settings-panel': { id: 'model-settings-panel', x: window.innerWidth - 224 - 16, y: 64, width: 224, height: 700, minimized: true },
-  });
-
-  const updatePanelRect = useCallback((id: string, newRect: Omit<PanelRect, 'x' | 'y'>) => {
-    setPanelRects(prev => {
-      const existingRect = prev[id];
-      if (!existingRect || existingRect.width !== newRect.width || existingRect.height !== newRect.height || existingRect.minimized !== newRect.minimized) {
-        return { ...prev, [id]: { ...existingRect, ...newRect } };
-      }
-      return prev;
-    });
-  }, []);
-
-  const updatePanelPosition = useCallback((id: string, newX: number, newY: number, minimized: boolean) => {
-    setPanelRects(prev => {
-      const existingRect = prev[id];
-      if (!existingRect || existingRect.x !== newX || existingRect.y !== newY || existingRect.minimized !== minimized) {
-        return { ...prev, [id]: { ...existingRect, x: newX, y: newY, minimized: minimized } };
-      }
-      return prev;
-    });
-  }, []);
-
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     'joint-control': true,
     'pin-options': false,
@@ -266,8 +227,6 @@ const App: React.FC = () => {
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
-
-  // --- End Panel Position/Size Management ---
 
   const primarySelectedPart = useMemo(() => {
     return (Object.entries(selectedParts).find(([p, sel]) => sel)?.[0]) as PartName | undefined;
