@@ -53,6 +53,28 @@ const App: React.FC = () => {
     Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: 'fk' }), {} as Record<PartName, JointConstraint>)
   );
 
+  const [workflowStep, setWorkflowStep] = useState<'upload' | 'slice' | 'rig' | 'pose'>('pose');
+  const [masksEnabled, setMasksEnabled] = useState(true);
+  const [hideBonesWithMasks, setHideBonesWithMasks] = useState(false);
+  const [torsoUnitEnabled, setTorsoUnitEnabled] = useState(true);
+  const [torsoUnitAngle, setTorsoUnitAngle] = useState(0);
+
+  const DEFAULT_MASK_LAYER: BodyPartMaskLayer = {
+    src: null,
+    width: 0,
+    height: 0,
+    opacity: 1,
+    scale: 1,
+    rotationDeg: 0,
+    offsetX: 0,
+    offsetY: 0,
+    layerOrder: 'front',
+  };
+
+  const [maskLayers, setMaskLayers] = useState<Record<PartName, BodyPartMaskLayer>>(() =>
+    Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: { ...DEFAULT_MASK_LAYER } }), {} as Record<PartName, BodyPartMaskLayer>)
+  );
+
   // Animation State
   const [animation, setAnimation] = useState<AnimationState>({
     keyframes: [],
