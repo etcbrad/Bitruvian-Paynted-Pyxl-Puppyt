@@ -3231,18 +3231,63 @@ const App: React.FC = () => {
             )}
             {workflowStep === 'slice' && cutoutSheet && (
               <g>
-                {cutoutRegion && (
-                  <rect
-                    x={-((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x + cutoutRegion.x * cutoutScale}
-                    y={-((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y + cutoutRegion.y * cutoutScale}
-                    width={cutoutRegion.w * cutoutScale}
-                    height={cutoutRegion.h * cutoutScale}
-                    fill="rgba(59,130,246,0.08)"
-                    stroke="rgba(59,130,246,0.6)"
-                    strokeWidth={2}
-                    pointerEvents="none"
-                  />
-                )}
+                {[...cutoutShapes, ...(cutoutDraftShape ? [{
+                  id: 'draft',
+                  type: cutoutDraftShape.type,
+                  bbox: cutoutDraftShape.bbox,
+                  points: cutoutDraftShape.points,
+                }] : [])].map(shape => {
+                  const isActive = shape.id === cutoutActiveShapeId || shape.id === 'draft';
+                  const x = -((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x + shape.bbox.x * cutoutScale;
+                  const y = -((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y + shape.bbox.y * cutoutScale;
+                  const w = shape.bbox.w * cutoutScale;
+                  const h = shape.bbox.h * cutoutScale;
+                  if (shape.type === 'circle') {
+                    return (
+                      <ellipse
+                        key={`shape-${shape.id}`}
+                        cx={x + w / 2}
+                        cy={y + h / 2}
+                        rx={Math.max(1, w / 2)}
+                        ry={Math.max(1, h / 2)}
+                        fill="rgba(56,189,248,0.08)"
+                        stroke={isActive ? 'rgba(56,189,248,0.9)' : 'rgba(56,189,248,0.4)'}
+                        strokeWidth={isActive ? 2 : 1}
+                        pointerEvents="none"
+                      />
+                    );
+                  }
+                  if (shape.type === 'freehand' && shape.points && shape.points.length > 1) {
+                    const d = shape.points.map((p, i) => {
+                      const px = -((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x + p.x * cutoutScale;
+                      const py = -((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y + p.y * cutoutScale;
+                      return `${i === 0 ? 'M' : 'L'} ${px} ${py}`;
+                    }).join(' ');
+                    return (
+                      <path
+                        key={`shape-${shape.id}`}
+                        d={`${d} Z`}
+                        fill="rgba(56,189,248,0.08)"
+                        stroke={isActive ? 'rgba(56,189,248,0.9)' : 'rgba(56,189,248,0.4)'}
+                        strokeWidth={isActive ? 2 : 1}
+                        pointerEvents="none"
+                      />
+                    );
+                  }
+                  return (
+                    <rect
+                      key={`shape-${shape.id}`}
+                      x={x}
+                      y={y}
+                      width={w}
+                      height={h}
+                      fill="rgba(56,189,248,0.08)"
+                      stroke={isActive ? 'rgba(56,189,248,0.9)' : 'rgba(56,189,248,0.4)'}
+                      strokeWidth={isActive ? 2 : 1}
+                      pointerEvents="none"
+                    />
+                  );
+                })}
                 {cutoutPieces.map(piece => {
                   const px = -((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x + piece.bbox.x * cutoutScale;
                   const py = -((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y + piece.bbox.y * cutoutScale;
@@ -3280,23 +3325,17 @@ const App: React.FC = () => {
                     Drag up/down
                   </text>
                 </g>
-                {cutoutRegionMode && (
-                  <rect
-                    x={viewBoxValues.x}
-                    y={viewBoxValues.y}
-                    width={viewBoxValues.w}
-                    height={viewBoxValues.h}
-                    fill="transparent"
-                    style={{ cursor: 'crosshair' }}
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      const point = svgPointToSheetPoint(e.clientX, e.clientY);
-                      if (!point) return;
-                      regionDragRef.current = { startX: point.x, startY: point.y };
-                      setCutoutRegion({ x: point.x, y: point.y, w: 0, h: 0 });
-                    }}
-                  />
-                )}
+                <rect
+                  x={viewBoxValues.x}
+                  y={viewBoxValues.y}
+                  width={viewBoxValues.w}
+                  height={viewBoxValues.h}
+                  fill="transparent"
+                  style={{ cursor: cutoutTool === 'erase' ? 'crosshair' : 'default' }}
+                  onMouseDown={handleSliceMouseDown}
+                  onMouseUp={handleSliceMouseUp}
+                  onDoubleClick={handleSliceDoubleClick}
+                />
               </g>
             )}
           </svg>
