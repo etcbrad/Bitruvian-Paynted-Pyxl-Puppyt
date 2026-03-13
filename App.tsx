@@ -14,6 +14,12 @@ const App: React.FC = () => {
   const [activePose, setActivePose] = useState<Pose>(RESET_POSE);
   const [ghostPose, setGhostPose] = useState<Pose>(RESET_POSE);
   const isDragging = useRef(false);
+  const maskDragInfo = useRef<{
+    startX: number;
+    startY: number;
+    startOffsetX: number;
+    startOffsetY: number;
+  } | null>(null);
   const undoStack = useRef<Pose[]>([]);
   const redoStack = useRef<Pose[]>([]); 
   redoStack.current = []; // Clear redo stack on mount
