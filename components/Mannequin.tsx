@@ -308,6 +308,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
             offset={skeletonOffsets[PartName.RThigh]} 
             visible={visibility[PartName.RThigh]} 
             partCategory={getPartCategory(PartName.RThigh)}
+            maskLayer={masksEnabled ? maskLayers[PartName.RThigh] : undefined}
+            suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.RThigh]?.src)}
           >
             <PartWrapper part={PartName.RSkin} isGhost={isGhost}>
               <Bone 
@@ -319,6 +321,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                 offset={skeletonOffsets[PartName.RSkin]} 
                 visible={visibility[PartName.RSkin]} 
                 partCategory={getPartCategory(PartName.RSkin)}
+                maskLayer={masksEnabled ? maskLayers[PartName.RSkin] : undefined}
+                suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.RSkin]?.src)}
               >
                 <PartWrapper part={PartName.RAnkle} isGhost={isGhost}>
                   <Bone 
@@ -330,6 +334,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                     offset={skeletonOffsets[PartName.RAnkle]} 
                     visible={visibility[PartName.RAnkle]} 
                     partCategory={getPartCategory(PartName.RAnkle)}
+                    maskLayer={masksEnabled ? maskLayers[PartName.RAnkle] : undefined}
+                    suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.RAnkle]?.src)}
                   />
                 </PartWrapper>
               </Bone>
@@ -347,6 +353,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
             offset={skeletonOffsets[PartName.LThigh]} 
             visible={visibility[PartName.LThigh]} 
             partCategory={getPartCategory(PartName.LThigh)}
+            maskLayer={masksEnabled ? maskLayers[PartName.LThigh] : undefined}
+            suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.LThigh]?.src)}
           >
             <PartWrapper part={PartName.LSkin} isGhost={isGhost}>
               <Bone 
@@ -358,6 +366,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                 offset={skeletonOffsets[PartName.LSkin]} 
                 visible={visibility[PartName.LSkin]} 
                 partCategory={getPartCategory(PartName.LSkin)}
+                maskLayer={masksEnabled ? maskLayers[PartName.LSkin] : undefined}
+                suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.LSkin]?.src)}
               >
                 <PartWrapper part={PartName.LAnkle} isGhost={isGhost}>
                   <Bone 
@@ -369,6 +379,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                     offset={skeletonOffsets[PartName.LAnkle]} 
                     visible={visibility[PartName.LAnkle]} 
                     partCategory={getPartCategory(PartName.LAnkle)}
+                    maskLayer={masksEnabled ? maskLayers[PartName.LAnkle] : undefined}
+                    suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.LAnkle]?.src)}
                   />
                 </PartWrapper>
               </Bone>
