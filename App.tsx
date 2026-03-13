@@ -780,16 +780,54 @@ const App: React.FC = () => {
   const handleCutoutUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
     const reader = new FileReader();
-    reader.onload = () => {
-      const src = reader.result as string;
+
+    const loadRaster = (src: string) => {
       const img = new Image();
       img.onload = () => {
-        setCutoutSheet({ src, width: img.width, height: img.height });
+        setCutoutSheet({ src, width: img.width || img.naturalWidth, height: img.height || img.naturalHeight });
       };
       img.src = src;
     };
-    reader.readAsDataURL(file);
+
+    if (isSvg) {
+      reader.onload = () => {
+        const raw = String(reader.result || '');
+        let width = 0;
+        let height = 0;
+        try {
+          const doc = new DOMParser().parseFromString(raw, 'image/svg+xml');
+          const svgEl = doc.documentElement;
+          const widthAttr = svgEl.getAttribute('width');
+          const heightAttr = svgEl.getAttribute('height');
+          const viewBoxAttr = svgEl.getAttribute('viewBox');
+          if (widthAttr && heightAttr) {
+            width = parseFloat(widthAttr);
+            height = parseFloat(heightAttr);
+          } else if (viewBoxAttr) {
+            const parts = viewBoxAttr.split(/[\s,]+/).map(v => parseFloat(v)).filter(v => Number.isFinite(v));
+            if (parts.length === 4) {
+              width = parts[2];
+              height = parts[3];
+            }
+          }
+        } catch {
+          // Fallback handled below.
+        }
+        const src = `data:image/svg+xml;utf8,${encodeURIComponent(raw)}`;
+        if (width > 0 && height > 0) {
+          setCutoutSheet({ src, width, height });
+        } else {
+          // Some SVGs omit size attributes; attempt to infer via image load.
+          loadRaster(src);
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      reader.onload = () => loadRaster(reader.result as string);
+      reader.readAsDataURL(file);
+    }
     e.target.value = '';
   }, []);
 
