@@ -1198,6 +1198,21 @@ const App: React.FC = () => {
     setSelectedCutoutPieceId(null);
   }, [cutoutPieces, getBoneLengthForPart, updateMaskLayer]);
 
+  const svgPointToSheetPoint = useCallback((clientX: number, clientY: number) => {
+    if (!svgRef.current || !cutoutSheet) return null;
+    const svgPoint = svgRef.current.createSVGPoint();
+    svgPoint.x = clientX;
+    svgPoint.y = clientY;
+    const ctm = svgRef.current.getScreenCTM();
+    if (!ctm) return null;
+    const transformed = svgPoint.matrixTransform(ctm.inverse());
+    const sheetOriginX = -((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x;
+    const sheetOriginY = -((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y;
+    const sx = (transformed.x - sheetOriginX) / cutoutScale;
+    const sy = (transformed.y - sheetOriginY) / cutoutScale;
+    return { x: clamp(sx, 0, cutoutSheet.width), y: clamp(sy, 0, cutoutSheet.height) };
+  }, [cutoutOffset.x, cutoutOffset.y, cutoutScale, cutoutSheet]);
+
   useEffect(() => {
     if (!cutoutSheet) {
       setCutoutPieces([]);
@@ -1321,12 +1336,25 @@ const App: React.FC = () => {
                             ? 'bg-accent-red/20 border-accent-red/50 text-accent-red'
                             : 'bg-amber-500/20 border-amber-400/50 text-amber-200'
                   }`}
-                  aria-label={`Cycle Display Mode. Current: ${getRenderModeDisplayName(renderMode)}`}
+                  aria-label={`Aesthetic Engine. Current: ${getRenderModeDisplayName(renderMode)}`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                  <span className="text-[9px] font-bold uppercase tracking-widest">Aesthetic Engine</span>
                 </button>
+                <button
+                  onClick={() => backgroundUploadInputRef.current?.click()}
+                  className="p-2 rounded border bg-white/10 border-white/20 text-white/70 hover:bg-white/20 transition-all"
+                  aria-label="Upload background"
+                  title="Upload background"
+                >
+                  +
+                </button>
+                <input
+                  ref={backgroundUploadInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBackgroundUpload}
+                  className="hidden"
+                />
               </div>
             </div>
 
