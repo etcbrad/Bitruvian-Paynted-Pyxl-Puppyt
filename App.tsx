@@ -1028,35 +1028,6 @@ const App: React.FC = () => {
   }, []);
 
 
-  const handleMaskUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !primarySelectedPart) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const src = reader.result as string;
-      const img = new Image();
-      img.onload = () => {
-        const boneLength = getBoneLengthForPart(primarySelectedPart);
-        const dominantSize = Math.max(img.width, img.height);
-        const baseScale = dominantSize > 0 ? boneLength / dominantSize : 1;
-        updateMaskLayer(primarySelectedPart, {
-          src,
-          width: img.width,
-          height: img.height,
-          baseScale,
-          scale: baseScale,
-        });
-        if (autoAdvanceJoint) {
-          const next = getNextEmptyJoint(primarySelectedPart);
-          if (next) selectSinglePart(next);
-        }
-      };
-      img.src = src;
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  }, [primarySelectedPart, updateMaskLayer, getBoneLengthForPart, autoAdvanceJoint, getNextEmptyJoint, selectSinglePart]);
-
   const handleCutoutUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
