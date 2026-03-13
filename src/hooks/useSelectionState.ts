@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PartSelection, PartName, ViewMode, RenderMode, AnchorName, Vector2D } from '../types';
+import { PartSelection, PartName, ViewMode, RenderMode, AnchorName, Vector2D } from '../types/types';
 
 export const useSelectionState = () => {
   const [selectedParts, setSelectedParts] = useState<PartSelection>(() => {
