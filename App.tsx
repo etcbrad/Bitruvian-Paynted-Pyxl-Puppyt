@@ -2776,6 +2776,49 @@ const App: React.FC = () => {
               {workflowStep === 'slice' && cutoutSheet && (
                 <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
                   <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] uppercase font-bold text-white/70">Tools</span>
+                    <span className="text-[8px] text-white/40">Slice</span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1">
+                    {(['select', 'rect', 'circle', 'freehand', 'erase'] as const).map(tool => (
+                      <button
+                        key={tool}
+                        onClick={() => setCutoutTool(tool)}
+                        className={`text-[9px] px-1 py-1 border uppercase ${
+                          cutoutTool === tool
+                            ? 'bg-selection text-paper border-selection'
+                            : 'bg-white/5 border-white/10 text-white/50 hover:text-white/80'
+                        }`}
+                      >
+                        {tool}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-2 text-[8px] text-white/40">
+                    Draw a shape per piece. Double‑click to merge extra blobs. Long‑press to tweak sensitivity.
+                  </div>
+                  {cutoutTool === 'erase' && (
+                    <>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-[8px] text-white/40">Erase Size</span>
+                        <span className="text-[8px] text-white/40">{Math.round(cutoutEraseSize)}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={4}
+                        max={48}
+                        value={Math.round(cutoutEraseSize)}
+                        onChange={e => setCutoutEraseSize(Number(e.target.value))}
+                        className="w-full accent-selection"
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+
+              {workflowStep === 'slice' && cutoutSheet && (
+                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="flex items-center justify-between mb-2">
                     <span className="text-[9px] uppercase font-bold text-white/70">Detection</span>
                     <span className="text-[8px] text-white/40">{Math.round(cutoutSensitivity * 100)}%</span>
                   </div>
@@ -2811,24 +2854,47 @@ const App: React.FC = () => {
                     />
                     Ignore text-like fragments
                   </label>
-                  <div className="mt-2 flex items-center gap-2">
-                    <button
-                      onClick={() => setCutoutRegionMode(prev => !prev)}
-                      className={`flex-1 text-[9px] px-2 py-1 border uppercase ${
-                        cutoutRegionMode
-                          ? 'bg-selection/30 border-selection text-selection'
-                          : 'bg-white/5 border-white/10 text-white/40'
-                      }`}
-                    >
-                      {cutoutRegionMode ? 'Region: On' : 'Region: Off'}
-                    </button>
-                    <button
-                      onClick={() => setCutoutRegion(null)}
-                      className="flex-1 text-[9px] px-2 py-1 border uppercase bg-white/5 border-white/10 text-white/40"
-                    >
-                      Clear Region
-                    </button>
+                </div>
+              )}
+
+              {workflowStep === 'slice' && cutoutSheet && (
+                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] uppercase font-bold text-white/70">Shapes</span>
+                    <span className="text-[8px] text-white/40">{cutoutShapes.length}</span>
                   </div>
+                  <div className="grid grid-cols-1 gap-1 max-h-32 overflow-y-auto custom-scrollbar">
+                    {cutoutShapes.map(shape => (
+                      <button
+                        key={shape.id}
+                        onClick={() => setCutoutActiveShapeId(shape.id)}
+                        className={`flex items-center justify-between text-[9px] px-2 py-1 border ${
+                          cutoutActiveShapeId === shape.id
+                            ? 'bg-selection/20 border-selection text-selection'
+                            : 'bg-white/5 border-white/10 text-white/50'
+                        }`}
+                      >
+                        <span>{shape.type.toUpperCase()}</span>
+                        <span className="text-[8px]">
+                          {Math.round(shape.bbox.w)}×{Math.round(shape.bbox.h)}
+                        </span>
+                      </button>
+                    ))}
+                    {cutoutShapes.length === 0 && (
+                      <div className="text-[8px] text-white/40">No shapes yet.</div>
+                    )}
+                  </div>
+                  {cutoutActiveShapeId && (
+                    <button
+                      onClick={() => {
+                        setCutoutShapes(prev => prev.filter(shape => shape.id !== cutoutActiveShapeId));
+                        setCutoutActiveShapeId(null);
+                      }}
+                      className="mt-2 w-full text-[9px] px-2 py-1 border uppercase bg-white/5 border-white/10 text-white/40"
+                    >
+                      Delete Selected Shape
+                    </button>
+                  )}
                 </div>
               )}
 
