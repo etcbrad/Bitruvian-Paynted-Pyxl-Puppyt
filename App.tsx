@@ -120,11 +120,24 @@ const App: React.FC = () => {
   const [cutoutSensitivity, setCutoutSensitivity] = useState(0.6);
   const [cutoutMergeGap, setCutoutMergeGap] = useState(1);
   const [cutoutIgnoreText, setCutoutIgnoreText] = useState(true);
-  const [cutoutRegionMode, setCutoutRegionMode] = useState(false);
-  const [cutoutRegion, setCutoutRegion] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [cutoutTool, setCutoutTool] = useState<'select' | 'rect' | 'circle' | 'freehand' | 'erase'>('select');
+  const [cutoutEraseSize, setCutoutEraseSize] = useState(14);
+  const [cutoutShapes, setCutoutShapes] = useState<Array<{
+    id: string;
+    type: 'rect' | 'circle' | 'freehand';
+    bbox: { x: number; y: number; w: number; h: number };
+    points?: Array<{ x: number; y: number }>;
+  }>>([]);
+  const [cutoutActiveShapeId, setCutoutActiveShapeId] = useState<string | null>(null);
+  const [cutoutDraftShape, setCutoutDraftShape] = useState<{
+    type: 'rect' | 'circle' | 'freehand';
+    bbox: { x: number; y: number; w: number; h: number };
+    points?: Array<{ x: number; y: number }>;
+  } | null>(null);
   const [cutoutPieces, setCutoutPieces] = useState<Array<{
     id: string;
     labelId: number;
+    shapeId: string;
     bbox: { x: number; y: number; w: number; h: number };
     area: number;
     previewSrc: string;
@@ -137,7 +150,9 @@ const App: React.FC = () => {
   const cutoutImageDataRef = useRef<ImageData | null>(null);
   const cutoutLabelMapRef = useRef<{ labels: Int32Array; width: number; height: number } | null>(null);
   const sensitivityDragRef = useRef<{ startY: number; startSensitivity: number } | null>(null);
-  const regionDragRef = useRef<{ startX: number; startY: number } | null>(null);
+  const shapeDragRef = useRef<{ startX: number; startY: number } | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const isErasingRef = useRef(false);
 
   // Animation State
   const [animation, setAnimation] = useState<AnimationState>({
