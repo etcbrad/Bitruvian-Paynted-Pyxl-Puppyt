@@ -63,6 +63,9 @@ const App: React.FC = () => {
   const [jointModes, setJointModes] = useState<Record<PartName, JointConstraint>>(() => 
     Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: 'fk' }), {} as Record<PartName, JointConstraint>)
   );
+  const [jointParentOverrides, setJointParentOverrides] = useState<Record<PartName, AnchorName | null>>(() =>
+    Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: PARENT_MAP[name] || null }), {} as Record<PartName, AnchorName | null>)
+  );
 
   const [workflowStep, setWorkflowStep] = useState<'upload' | 'slice' | 'rig' | 'pose'>('pose');
   const [masksEnabled, setMasksEnabled] = useState(true);
