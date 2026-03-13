@@ -324,6 +324,14 @@ const App: React.FC = () => {
     }
   }, [viewMode, windowSize.innerWidth, windowSize.innerHeight]);
 
+  const viewBoxValues = useMemo(() => {
+    const parts = autoViewBox.split(' ').map(v => Number(v));
+    if (parts.length === 4 && parts.every(v => Number.isFinite(v))) {
+      return { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
+    }
+    return { x: -1000, y: -1000, w: 2000, h: 2000 };
+  }, [autoViewBox]);
+
   // --- Physics Validation Logic ---
   const isValidMove = useCallback((
     potentialPose: Pose,
