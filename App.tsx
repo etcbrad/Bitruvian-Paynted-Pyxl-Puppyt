@@ -623,7 +623,8 @@ const App: React.FC = () => {
       if (prev === 'default') return 'wireframe';
       if (prev === 'wireframe') return 'silhouette';
       if (prev === 'silhouette') return 'backlight';
-      if (prev === 'backlight') return 'default';
+      if (prev === 'backlight') return 'colorwheel';
+      if (prev === 'colorwheel') return 'default';
       return 'default';
     });
   }, []);
