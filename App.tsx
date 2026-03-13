@@ -2523,7 +2523,8 @@ const App: React.FC = () => {
                                 min={-200}
                                 max={200}
                                 value={Math.round(maskLayers[primarySelectedPart].offsetX)}
-                                onChange={e => updateMaskLayer(primarySelectedPart, { offsetX: Number(e.target.value) })}
+                                step={snapToGrid ? gridSize : 1}
+                                onChange={e => updateMaskLayer(primarySelectedPart, { offsetX: snapValue(Number(e.target.value)) })}
                                 className="w-full accent-selection"
                               />
                             </div>
@@ -2534,7 +2535,8 @@ const App: React.FC = () => {
                                 min={-200}
                                 max={200}
                                 value={Math.round(maskLayers[primarySelectedPart].offsetY)}
-                                onChange={e => updateMaskLayer(primarySelectedPart, { offsetY: Number(e.target.value) })}
+                                step={snapToGrid ? gridSize : 1}
+                                onChange={e => updateMaskLayer(primarySelectedPart, { offsetY: snapValue(Number(e.target.value)) })}
                                 className="w-full accent-selection"
                               />
                             </div>
