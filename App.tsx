@@ -2577,6 +2577,15 @@ const App: React.FC = () => {
                             Upload
                           </button>
                           <button
+                            onClick={() => primarySelectedPart && fitMaskToBone(primarySelectedPart)}
+                            disabled={!primarySelectedPart}
+                            className={`text-[9px] px-2 py-1 border ${
+                              primarySelectedPart ? 'bg-white/10 border-white/20 text-white/70' : 'bg-white/5 border-transparent text-white cursor-not-allowed'
+                            }`}
+                          >
+                            Fit
+                          </button>
+                          <button
                             onClick={() => primarySelectedPart && updateMaskLayer(primarySelectedPart, { src: null })}
                             disabled={!primarySelectedPart}
                             className={`text-[9px] px-2 py-1 border ${
@@ -2600,6 +2609,16 @@ const App: React.FC = () => {
 
                       {primarySelectedPart && maskLayers[primarySelectedPart]?.src && (
                         <div className="mt-2 space-y-2">
+                          <div className="flex items-center gap-2 text-[8px] text-white/40">
+                            <button
+                              onClick={() => updateMaskLayer(primarySelectedPart, { mirrorX: !maskLayers[primarySelectedPart].mirrorX })}
+                              className={`px-2 py-0.5 border uppercase ${
+                                maskLayers[primarySelectedPart].mirrorX ? 'bg-selection/30 border-selection text-selection' : 'bg-white/5 border-white/10 text-white/40'
+                              }`}
+                            >
+                              Mirror {maskLayers[primarySelectedPart].mirrorX ? 'On' : 'Off'}
+                            </button>
+                          </div>
                           {maskLayers[primarySelectedPart].baseScale > 0 && (
                             <div className="text-[8px] text-white/40 uppercase">
                               Auto Fit: {maskLayers[primarySelectedPart].baseScale.toFixed(2)}x
