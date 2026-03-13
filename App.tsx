@@ -3245,6 +3245,56 @@ const App: React.FC = () => {
             onClick={handleCanvasClick}
           >
             <SystemGuides floorY={FLOOR_HEIGHT} /> 
+            {workflowStep === 'rig' && showTPoseTemplate && tPoseTemplate && (
+              <g opacity={tPoseTemplateOpacity}>
+                <circle
+                  cx={tPoseTemplate.circle.cx}
+                  cy={tPoseTemplate.circle.cy}
+                  r={tPoseTemplate.circle.r}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.45)"
+                  strokeWidth={2}
+                />
+                <rect
+                  x={tPoseTemplate.square.x}
+                  y={tPoseTemplate.square.y}
+                  width={tPoseTemplate.square.size}
+                  height={tPoseTemplate.square.size}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.45)"
+                  strokeWidth={2}
+                />
+                <line
+                  x1={tPoseTemplate.vertical.x1}
+                  y1={tPoseTemplate.vertical.y1}
+                  x2={tPoseTemplate.vertical.x2}
+                  y2={tPoseTemplate.vertical.y2}
+                  stroke="rgba(255,255,255,0.55)"
+                  strokeWidth={1.5}
+                />
+                {tPoseTemplate.shoulders && (
+                  <line
+                    x1={tPoseTemplate.shoulders.x1}
+                    y1={tPoseTemplate.shoulders.y1}
+                    x2={tPoseTemplate.shoulders.x2}
+                    y2={tPoseTemplate.shoulders.y2}
+                    stroke="rgba(255,255,255,0.55)"
+                    strokeWidth={1.5}
+                  />
+                )}
+                {tPoseTemplate.hands && (
+                  <line
+                    x1={tPoseTemplate.hands.x1}
+                    y1={tPoseTemplate.hands.y1}
+                    x2={tPoseTemplate.hands.x2}
+                    y2={tPoseTemplate.hands.y2}
+                    stroke="rgba(255,255,255,0.35)"
+                    strokeDasharray="6 6"
+                    strokeWidth={1}
+                  />
+                )}
+              </g>
+            )}
             {showJointLabels && (
               <g>
                 {PART_NAMES.map(part => {
