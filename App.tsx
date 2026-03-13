@@ -2243,12 +2243,19 @@ const App: React.FC = () => {
         <div
           className={`flex-1 flex items-center justify-center relative ${activeBackground.className || ''}`}
           style={
-            activeBackground.className
-              ? undefined
-              : {
-                  backgroundColor: activeBackground.color,
-                  backgroundImage: 'none',
+            backgroundImageSrc
+              ? {
+                  backgroundImage: `url(${backgroundImageSrc})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
                 }
+              : activeBackground.className
+                ? undefined
+                : {
+                    backgroundColor: activeBackground.color,
+                    backgroundImage: 'none',
+                  }
           }
         >
           <Scanlines />
