@@ -3,7 +3,7 @@ import React from 'react';
 import { Bone, type BoneProps } from './Bone'; // Import BoneProps type for explicit casting
 import { ANATOMY, RIGGING } from '../constants';
 import { getJointPositions, getTotalRotation, calculateTensionFactor } from '../utils/kinematics';
-import { PartName, PartSelection, PartVisibility, AnchorName, Pose, JointConstraint, RenderMode, PARENT_MAP, partNameToPoseKey, PinnedState } from '../types';
+import { PartName, PartSelection, PartVisibility, AnchorName, Pose, JointConstraint, RenderMode, PARENT_MAP, partNameToPoseKey, PinnedState, BodyPartMaskLayer } from '../types';
 import { COLORS_BY_CATEGORY, COLORS } from './Bone'; // Import COLORS_BY_CATEGORY AND COLORS for pin indicator color
 
 interface MannequinProps {
@@ -20,6 +20,9 @@ interface MannequinProps {
   onMouseDownOnRoot?: (event: React.MouseEvent<SVGCircleElement>) => void;
   jointModes: Record<PartName, JointConstraint>;
   renderMode?: RenderMode;
+  masksEnabled?: boolean;
+  hideBonesWithMasks?: boolean;
+  maskLayers?: Record<PartName, BodyPartMaskLayer>;
 }
 
 export const getPartCategory = (part: PartName): string => { // Exported
@@ -76,6 +79,9 @@ export const Mannequin: React.FC<MannequinProps> = ({
   onMouseDownOnRoot,
   jointModes,
   renderMode = 'default',
+  masksEnabled = false,
+  hideBonesWithMasks = false,
+  maskLayers = {},
 }) => {
   const joints = getJointPositions(pose, activePins);
   const ghostJoints = ghostPose ? getJointPositions(ghostPose, activePins) : null;
