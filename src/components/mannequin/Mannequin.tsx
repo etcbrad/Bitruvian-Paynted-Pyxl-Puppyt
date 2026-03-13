@@ -52,12 +52,12 @@ export const getPartCategoryDisplayName = (part: PartName): string => { // Expor
   const category = getPartCategory(part);
   // Simple mapping for display purposes
   switch(category) {
-    case 'bicep': return part.startsWith('r') ? 'RIGHT BICEP' : 'LEFT BICEP';
-    case 'forearm': return part.startsWith('r') ? 'RIGHT FOREARM' : 'LEFT FOREARM';
-    case 'hand': return part.startsWith('r') ? 'RIGHT HAND' : 'LEFT HAND';
-    case 'thigh': return part.startsWith('r') ? 'RIGHT THIGH' : 'LEFT THIGH';
-    case 'shin': return part.startsWith('r') ? 'RIGHT SHIN' : 'LEFT SHIN';
-    case 'foot': return part.startsWith('r') ? 'RIGHT FOOT' : 'LEFT FOOT';
+    case 'bicep': return part.toLowerCase().startsWith('r') ? 'RIGHT BICEP' : 'LEFT BICEP';
+    case 'forearm': return part.toLowerCase().startsWith('r') ? 'RIGHT FOREARM' : 'LEFT FOREARM';
+    case 'hand': return part.toLowerCase().startsWith('r') ? 'RIGHT HAND' : 'LEFT HAND';
+    case 'thigh': return part.toLowerCase().startsWith('r') ? 'RIGHT THIGH' : 'LEFT THIGH';
+    case 'shin': return part.toLowerCase().startsWith('r') ? 'RIGHT SHIN' : 'LEFT SHIN';
+    case 'foot': return part.toLowerCase().startsWith('r') ? 'RIGHT FOOT' : 'LEFT FOOT';
     case 'head': return 'HEAD';
     case 'collar': return 'COLLAR';
     case 'torso': return 'TORSO';
