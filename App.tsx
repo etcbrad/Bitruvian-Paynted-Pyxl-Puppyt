@@ -951,8 +951,6 @@ const App: React.FC = () => {
     e.target.value = '';
   }, []);
 
-  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-
   const getCutoutDetectionParams = useCallback((sensitivity: number) => {
     const normalized = clamp(sensitivity, 0, 1);
     return {
