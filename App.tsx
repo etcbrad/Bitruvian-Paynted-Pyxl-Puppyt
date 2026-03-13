@@ -355,8 +355,24 @@ const App: React.FC = () => {
       partBeingDirectlyManipulated: PartName | null,
       isEffectorDrag: boolean,
   ) => {
+      let normalizedUpdates = proposedUpdates;
+      if (torsoUnitEnabled) {
+        const torsoUpdate =
+          (typeof proposedUpdates.waist === 'number' && proposedUpdates.waist) ||
+          (typeof proposedUpdates.torso === 'number' && proposedUpdates.torso) ||
+          (typeof proposedUpdates.collar === 'number' && proposedUpdates.collar);
+        if (typeof torsoUpdate === 'number') {
+          normalizedUpdates = {
+            ...proposedUpdates,
+            waist: torsoUpdate,
+            torso: torsoUpdate,
+            collar: torsoUpdate,
+          };
+          setTorsoUnitAngle(torsoUpdate);
+        }
+      }
       setGhostPose(prev => {
-          let tentativeNextPose: Pose = { ...prev, ...proposedUpdates };
+          let tentativeNextPose: Pose = { ...prev, ...normalizedUpdates };
 
           if (!isValidMove(
               tentativeNextPose,
@@ -373,7 +389,7 @@ const App: React.FC = () => {
 
           return tentativeNextPose;
       });
-  }, [activePins, pinnedState, isAirMode, isCraneDragging, isValidMove]);
+  }, [activePins, pinnedState, isAirMode, isCraneDragging, isValidMove, torsoUnitEnabled]);
 
   // Exponential Decay Smoothing (Bitruvius 0.1 requirement)
   useEffect(() => {
