@@ -951,12 +951,16 @@ const App: React.FC = () => {
                   <div className="flex flex-col gap-1 border-t border-white/10 pt-2 items-center">
                     <span className="text-white/40 uppercase text-[8px]">Joint_Rotation_Angle</span>
                     <RotationWheelControl
-                      value={primarySelectedPart ? activePose[partNameToPoseKey[primarySelectedPart]] || 0 : 0}
+                      value={
+                        primarySelectedPart
+                          ? (torsoUnitEnabled && isTorsoUnitPart ? torsoUnitAngle : (activePose[partNameToPoseKey[primarySelectedPart]] || 0))
+                          : 0
+                      }
                       min={primarySelectedPart ? JOINT_LIMITS[partNameToPoseKey[primarySelectedPart]]?.min || -180 : -180}
                       max={primarySelectedPart ? JOINT_LIMITS[partNameToPoseKey[primarySelectedPart]]?.max || 180 : 180}
                       step={5}
                       onChange={handlePartRotationWheelChange}
-                      isDisabled={!primarySelectedPart}
+                      isDisabled={!primarySelectedPart || (torsoUnitEnabled && isTorsoUnitPart)}
                       className="my-2"
                     />
                   </div>
