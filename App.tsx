@@ -1563,6 +1563,7 @@ const App: React.FC = () => {
       offsetY: 0,
       rotationDeg: 0,
       opacity: 1,
+      jointAnchors: [],
     });
     setSelectedCutoutPieceId(null);
     if (autoAdvanceJoint) {
