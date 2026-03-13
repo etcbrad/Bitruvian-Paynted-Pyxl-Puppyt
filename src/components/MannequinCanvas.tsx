@@ -29,7 +29,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   return (
     <Stage width={width} height={height}>
       <Layer>
-        {backgroundPreset === 'grid' && <SystemGuides />}
+        {backgroundPreset === 'grid' && <SystemGuides floorY={FLOOR_HEIGHT} />}
         <Mannequin
           pose={pose}
           renderMode={renderMode}
