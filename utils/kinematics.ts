@@ -195,7 +195,7 @@ export const getJointPositions = (pose: Pose, activePins: AnchorName[], scales?:
     // To keep a pin fixed while rotating, we find the offset the rotation caused.
     const jointsNoRot = _calculateGlobalJointPositions(inputRoot, 0, pose, scales);
     const pinNoRot = jointsNoRot[primaryPin as string];
-    if (!pinNoRot) return _calculateGlobalJointPositions(inputRoot, inputBodyRotation, pose);
+    if (!pinNoRot) return _calculateGlobalJointPositions(inputRoot, inputBodyRotation, pose, scales);
 
     const jointsWithRot = _calculateGlobalJointPositions(inputRoot, inputBodyRotation, pose, scales);
     const pinWithRot = jointsWithRot[primaryPin as string];
