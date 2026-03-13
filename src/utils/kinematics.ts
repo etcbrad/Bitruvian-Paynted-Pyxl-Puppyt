@@ -434,7 +434,7 @@ export const solveIK = (
   if (!chain) return newPose;
 
   // CCD Implementation
-  const joints = getJointPositions(newPose, {}, scales);
+  const joints = getJointPositions(newPose, [] as any, scales);
   
   for (let iter = 0; iter < iterations; iter++) {
     for (let i = chain.length - 1; i >= 0; i--) {
