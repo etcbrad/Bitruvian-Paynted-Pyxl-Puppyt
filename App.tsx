@@ -57,10 +57,10 @@ const App: React.FC = () => {
             Animation
           </button>
           <button 
-            className={activeTab === 'puppyt' ? 'active' : ''}
-            onClick={() => setActiveTab('puppyt')}
+            className={activeTab === 'puppet' ? 'active' : ''}
+            onClick={() => setActiveTab('puppet')}
           >
-            Puppyt
+            Puppet
           </button>
         </div>
       </header>
