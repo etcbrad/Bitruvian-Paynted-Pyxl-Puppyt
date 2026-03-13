@@ -862,6 +862,18 @@ const App: React.FC = () => {
     });
   }, [autoMirrorLimbs]);
 
+  const copyRightToLeft = useCallback((pairs: Array<[PartName, PartName]>) => {
+    setMaskLayers(prev => {
+      const next = { ...prev };
+      pairs.forEach(([right, left]) => {
+        if (prev[right].src) {
+          next[left] = { ...prev[right], mirrorX: true };
+        }
+      });
+      return next;
+    });
+  }, []);
+
   const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
   const snapValue = useCallback((value: number) => {
