@@ -1492,6 +1492,35 @@ const App: React.FC = () => {
                 </div>
               )}
 
+              {workflowStep === 'slice' && (
+                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] uppercase font-bold text-white/70">Slice Helper</span>
+                    <span className="text-[8px] text-white/40">
+                      {Object.values(PartName).filter(p => maskLayers[p].src).length}/{Object.values(PartName).length}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-1 max-h-52 overflow-y-auto custom-scrollbar">
+                    {Object.values(PartName).map(part => {
+                      const hasMask = Boolean(maskLayers[part].src);
+                      return (
+                        <button
+                          key={`slice-${part}`}
+                          onClick={() => selectSinglePart(part)}
+                          className={`flex items-center gap-2 px-2 py-1 text-[9px] border transition-all ${
+                            hasMask ? 'bg-accent-green/10 border-accent-green/30 text-accent-green' : 'bg-white/5 border-white/10 text-white/50'
+                          }`}
+                        >
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: hasMask ? '#22c55e' : '#6b7280' }} />
+                          <span className="flex-1 text-left">{part.replace(/([A-Z])/g, ' $1').toUpperCase()}</span>
+                          <span className="text-[8px]">{hasMask ? 'DONE' : 'EMPTY'}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Cutout Maker */}
               <div className="flex flex-col gap-1 w-full text-left border-b border-white/10 pb-2 mb-2">
                 <button
@@ -1555,6 +1584,15 @@ const App: React.FC = () => {
                         </div>
                       </div>
                       <input ref={maskUploadInputRef} type="file" accept="image/*" onChange={handleMaskUpload} className="hidden" />
+
+                      {primarySelectedPart && maskLayers[primarySelectedPart]?.src && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <div className="w-10 h-10 border border-white/10 bg-black/20 flex items-center justify-center overflow-hidden">
+                            <img src={maskLayers[primarySelectedPart].src!} alt="mask preview" className="w-full h-full object-contain opacity-90" />
+                          </div>
+                          <div className="text-[8px] text-white/40 uppercase">Preview</div>
+                        </div>
+                      )}
 
                       {primarySelectedPart && maskLayers[primarySelectedPart]?.src && (
                         <div className="mt-2 space-y-2">
