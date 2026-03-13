@@ -157,6 +157,7 @@ const App: React.FC = () => {
   const shapeDragRef = useRef<{ startX: number; startY: number } | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const isErasingRef = useRef(false);
+  const longPressTriggeredRef = useRef(false);
 
   // Animation State
   const [animation, setAnimation] = useState<AnimationState>({
