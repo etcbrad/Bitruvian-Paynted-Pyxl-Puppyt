@@ -929,6 +929,11 @@ const App: React.FC = () => {
 
                   {primarySelectedPart && maskLayers[primarySelectedPart]?.src && (
                     <div className="mt-2 space-y-2">
+                      {maskLayers[primarySelectedPart].baseScale > 0 && (
+                        <div className="text-[8px] text-white/40 uppercase">
+                          Auto Fit: {maskLayers[primarySelectedPart].baseScale.toFixed(2)}x
+                        </div>
+                      )}
                       <div className="flex justify-between text-[8px] text-white/40">
                         <span>Opacity</span>
                         <span>{Math.round(maskLayers[primarySelectedPart].opacity * 100)}%</span>
@@ -948,8 +953,8 @@ const App: React.FC = () => {
                       </div>
                       <input
                         type="range"
-                        min={50}
-                        max={200}
+                        min={Math.round(((maskLayers[primarySelectedPart].baseScale || 1) * 0.2) * 100)}
+                        max={Math.round(((maskLayers[primarySelectedPart].baseScale || 1) * 3.5) * 100)}
                         value={Math.round(maskLayers[primarySelectedPart].scale * 100)}
                         onChange={e => updateMaskLayer(primarySelectedPart, { scale: Number(e.target.value) / 100 })}
                         className="w-full accent-selection"
