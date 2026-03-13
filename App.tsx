@@ -601,6 +601,21 @@ const App: React.FC = () => {
     if (!ctm) return;
     const transformedPoint = svgPoint.matrixTransform(ctm.inverse());
 
+    if (dragMaskMode && maskDragInfo.current && primarySelectedPart) {
+      const joints = getJointPositions(activePose, activePins, proportionScales);
+      const jointPos = joints[primarySelectedPart];
+      if (!jointPos) return;
+      const rot = getWorldRotationForPart(primarySelectedPart, activePose);
+      const local = rotateVec(transformedPoint.x - jointPos.x, transformedPoint.y - jointPos.y, -rot);
+      const dx = local.x - maskDragInfo.current.startLocalX;
+      const dy = local.y - maskDragInfo.current.startLocalY;
+      updateMaskLayer(primarySelectedPart, {
+        offsetX: snapValue(maskDragInfo.current.startOffsetX + dx),
+        offsetY: snapValue(maskDragInfo.current.startOffsetY + dy),
+      });
+      return;
+    }
+
     if (isCraneDragging && dragStartInfo.current) {
       const dx = transformedPoint.x - dragStartInfo.current.startX;
       const dy = transformedPoint.y - dragStartInfo.current.startY;
@@ -633,7 +648,7 @@ const App: React.FC = () => {
     } else if (isIKDragging && effectorPart) {
       handleIKMove(effectorPart, transformedPoint);
     }
-  }, [isAdjusting, rotatingPart, isCraneDragging, isIKDragging, effectorPart, ghostPose, validateAndApplyPoseUpdate, activePins, handleIKMove]);
+  }, [dragMaskMode, primarySelectedPart, activePose, activePins, proportionScales, getWorldRotationForPart, rotateVec, snapValue, updateMaskLayer, isAdjusting, rotatingPart, isCraneDragging, isIKDragging, effectorPart, ghostPose, validateAndApplyPoseUpdate, handleIKMove]);
 
   const updatePinnedState = useCallback((pins: AnchorName[]) => {
     const joints = getJointPositions(activePose, pins, proportionScales);
