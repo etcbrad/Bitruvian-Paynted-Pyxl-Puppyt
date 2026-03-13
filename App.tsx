@@ -2070,6 +2070,45 @@ const App: React.FC = () => {
                     onChange={e => setCutoutSensitivity(Number(e.target.value) / 100)}
                     className="w-full accent-selection"
                   />
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-[8px] text-white/40">Merge Gap</span>
+                    <span className="text-[8px] text-white/40">{Math.round(cutoutMergeGap)}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={8}
+                    value={Math.round(cutoutMergeGap)}
+                    onChange={e => setCutoutMergeGap(Number(e.target.value))}
+                    className="w-full accent-selection"
+                  />
+                  <label className="mt-2 flex items-center gap-2 text-[8px] text-white/50">
+                    <input
+                      type="checkbox"
+                      checked={cutoutIgnoreText}
+                      onChange={e => setCutoutIgnoreText(e.target.checked)}
+                      className="accent-selection"
+                    />
+                    Ignore text-like fragments
+                  </label>
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      onClick={() => setCutoutRegionMode(prev => !prev)}
+                      className={`flex-1 text-[9px] px-2 py-1 border uppercase ${
+                        cutoutRegionMode
+                          ? 'bg-selection/30 border-selection text-selection'
+                          : 'bg-white/5 border-white/10 text-white/40'
+                      }`}
+                    >
+                      {cutoutRegionMode ? 'Region: On' : 'Region: Off'}
+                    </button>
+                    <button
+                      onClick={() => setCutoutRegion(null)}
+                      className="flex-1 text-[9px] px-2 py-1 border uppercase bg-white/5 border-white/10 text-white/40"
+                    >
+                      Clear Region
+                    </button>
+                  </div>
                 </div>
               )}
 
