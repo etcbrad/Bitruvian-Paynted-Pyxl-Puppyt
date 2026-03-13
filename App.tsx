@@ -831,6 +831,14 @@ const App: React.FC = () => {
     e.target.value = '';
   }, []);
 
+  const selectSinglePart = useCallback((part: PartName) => {
+    setSelectedParts(prev => {
+      const next: PartSelection = Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: false }), {} as PartSelection);
+      next[part] = true;
+      return next;
+    });
+  }, []);
+
   
 
   return (
