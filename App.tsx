@@ -1179,7 +1179,21 @@ const App: React.FC = () => {
   }, []);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if (!placingJoint || !primarySelectedPart || workflowStep === 'slice') return;
+    if (workflowStep === 'slice') return;
+    if (placingAnchors && primarySelectedPart) {
+      const point = toSvgPoint(e.clientX, e.clientY);
+      if (!point) return;
+      const jointPos = jointPositions[primarySelectedPart];
+      if (!jointPos) return;
+      const rot = getWorldRotationForPart(primarySelectedPart, activePose);
+      const local = rotateVec(point.x - jointPos.x, point.y - jointPos.y, -rot);
+      const anchor = { x: snapValue(local.x), y: snapValue(local.y) };
+      const existing = maskLayers[primarySelectedPart]?.jointAnchors || [];
+      const nextAnchors = existing.length >= 3 ? [anchor] : [...existing, anchor];
+      updateMaskLayer(primarySelectedPart, { jointAnchors: nextAnchors });
+      return;
+    }
+    if (!placingJoint || !primarySelectedPart) return;
     const point = toSvgPoint(e.clientX, e.clientY);
     if (!point) return;
     const jointPos = jointPositions[primarySelectedPart];
@@ -1187,7 +1201,7 @@ const App: React.FC = () => {
     const rot = getWorldRotationForPart(primarySelectedPart, activePose);
     const local = rotateVec(point.x - jointPos.x, point.y - jointPos.y, -rot);
     updateMaskLayer(primarySelectedPart, { offsetX: snapValue(local.x), offsetY: snapValue(local.y) });
-  }, [placingJoint, primarySelectedPart, workflowStep, toSvgPoint, jointPositions, getWorldRotationForPart, activePose, rotateVec, updateMaskLayer, snapValue]);
+  }, [placingAnchors, placingJoint, primarySelectedPart, workflowStep, toSvgPoint, jointPositions, getWorldRotationForPart, activePose, rotateVec, updateMaskLayer, snapValue, maskLayers]);
 
   const getCutoutDetectionParams = useCallback((sensitivity: number) => {
     const normalized = clamp(sensitivity, 0, 1);
