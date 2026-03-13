@@ -2429,17 +2429,6 @@ const App: React.FC = () => {
             className={`overflow-visible relative z-30 ${placingJoint ? 'cursor-crosshair' : ''}`} 
             onClick={handleCanvasClick}
           >
-            {cutoutSheet && (
-              <image
-                href={cutoutSheet.src}
-                x={-((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x}
-                y={-((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y}
-                width={cutoutSheet.width * cutoutScale}
-                height={cutoutSheet.height * cutoutScale}
-                opacity={cutoutOpacity}
-                preserveAspectRatio="xMidYMid meet"
-              />
-            )}
             <SystemGuides floorY={FLOOR_HEIGHT} /> 
             {showJointLabels && (
               <g>
