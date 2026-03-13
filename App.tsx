@@ -3230,6 +3230,16 @@ const App: React.FC = () => {
                             onChange={e => updateMaskLayer(primarySelectedPart, { rotationDeg: Number(e.target.value) })}
                             className="w-full accent-selection"
                           />
+                          <div className="flex items-center justify-between text-[8px] text-white/40">
+                            <span>Anchors</span>
+                            <span>{(maskLayers[primarySelectedPart].jointAnchors || []).length}/3</span>
+                          </div>
+                          <button
+                            onClick={() => updateMaskLayer(primarySelectedPart, { jointAnchors: [] })}
+                            className="text-[9px] px-2 py-1 border uppercase bg-white/5 border-white/10 text-white/40"
+                          >
+                            Clear Anchors
+                          </button>
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
