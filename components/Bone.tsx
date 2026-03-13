@@ -203,7 +203,11 @@ export const Bone: React.FC<BoneProps> = ({
     if (!maskLayer?.src) return null;
     const layerOrder = maskLayer.layerOrder || 'front';
     if (layerOrder !== position) return null;
-    const scale = Number.isFinite(maskLayer.scale) ? maskLayer.scale : 1;
+    const scale = Number.isFinite(maskLayer.scale)
+      ? maskLayer.scale
+      : Number.isFinite(maskLayer.baseScale)
+        ? maskLayer.baseScale
+        : 1;
     const width = (maskLayer.width || 0) * scale || 100 * scale;
     const height = (maskLayer.height || 0) * scale || 100 * scale;
     const offsetX = Number.isFinite(maskLayer.offsetX) ? maskLayer.offsetX : 0;
