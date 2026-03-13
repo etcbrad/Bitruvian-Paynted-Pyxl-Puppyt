@@ -1,8 +1,7 @@
+
 import React from 'react';
 import { Vector2D } from '../types'; // Assuming Vector2D is defined in types.ts
-import { ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT, GROUND_STRIP_HEIGHT_RAW_H_UNIT } from '../constants'; // Import ANATOMY and new ground constants
-
-const GROUND_STRIP_COLOR = '#2D2D2D'; // Dark grey for ground strip on dark background.
+import { ANATOMY, GROUND_STRIP_HEIGHT, GROUND_STRIP_COLOR } from '../constants'; // Import ANATOMY and new ground constants
 
 interface AdvancedGridProps {
   origin: Vector2D;
@@ -11,8 +10,7 @@ interface AdvancedGridProps {
 }
 
 interface SystemGuidesProps {
-  floorY: number; // This will be the absolute SVG coordinate for the floor
-  baseUnitH: number; // The H from the walking engine
+  floorY: number;
 }
 
 export const Scanlines: React.FC = () => (
@@ -71,13 +69,9 @@ export const AdvancedGrid: React.FC<AdvancedGridProps> = ({ origin, gridSize, vi
   return <g className="pointer-events-none">{lines}</g>;
 };
 
-export const SystemGuides: React.FC<SystemGuidesProps> = ({ floorY, baseUnitH }) => {
+export const SystemGuides: React.FC<SystemGuidesProps> = ({ floorY }) => {
   const guideColor = 'rgba(80, 80, 80, 0.25)'; // Changed to darker monochrome rgba
-  const span = 20000; // Extend guide lines far beyond typical viewport
-
-  // Calculate ground strip width relative to H and position it centered on X=0
-  const groundStripWidth = ANATOMY_RAW_RELATIVE_TO_BASE_HEAD_UNIT.FOOT * baseUnitH * 4; // Adjusted for visual balance
-  const groundStripX = -groundStripWidth / 2;
+  const span = 2000; // Extend guide lines far beyond typical viewport
 
   return (
     <g className="pointer-events-none">
@@ -86,16 +80,16 @@ export const SystemGuides: React.FC<SystemGuidesProps> = ({ floorY, baseUnitH })
       {/* Center Y-axis guide */}
       <line x1="0" y1={-span} x2="0" y2={span} stroke={guideColor} strokeWidth="1" opacity="0.3" strokeDasharray="10 5" />
 
-      {/* Floor guide line and ground strip */}
+      {/* Floor guide line and ground strip, always visible as AirMode is removed */}
         <g style={{ transition: 'all 0.2s ease-in-out' }}>
           {/* Main floor guide line */}
           <line x1={-span} y1={floorY} x2={span} y2={floorY} stroke={guideColor} strokeWidth={1} opacity="0.9" />
           {/* Darker ground strip at the floor level */}
           <rect
-            x={groundStripX} 
+            x={-ANATOMY.FOOT / 2}
             y={floorY}
-            width={groundStripWidth} 
-            height={GROUND_STRIP_HEIGHT_RAW_H_UNIT * baseUnitH}
+            width={ANATOMY.FOOT}
+            height={GROUND_STRIP_HEIGHT}
             fill={GROUND_STRIP_COLOR}
             opacity="0.9"
           />

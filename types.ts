@@ -1,145 +1,148 @@
 
 
+import React from 'react';
+
+export enum PartName {
+  Torso = 'torso',
+  Waist = 'waist',
+  Collar = 'collar',
+  Head = 'head',
+  RShoulder = 'rShoulder',
+  RElbow = 'rElbow',
+  RWrist = 'rWrist',
+  LShoulder = 'lShoulder',
+  LElbow = 'lElbow',
+  LWrist = 'lWrist',
+  RThigh = 'rThigh',
+  RSkin = 'rSkin',
+  RAnkle = 'rAnkle',
+  LThigh = 'lThigh',
+  LSkin = 'lSkin',
+  LAnkle = 'lAnkle',
+}
+
+export const PART_NAMES: PartName[] = Object.values(PartName);
+
+export const partNameToPoseKey: { [key in PartName]: string } = {
+  [PartName.Torso]: 'torso',
+  [PartName.Waist]: 'waist',
+  [PartName.Collar]: 'collar',
+  [PartName.Head]: 'head',
+  [PartName.RShoulder]: 'rShoulder',
+  [PartName.RElbow]: 'rForearm',
+  [PartName.RWrist]: 'rWrist',
+  [PartName.LShoulder]: 'lShoulder',
+  [PartName.LElbow]: 'lForearm',
+  [PartName.LWrist]: 'lWrist',
+  [PartName.RThigh]: 'rThigh',
+  [PartName.RSkin]: 'rCalf',
+  [PartName.RAnkle]: 'rAnkle',
+  [PartName.LThigh]: 'lThigh',
+  [PartName.LSkin]: 'lCalf',
+  [PartName.LAnkle]: 'lAnkle',
+};
+
+export const PARENT_MAP: { [key in PartName]?: PartName } = {
+  [PartName.Torso]: PartName.Waist,
+  [PartName.Collar]: PartName.Torso,
+  [PartName.Head]: PartName.Collar,
+  [PartName.RShoulder]: PartName.Collar,
+  [PartName.LShoulder]: PartName.Collar,
+  [PartName.RThigh]: PartName.Waist,
+  [PartName.LThigh]: PartName.Waist,
+  [PartName.RElbow]: PartName.RShoulder,
+  [PartName.LElbow]: PartName.LShoulder,
+  [PartName.RWrist]: PartName.RElbow,
+  [PartName.LWrist]: PartName.LElbow,
+  [PartName.RSkin]: PartName.RThigh,
+  [PartName.LSkin]: PartName.LThigh,
+  [PartName.RAnkle]: PartName.RSkin,
+  [PartName.LAnkle]: PartName.LSkin,
+};
+
+export const CHILD_MAP: { [key in PartName]?: PartName[] } = (() => {
+  const map: { [key in PartName]?: PartName[] } = {};
+  PART_NAMES.forEach(child => {
+    const parent = PARENT_MAP[child];
+    if (parent) {
+      if (!map[parent]) map[parent] = [];
+      map[parent]!.push(child);
+    }
+  });
+  return map;
+})();
+
+export const LIMB_SEQUENCES: { [key: string]: PartName[] } = {
+  rArm: [PartName.RShoulder, PartName.RElbow, PartName.RWrist],
+  lArm: [PartName.LShoulder, PartName.LElbow, PartName.LWrist],
+  rLeg: [PartName.RThigh, PartName.RSkin, PartName.RAnkle],
+  lLeg: [PartName.LThigh, PartName.LSkin, PartName.LAnkle],
+};
+
 export type Vector2D = { x: number; y: number; };
-
-export type MaskTransform = {
-  x: number;
-  y: number;
-  rotation: number;
-  scale: number;
+export type Pose = {
+  root: Vector2D;
+  bodyRotation: number;
+  torso: number;
+  waist: number;
+  collar: number;
+  head: number;
+  lShoulder: number;
+  lForearm: number;
+  lWrist: number;
+  rShoulder: number;
+  rForearm: number;
+  rWrist: number;
+  lThigh: number;
+  lCalf: number;
+  lAnkle: number;
+  rThigh: number;
+  rCalf: number;
+  rAnkle: number;
+  offsets?: { [key: string]: Vector2D };
 };
 
-export type JointMode = 'standard' | 'bend' | 'stretch';
+export type PartVisibility = { [key in PartName]: boolean };
+export type PartSelection = { [key in PartName]: boolean };
+export type AnchorName = PartName | 'root' | 'lFootTip' | 'rFootTip' | 'lHandTip' | 'rHandTip'; 
 
-export type BoneVariant =
-  | 'diamond'
-  | 'waist-teardrop-pointy-up'
-  | 'torso-teardrop-pointy-down'
-  | 'collar-horizontal-oval-shape'
-  | 'deltoid-shape'
-  | 'limb-tapered'
-  | 'head-tall-oval'
-  | 'hand-foot-arrowhead-shape'
-  | 'foot-block-shape'
-  | 'toe-rounded-cap'
-  | 'capsule'
-  | 'triangle'
-  | 'triangle-up'
-  | 'trapezoid'
-  | 'trapezoid-up'
-  | 'pentagon';
-
-export type BodyPartMaskLayer = {
-  src: string | null;
-  visible: boolean;
-  opacity: number;
-  scale: number;
-  mode?: 'projection' | 'costume';
-  rotationDeg?: number;
-  skewXDeg?: number;
-  skewYDeg?: number;
-  offsetX?: number;
-  offsetY?: number;
-  blendMode?: GlobalCompositeOperation;
-  filter?: string;
-  layerOrder?: 'front' | 'behind';
+export type PinnedState = {
+  [key in AnchorName]?: Vector2D;
 };
 
-export type RigManifestV1 = {
-  version: '1';
-  metadata?: {
-    source?: string;
-    createdAt?: string;
-  };
-  parts: RigManifestPart[];
-  joints: RigManifestJoint[];
-  pose: RigManifestPose;
-  constraints?: {
-    rigidClusters?: string[];
-  };
+// Defines the available kinetic constraint modes for joints.
+// Re-introduced 'stretch' and 'curl' as per user request.
+export type JointConstraint = 'fk' | 'stretch' | 'curl';
+
+// Defines the rendering mode for the Bone component.
+// Simplified: 'grayscale' removed as UI is globally monochrome, 'silhouette' now represents solid black fill.
+export type RenderMode = 'default' | 'wireframe' | 'silhouette' | 'backlight'; // Added 'backlight'
+
+export type ViewMode = 'zoomed' | 'default' | 'lotte' | 'wide' | 'mobile'; // Added 'mobile'
+
+export type KinematicMode = 'fk' | 'ik' | 'fabrik';
+
+export type AnimationKeyframe = {
+  id: string;
+  pose: Pose;
+  duration: number; // ms to reach this keyframe
 };
 
-export type RigManifestPart = {
+export type AnimationState = {
+  keyframes: AnimationKeyframe[];
+  isPlaying: boolean;
+  currentFrameIndex: number;
+  loop: boolean;
+};
+
+export type SavedPose = {
   id: string;
   name: string;
-  src: string | null;
-  width: number;
-  height: number;
-  pivot: Vector2D;
-  ballPoint: Vector2D;
-  zIndex: number;
-  physics?: {
-    stiffness: number;
-    tension: number;
-    volumePreservation: boolean;
-    shadowEnabled: boolean;
-  };
-  tags?: string[];
-  shape?: BoneVariant;
-  colorClass?: string;
+  data: string;
+  timestamp: number;
 };
 
-export type RigManifestJoint = {
-  id: string;
-  parentId: string | null;
-  drivesPartId: string;
-  defaultOffset: Vector2D;
-  defaultRotation: number;
-  rigidCluster?: boolean;
-};
-
-export type RigManifestPose = {
-  joints: Record<string, { rotation: number; offsetX?: number; offsetY?: number }>;
-};
-
-export type WalkingEnginePose = {
-  waist: number;
-  neck: number; 
-  collar: number; 
-  torso: number;
-  l_shoulder: number; r_shoulder: number;
-  l_elbow: number; r_elbow: number;
-  l_hand: number; r_hand: number;
-  l_hip: number; r_hip: number;
-  l_knee: number; r_knee: number;
-  l_foot: number; r_foot: number;
-  l_toe: number; r_toe: number;
-  stride_phase: number;
-  y_offset: number;
-  x_offset: number;
-};
-
-export type WalkingEnginePivotOffsets = {
-  waist: number;
-  neck: number; 
-  collar: number; 
-  torso: number;
-  l_shoulder: number; r_shoulder: number;
-  l_elbow: number; r_elbow: number;
-  l_hand: number; r_hand: number;
-  l_hip: number; r_hip: number;
-  l_knee: number; r_knee: number;
-  l_foot: number; r_foot: number;
-  l_toe: number; r_toe: number;
-};
-
-export type WalkingEngineProportions = {
-  head: { w: number; h: number };
-  collar: { w: number; h: number };
-  torso: { w: number; h: number };
-  waist: { w: number; h: number };
-  l_upper_arm: { w: number; h: number };
-  l_lower_arm: { w: number; h: number };
-  l_hand: { w: number; h: number };
-  r_upper_arm: { w: number; h: number };
-  r_lower_arm: { w: number; h: number };
-  r_hand: { w: number; h: number };
-  l_upper_leg: { w: number; h: number };
-  l_lower_leg: { w: number; h: number };
-  l_foot: { w: number; h: number };
-  l_toe: { w: number; h: number };
-  r_upper_leg: { w: number; h: number };
-  r_lower_leg: { w: number; h: number };
-  r_foot: { w: number; h: number };
-  r_toe: { w: number; h: number };
+// Defines the min/max rotation limits for each joint (in degrees).
+export type JointLimits = {
+  [key: string]: { min: number; max: number };
 };

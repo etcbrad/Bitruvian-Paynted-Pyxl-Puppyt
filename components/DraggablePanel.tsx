@@ -53,7 +53,7 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
   const isDraggingBeyondDisconnectThreshold = useRef(false); // New ref for eased pull
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Only drag by header
+    // Only drag by the header
     if (!(e.target as HTMLElement).closest('.draggable-handle')) return;
 
     e.preventDefault();
@@ -84,7 +84,7 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
     const panelHeight = panelRef.current?.offsetHeight || 0;
 
     // --- Kinetic Overload Maneuver (Shake to Break Snap) ---
-    // If already snapped and a sudden large movement occurs, break snap
+    // If already snapped and a sudden large movement occurs, break the snap
     if (isSnappedRef.current && initialClientPos.current) {
       const dxAbs = Math.abs(e.clientX - initialClientPos.current.x);
       const dyAbs = Math.abs(e.clientY - initialClientPos.current.y);
@@ -99,7 +99,7 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
       const dxMoved = Math.abs(e.clientX - initialClientPos.current.x);
       const dyMoved = Math.abs(e.clientY - initialClientPos.current.y);
       if (dxMoved > DISCONNECT_THRESHOLD || dyMoved > DISCONNECT_THRESHOLD) {
-        isDraggingBeyondDisconnectThreshold.current = true; // Break "eased pull"
+        isDraggingBeyondDisconnectThreshold.current = true; // Break the "eased pull"
       }
     }
 
@@ -143,7 +143,7 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
   }, []);
 
   const toggleMinimize = useCallback(() => {
-    onUpdatePosition(id, x, y, !minimized); // Update minimized state via callback
+    onUpdatePosition(id, x, y, !minimized); // Update the minimized state via callback
   }, [id, x, y, minimized, onUpdatePosition]);
 
   useEffect(() => {
@@ -170,12 +170,12 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
     <div
       ref={panelRef}
       id={id}
-      className={`absolute bg-black/80 text-white/90 font-mono text-[10px] p-4 rounded border border-white/20 shadow-2xl w-56 backdrop-blur-lg transition-all duration-200 ease-out
-        ${minimized ? 'h-auto max-h-[40px] overflow-hidden' : ''} ${className}`}
+      className={`absolute bg-black/80 text-white/90 font-mono text-[10px] rounded border border-white/20 shadow-2xl w-56 backdrop-blur-lg transition-all duration-200 ease-out
+        ${minimized ? 'h-auto max-h-[32px] overflow-hidden p-2' : 'p-4'} ${className}`}
       style={{ transform: `translate(${x}px, ${y}px)`, zIndex: currentZIndex }}
     >
       <div 
-        className="draggable-handle text-focus-ring mb-2 font-bold border-b border-white/10 w-full text-left pb-1 flex justify-between items-center cursor-grab"
+        className={`draggable-handle text-focus-ring font-bold border-white/10 w-full text-left flex justify-between items-center cursor-grab ${minimized ? 'mb-0 border-b-0' : 'mb-2 border-b pb-1'}`}
         onMouseDown={handleMouseDown}
       >
         <span className="tracking-widest">{title}</span>
