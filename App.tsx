@@ -395,6 +395,52 @@ const App: React.FC = () => {
     return { x: -1000, y: -1000, w: 2000, h: 2000 };
   }, [autoViewBox]);
 
+  const tPoseTemplate = useMemo(() => {
+    const headTip = jointPositions.headTip;
+    const lFoot = jointPositions.lFootTip;
+    const rFoot = jointPositions.rFootTip;
+    const lHand = jointPositions.lHandTip;
+    const rHand = jointPositions.rHandTip;
+    const lShoulder = jointPositions.lShoulder;
+    const rShoulder = jointPositions.rShoulder;
+    if (!headTip || !lFoot || !rFoot) return null;
+    const topY = headTip.y;
+    const bottomY = Math.max(lFoot.y, rFoot.y);
+    const height = Math.max(1, bottomY - topY);
+    const centerX = activePose.root.x;
+    const centerY = topY + height / 2;
+    return {
+      square: {
+        x: centerX - height / 2,
+        y: topY,
+        size: height,
+      },
+      circle: {
+        cx: centerX,
+        cy: centerY,
+        r: height / 2,
+      },
+      vertical: {
+        x1: centerX,
+        y1: topY,
+        x2: centerX,
+        y2: bottomY,
+      },
+      shoulders: lShoulder && rShoulder ? {
+        x1: lShoulder.x,
+        y1: lShoulder.y,
+        x2: rShoulder.x,
+        y2: rShoulder.y,
+      } : null,
+      hands: lHand && rHand ? {
+        x1: lHand.x,
+        y1: lHand.y,
+        x2: rHand.x,
+        y2: rHand.y,
+      } : null,
+    };
+  }, [activePose.root.x, jointPositions]);
+
   // --- Physics Validation Logic ---
   const isValidMove = useCallback((
     potentialPose: Pose,
