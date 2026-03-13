@@ -846,21 +846,6 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-4 gap-1">
-              {(['upload', 'slice', 'rig', 'pose'] as const).map(step => (
-                <button
-                  key={step}
-                  onClick={() => setWorkflowStep(step)}
-                  className={`py-1 text-[9px] font-bold uppercase border transition-all ${
-                    workflowStep === step
-                      ? 'bg-selection text-paper border-selection'
-                      : 'bg-white/5 border-white/10 text-white/50 hover:text-white/80'
-                  }`}
-                >
-                  {step}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Section: Cutout Maker */}
