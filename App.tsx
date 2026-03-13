@@ -15,8 +15,8 @@ const App: React.FC = () => {
   const [ghostPose, setGhostPose] = useState<Pose>(RESET_POSE);
   const isDragging = useRef(false);
   const maskDragInfo = useRef<{
-    startX: number;
-    startY: number;
+    startLocalX: number;
+    startLocalY: number;
     startOffsetX: number;
     startOffsetY: number;
   } | null>(null);
