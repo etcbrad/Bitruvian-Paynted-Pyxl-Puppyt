@@ -89,7 +89,7 @@ export const Mannequin: React.FC<MannequinProps> = ({
   const ghostJoints = ghostPose ? getJointPositions(ghostPose, activePins) : null;
   const offsets = pose.offsets || {};
 
-  const scaleLen = (category: 'arm' | 'leg' | 'torso' | 'head') => (proportionScales[category] || 1);
+  const scaleLen = (category: 'arm' | 'leg' | 'torso' | 'head') => (proportionScales[category] ?? 1);
   const scaled = {
     waist: ANATOMY.WAIST * scaleLen('torso'),
     torso: ANATOMY.TORSO * scaleLen('torso'),
