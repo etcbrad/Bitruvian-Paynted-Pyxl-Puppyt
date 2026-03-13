@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Pose } from '../types';
+import { Pose } from '../types/types';
 import { interpolatePoses } from '../utils/kinematics';
 
 export const useAnimationState = () => {
