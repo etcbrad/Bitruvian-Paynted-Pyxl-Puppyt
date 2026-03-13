@@ -408,20 +408,13 @@ const App: React.FC = () => {
       });
   }, [activePins, pinnedState, isAirMode, isCraneDragging, isValidMove, torsoUnitEnabled]);
 
-  // Exponential Decay Smoothing (Bitruvius 0.1 requirement)
+  // Pose sync loop (smoothing disabled for immediate feedback)
   useEffect(() => {
     if (!isPoweredOn) return;
     
     let rafId: number;
     const smooth = () => {
-      setActivePose(current => {
-        // During direct manipulation, reflect changes immediately for snappier feedback.
-        if (isDragging.current) return ghostPose;
-        // If not dragging, we can either snap or continue smoothing
-        // The "5-frame snap" logic is handled in handleMouseUp
-        const smoothingFactor = 0.15;
-        return interpolatePoses(current, ghostPose, smoothingFactor);
-      });
+      setActivePose(ghostPose);
       rafId = requestAnimationFrame(smooth);
     };
     
