@@ -2066,6 +2066,79 @@ const App: React.FC = () => {
                 ))}
               </div>
 
+              <div className="mb-3 border border-white/10 p-2 rounded bg-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[9px] uppercase font-bold text-white/70">Assist</span>
+                  <button
+                    onClick={() => setShowJointLabels(prev => !prev)}
+                    className={`text-[8px] px-2 py-1 border uppercase ${
+                      showJointLabels ? 'bg-selection/30 border-selection text-selection' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Labels {showJointLabels ? 'On' : 'Off'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setAutoMirrorLimbs(prev => !prev)}
+                    className={`text-[9px] px-2 py-1 border uppercase ${
+                      autoMirrorLimbs ? 'bg-accent-green/20 border-accent-green/40 text-accent-green' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Auto Mirror {autoMirrorLimbs ? 'On' : 'Off'}
+                  </button>
+                  <button
+                    onClick={() => setPlacingJoint(prev => !prev)}
+                    className={`text-[9px] px-2 py-1 border uppercase ${
+                      placingJoint ? 'bg-accent-purple/20 border-accent-purple/40 text-accent-purple' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Place Joint {placingJoint ? 'On' : 'Off'}
+                  </button>
+                  <button
+                    onClick={() => setSnapToGrid(prev => !prev)}
+                    className={`text-[9px] px-2 py-1 border uppercase ${
+                      snapToGrid ? 'bg-selection/30 border-selection text-selection' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Snap {snapToGrid ? 'On' : 'Off'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const rightArm: PartName[] = [PartName.RShoulder, PartName.RElbow, PartName.RWrist];
+                      rightArm.forEach(p => updateMaskLayer(p, { ...maskLayers[p], mirrorX: false }));
+                    }}
+                    className="text-[9px] px-2 py-1 border uppercase bg-white/5 border-white/10 text-white/40 hover:text-white/70"
+                  >
+                    Copy R→L Arm
+                  </button>
+                  <button
+                    onClick={() => {
+                      const rightLeg: PartName[] = [PartName.RThigh, PartName.RSkin, PartName.RAnkle];
+                      rightLeg.forEach(p => updateMaskLayer(p, { ...maskLayers[p], mirrorX: false }));
+                    }}
+                    className="text-[9px] px-2 py-1 border uppercase bg-white/5 border-white/10 text-white/40 hover:text-white/70"
+                  >
+                    Copy R→L Leg
+                  </button>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between text-[8px] text-white/40">
+                      <span>Grid</span>
+                      <span>{gridSize}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={5}
+                      max={40}
+                      step={1}
+                      value={gridSize}
+                      onChange={e => setGridSize(Number(e.target.value))}
+                      className="w-full accent-selection"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] uppercase font-bold text-white/70">Cutout Sheet</span>
