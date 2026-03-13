@@ -831,6 +831,142 @@ const App: React.FC = () => {
             </div>
           </div>
 
+          {/* Section: Cutout Maker */}
+          <div className="flex flex-col gap-1 w-full text-left border-b border-white/10 pb-2 mb-2">
+            <button
+              onClick={() => toggleSection('cutout-maker')}
+              className="flex items-center justify-between w-full text-focus-ring font-bold uppercase tracking-wide hover:text-white transition-colors"
+            >
+              <span>CUTOUT MAKER</span>
+              <span className="text-[10px] opacity-50">{expandedSections['cutout-maker'] ? '▼' : '▶'}</span>
+            </button>
+
+            {expandedSections['cutout-maker'] && (
+              <div className="mt-2 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setMasksEnabled(prev => !prev)}
+                    className={`flex-1 text-[9px] px-2 py-1 border uppercase ${
+                      masksEnabled ? 'bg-accent-green/20 border-accent-green/40 text-accent-green' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Masks {masksEnabled ? 'On' : 'Off'}
+                  </button>
+                  <button
+                    onClick={() => setHideBonesWithMasks(prev => !prev)}
+                    disabled={!masksEnabled}
+                    className={`flex-1 text-[9px] px-2 py-1 border uppercase ${
+                      !masksEnabled
+                        ? 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                        : hideBonesWithMasks
+                          ? 'bg-selection/30 border-selection text-selection'
+                          : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Bones {hideBonesWithMasks ? 'Hidden' : 'Visible'}
+                  </button>
+                </div>
+
+                <div className="bg-white/5 p-2 rounded border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] uppercase text-white/70 font-bold">
+                      {primarySelectedPart ? getPartCategoryDisplayName(primarySelectedPart) : 'Select Joint'}
+                    </span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => maskUploadInputRef.current?.click()}
+                        disabled={!primarySelectedPart}
+                        className={`text-[9px] px-2 py-1 border ${
+                          primarySelectedPart ? 'bg-white/10 border-white/20 text-white/70' : 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                        }`}
+                      >
+                        Upload
+                      </button>
+                      <button
+                        onClick={() => primarySelectedPart && updateMaskLayer(primarySelectedPart, { src: null })}
+                        disabled={!primarySelectedPart}
+                        className={`text-[9px] px-2 py-1 border ${
+                          primarySelectedPart ? 'bg-accent-red/20 border-accent-red/40 text-accent-red' : 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                        }`}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  <input ref={maskUploadInputRef} type="file" accept="image/*" onChange={handleMaskUpload} className="hidden" />
+
+                  {primarySelectedPart && maskLayers[primarySelectedPart]?.src && (
+                    <div className="mt-2 space-y-2">
+                      <div className="flex justify-between text-[8px] text-white/40">
+                        <span>Opacity</span>
+                        <span>{Math.round(maskLayers[primarySelectedPart].opacity * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={Math.round(maskLayers[primarySelectedPart].opacity * 100)}
+                        onChange={e => updateMaskLayer(primarySelectedPart, { opacity: Number(e.target.value) / 100 })}
+                        className="w-full accent-selection"
+                      />
+
+                      <div className="flex justify-between text-[8px] text-white/40">
+                        <span>Scale</span>
+                        <span>{maskLayers[primarySelectedPart].scale.toFixed(2)}x</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={50}
+                        max={200}
+                        value={Math.round(maskLayers[primarySelectedPart].scale * 100)}
+                        onChange={e => updateMaskLayer(primarySelectedPart, { scale: Number(e.target.value) / 100 })}
+                        className="w-full accent-selection"
+                      />
+
+                      <div className="flex justify-between text-[8px] text-white/40">
+                        <span>Rotation</span>
+                        <span>{Math.round(maskLayers[primarySelectedPart].rotationDeg)}°</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={-180}
+                        max={180}
+                        value={Math.round(maskLayers[primarySelectedPart].rotationDeg)}
+                        onChange={e => updateMaskLayer(primarySelectedPart, { rotationDeg: Number(e.target.value) })}
+                        className="w-full accent-selection"
+                      />
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <div className="flex justify-between text-[8px] text-white/40"><span>Offset X</span><span>{Math.round(maskLayers[primarySelectedPart].offsetX)}</span></div>
+                          <input
+                            type="range"
+                            min={-200}
+                            max={200}
+                            value={Math.round(maskLayers[primarySelectedPart].offsetX)}
+                            onChange={e => updateMaskLayer(primarySelectedPart, { offsetX: Number(e.target.value) })}
+                            className="w-full accent-selection"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-[8px] text-white/40"><span>Offset Y</span><span>{Math.round(maskLayers[primarySelectedPart].offsetY)}</span></div>
+                          <input
+                            type="range"
+                            min={-200}
+                            max={200}
+                            value={Math.round(maskLayers[primarySelectedPart].offsetY)}
+                            onChange={e => updateMaskLayer(primarySelectedPart, { offsetY: Number(e.target.value) })}
+                            className="w-full accent-selection"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Tab Bar */}
           <div className="flex border-b border-white/20 mb-4 px-4 pt-3">
             <button 
