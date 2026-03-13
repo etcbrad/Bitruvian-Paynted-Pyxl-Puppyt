@@ -2176,6 +2176,47 @@ const App: React.FC = () => {
                 pointerEvents="none"
               />
             )}
+            {workflowStep === 'slice' && cutoutSheet && (
+              <g>
+                {cutoutPieces.map(piece => {
+                  const px = -((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x + piece.bbox.x * cutoutScale;
+                  const py = -((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y + piece.bbox.y * cutoutScale;
+                  const pw = piece.bbox.w * cutoutScale;
+                  const ph = piece.bbox.h * cutoutScale;
+                  const isSelected = piece.id === selectedCutoutPieceId;
+                  return (
+                    <rect
+                      key={`piece-box-${piece.id}`}
+                      x={px}
+                      y={py}
+                      width={pw}
+                      height={ph}
+                      fill="none"
+                      stroke={isSelected ? '#E5E7EB' : 'rgba(255,255,255,0.2)'}
+                      strokeWidth={isSelected ? 2 : 1}
+                      pointerEvents="none"
+                    />
+                  );
+                })}
+                <g
+                  transform={`translate(${viewBoxValues.x + 40}, ${viewBoxValues.y + 40})`}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    sensitivityDragRef.current = { startY: e.clientY, startSensitivity: cutoutSensitivity };
+                    setIsAdjustingSensitivity(true);
+                  }}
+                  style={{ cursor: 'ns-resize' }}
+                >
+                  <rect x={-10} y={-18} width={160} height={28} rx={6} fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.2)" />
+                  <text x={0} y={0} fill="rgba(255,255,255,0.7)" fontSize={10} fontWeight={700}>
+                    Sensitivity {Math.round(cutoutSensitivity * 100)}%
+                  </text>
+                  <text x={0} y={12} fill="rgba(255,255,255,0.4)" fontSize={8}>
+                    Drag up/down
+                  </text>
+                </g>
+              </g>
+            )}
           </svg>
         </div>
       </div>
