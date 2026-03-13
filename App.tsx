@@ -1154,13 +1154,13 @@ const App: React.FC = () => {
   }, [cutoutSheet, runCutoutDetection]);
 
   useEffect(() => {
-    if (!cutoutImageRef.current || !cutoutSheet) return;
+    if (!cutoutImageRef.current) return;
     const timer = setTimeout(() => {
       if (!cutoutImageRef.current) return;
       runCutoutDetection(cutoutImageRef.current, cutoutSensitivity);
     }, 120);
     return () => clearTimeout(timer);
-  }, [cutoutSensitivity, cutoutSheet, runCutoutDetection]);
+  }, [cutoutSensitivity, runCutoutDetection]);
 
   useEffect(() => {
     if (!isAdjustingSensitivity) return;
