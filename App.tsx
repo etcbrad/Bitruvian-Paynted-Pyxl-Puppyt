@@ -70,6 +70,7 @@ const App: React.FC = () => {
   const [gridSize, setGridSize] = useState(10);
   const [placingJoint, setPlacingJoint] = useState(false);
   const [showJointLabels, setShowJointLabels] = useState(false);
+  const [proportionScales, setProportionScales] = useState({ arm: 1, leg: 1, torso: 1, head: 1 });
 
   const DEFAULT_MASK_LAYER: BodyPartMaskLayer = {
     src: null,
