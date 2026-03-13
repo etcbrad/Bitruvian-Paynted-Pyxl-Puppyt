@@ -1403,7 +1403,7 @@ const App: React.FC = () => {
                         disabled={!primarySelectedPart || (torsoUnitEnabled && isTorsoUnitPart)}
                         className={`w-full text-[9px] font-bold text-center px-2 py-1 transition-all border ${
                           (!primarySelectedPart || (torsoUnitEnabled && isTorsoUnitPart))
-                            ? 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                            ? 'bg-white/5 border-transparent text-white cursor-not-allowed'
                             : `bg-white/20 border-white/40 hover:bg-white/30 ${getKineticModeDisplayColorClass(jointModes[primarySelectedPart])}`
                         }`}
                         aria-label={`Toggle Kinetic Mode for ${getPartCategoryDisplayName(primarySelectedPart)}. Current mode: ${getKineticModeDisplayName(jointModes[primarySelectedPart])}`}
@@ -1422,7 +1422,7 @@ const App: React.FC = () => {
                     className={`flex-1 text-[9px] px-2 py-1 border ${
                       undoStack.current.length > 0 
                       ? 'bg-white/10 border-white/20 text-white/70 hover:bg-white/20' 
-                      : 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                      : 'bg-white/5 border-transparent text-white cursor-not-allowed'
                     } transition-all`}
                     aria-label="Undo last action"
                   >
@@ -1434,7 +1434,7 @@ const App: React.FC = () => {
                     className={`flex-1 text-[9px] px-2 py-1 border ${
                       redoStack.current.length > 0 
                       ? 'bg-white/10 border-white/20 text-white/70 hover:bg-white/10' 
-                      : 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                      : 'bg-white/5 border-transparent text-white cursor-not-allowed'
                     } transition-all`}
                     aria-label="Redo last action"
                   >
