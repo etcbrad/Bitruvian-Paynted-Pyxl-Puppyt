@@ -3,7 +3,7 @@ import React from 'react';
 import { Bone, type BoneProps } from './Bone'; // Import BoneProps type for explicit casting
 import { ANATOMY, RIGGING } from '../constants';
 import { getJointPositions, getTotalRotation, calculateTensionFactor } from '../utils/kinematics';
-import { PartName, PartSelection, PartVisibility, AnchorName, Pose, JointConstraint, RenderMode, PARENT_MAP, partNameToPoseKey, PinnedState, BodyPartMaskLayer } from '../types';
+import { PartName, PartSelection, PartVisibility, AnchorName, Pose, JointConstraint, RenderMode, PARENT_MAP, partNameToPoseKey, PinnedState, BodyPartMaskLayer, ProportionScales } from '../types';
 import { COLORS_BY_CATEGORY, COLORS } from './Bone'; // Import COLORS_BY_CATEGORY AND COLORS for pin indicator color
 
 interface MannequinProps {
@@ -23,6 +23,7 @@ interface MannequinProps {
   masksEnabled?: boolean;
   hideBonesWithMasks?: boolean;
   maskLayers?: Record<PartName, BodyPartMaskLayer>;
+  proportionScales?: ProportionScales;
 }
 
 export const getPartCategory = (part: PartName): string => { // Exported
@@ -82,10 +83,35 @@ export const Mannequin: React.FC<MannequinProps> = ({
   masksEnabled = false,
   hideBonesWithMasks = false,
   maskLayers = {},
+  proportionScales = { arm: 1, leg: 1, torso: 1, head: 1 },
 }) => {
   const joints = getJointPositions(pose, activePins);
   const ghostJoints = ghostPose ? getJointPositions(ghostPose, activePins) : null;
   const offsets = pose.offsets || {};
+
+  const scaleLen = (category: 'arm' | 'leg' | 'torso' | 'head') => (proportionScales[category] || 1);
+  const scaled = {
+    waist: ANATOMY.WAIST * scaleLen('torso'),
+    torso: ANATOMY.TORSO * scaleLen('torso'),
+    collar: ANATOMY.COLLAR * scaleLen('torso'),
+    head: ANATOMY.HEAD * scaleLen('head'),
+    upperArm: ANATOMY.UPPER_ARM * scaleLen('arm'),
+    lowerArm: ANATOMY.LOWER_ARM * scaleLen('arm'),
+    hand: ANATOMY.HAND * scaleLen('arm'),
+    upperLeg: ANATOMY.LEG_UPPER * scaleLen('leg'),
+    lowerLeg: ANATOMY.LEG_LOWER * scaleLen('leg'),
+    foot: ANATOMY.FOOT * scaleLen('leg'),
+    waistW: ANATOMY.WAIST_WIDTH * scaleLen('torso'),
+    torsoW: ANATOMY.TORSO_WIDTH * scaleLen('torso'),
+    collarW: ANATOMY.COLLAR_WIDTH * scaleLen('torso'),
+    headW: ANATOMY.HEAD_WIDTH * scaleLen('head'),
+    armW: ANATOMY.LIMB_WIDTH_ARM * scaleLen('arm'),
+    forearmW: ANATOMY.LIMB_WIDTH_FOREARM * scaleLen('arm'),
+    handW: ANATOMY.HAND_WIDTH * scaleLen('arm'),
+    thighW: ANATOMY.LIMB_WIDTH_THIGH * scaleLen('leg'),
+    calfW: ANATOMY.LIMB_WIDTH_CALF * scaleLen('leg'),
+    footW: ANATOMY.FOOT_WIDTH * scaleLen('leg'),
+  };
 
   const PartWrapper = ({ part, isGhost = false, children }: { part: PartName; isGhost?: boolean; children?: React.ReactNode }) => {
     const isSelected = selectedParts[part];
