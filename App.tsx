@@ -963,6 +963,17 @@ const App: React.FC = () => {
     e.target.value = '';
   }, []);
 
+  const handleCanvasClick = useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    if (!placingJoint || !primarySelectedPart) return;
+    const point = toSvgPoint(e.clientX, e.clientY);
+    if (!point) return;
+    const jointPos = jointPositions[primarySelectedPart];
+    if (!jointPos) return;
+    const rot = getWorldRotationForPart(primarySelectedPart, activePose);
+    const local = rotateVec(point.x - jointPos.x, point.y - jointPos.y, -rot);
+    updateMaskLayer(primarySelectedPart, { offsetX: snapValue(local.x), offsetY: snapValue(local.y) });
+  }, [placingJoint, primarySelectedPart, toSvgPoint, jointPositions, getWorldRotationForPart, activePose, rotateVec, updateMaskLayer, snapValue]);
+
   const getCutoutDetectionParams = useCallback((sensitivity: number) => {
     const normalized = clamp(sensitivity, 0, 1);
     return {
