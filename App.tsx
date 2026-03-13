@@ -1642,7 +1642,7 @@ const App: React.FC = () => {
       window.clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
-    if (cutoutTool === 'select' && !longPressTriggeredRef.current) {
+    if (cutoutTool === 'select') {
       const picked = getPieceAtPoint(e.clientX, e.clientY);
       if (picked) {
         setSelectedCutoutPieceId(picked.id);
