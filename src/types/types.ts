@@ -157,6 +157,8 @@ export type AnimationState = {
   loop: boolean;
 };
 
+export type BackgroundPreset = 'grid' | 'white' | 'gray-1' | 'gray-2' | 'gray-3' | 'black';
+
 export type SavedPose = {
   id: string;
   name: string;
