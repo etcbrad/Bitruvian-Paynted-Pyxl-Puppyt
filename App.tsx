@@ -1837,7 +1837,7 @@ const App: React.FC = () => {
     anchor.download = 'cutout-masks.json';
     anchor.click();
     URL.revokeObjectURL(url);
-  }, [cutoutIgnoreText, cutoutMergeGap, cutoutPieces, cutoutRegion, cutoutSensitivity, cutoutSheet, maskLayers]);
+  }, [cutoutEraseSize, cutoutIgnoreText, cutoutMergeGap, cutoutPieces, cutoutSensitivity, cutoutShapes, cutoutSheet, cutoutTool, maskLayers]);
 
   
 
