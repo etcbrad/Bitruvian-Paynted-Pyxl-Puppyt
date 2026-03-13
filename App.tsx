@@ -1396,6 +1396,14 @@ const App: React.FC = () => {
     setCutoutPieces(previews);
   }, [buildCutoutPreviews, buildShapeMask, cutoutIgnoreText, cutoutShapes, getCutoutDetectionParams]);
 
+  const selectSinglePartBase = useCallback((part: PartName) => {
+    setSelectedParts(prev => {
+      const next: PartSelection = Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: false }), {} as PartSelection);
+      next[part] = true;
+      return next;
+    });
+  }, []);
+
   const applyCutoutPieceToPart = useCallback((pieceId: string, part: PartName) => {
     const piece = cutoutPieces.find(p => p.id === pieceId);
     const labelMap = cutoutLabelMapRef.current;
@@ -1451,9 +1459,9 @@ const App: React.FC = () => {
     setSelectedCutoutPieceId(null);
     if (autoAdvanceJoint) {
       const next = getNextEmptyJoint(part);
-      if (next) selectSinglePart(next);
+      if (next) selectSinglePartBase(next);
     }
-  }, [cutoutPieces, getBoneLengthForPart, updateMaskLayer, autoAdvanceJoint, getNextEmptyJoint, selectSinglePart]);
+  }, [cutoutPieces, getBoneLengthForPart, updateMaskLayer, autoAdvanceJoint, getNextEmptyJoint, selectSinglePartBase]);
 
   const rebuildPieceFromLabels = useCallback((labelId: number, shapeId: string) => {
     const labelMap = cutoutLabelMapRef.current;
