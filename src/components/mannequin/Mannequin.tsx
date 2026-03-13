@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Bone, type BoneProps } from './Bone'; // Import BoneProps type for explicit casting
-import { ANATOMY, RIGGING } from '../constants';
-import { getJointPositions, getTotalRotation, calculateTensionFactor } from '../utils/kinematics';
-import { PartName, PartSelection, PartVisibility, AnchorName, Pose, JointConstraint, RenderMode, PARENT_MAP, partNameToPoseKey, PinnedState, BodyPartMaskLayer, ProportionScales } from '../types';
+import { ANATOMY, RIGGING } from '../../constants/constants';
+import { getJointPositions, getTotalRotation, calculateTensionFactor } from '../../utils/kinematics';
+import { PartName, PartSelection, PartVisibility, AnchorName, Pose, JointConstraint, RenderMode, PARENT_MAP, partNameToPoseKey, PinnedState, BodyPartMaskLayer, ProportionScales } from '../../types/types';
 import { COLORS_BY_CATEGORY, COLORS } from './Bone'; // Import COLORS_BY_CATEGORY AND COLORS for pin indicator color
 
 interface MannequinProps {
