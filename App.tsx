@@ -772,6 +772,18 @@ const App: React.FC = () => {
     validateAndApplyPoseUpdate({ bodyRotation: newValue }, null, false);
   }, [validateAndApplyPoseUpdate]);
 
+  const handleBackgroundUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setBackgroundImageSrc(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
   const getBoneLengthForPart = useCallback((part: PartName): number => {
     switch (part) {
       case PartName.Waist: return ANATOMY.WAIST;
