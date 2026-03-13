@@ -64,6 +64,8 @@ const App: React.FC = () => {
   const [torsoUnitEnabled, setTorsoUnitEnabled] = useState(true);
   const [torsoUnitAngle, setTorsoUnitAngle] = useState(0);
   const [autoMirrorLimbs, setAutoMirrorLimbs] = useState(true);
+  const [autoBuildFromLegs, setAutoBuildFromLegs] = useState(true);
+  const [autoAdvanceJoint, setAutoAdvanceJoint] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [gridSize, setGridSize] = useState(10);
   const [placingJoint, setPlacingJoint] = useState(false);
@@ -81,6 +83,7 @@ const App: React.FC = () => {
     offsetY: 0,
     layerOrder: 'front',
     mirrorX: false,
+    scaleLocked: false,
   };
 
   const [maskLayers, setMaskLayers] = useState<Record<PartName, BodyPartMaskLayer>>(() =>
