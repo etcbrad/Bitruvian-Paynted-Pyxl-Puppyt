@@ -434,15 +434,13 @@ export const solveIK = (
   if (!chain) return newPose;
 
   // CCD Implementation
-      let deltaAngle = deg(angleTarget - angleEffector);
+  const joints = getJointPositions(newPose, {}, scales);
+  
+  for (let iter = 0; iter < iterations; iter++) {
+    for (let i = chain.length - 1; i >= 0; i--) {
+      const currentJoint = chain[i];
+      const effector = chain[chain.length - 1];
       
-      // Apply bias only when there's a meaningful delta to correct
-      if (Math.abs(deltaAngle) > 0.5) {
-        deltaAngle += (deltaAngle > 0 ? 1 : -1);
-      }
-
-      const poseKey = partNameToPoseKey[currentJoint];
-      (newPose as any)[poseKey] = ((newPose as any)[poseKey] || 0) + deltaAngle;
       const jointPos = joints[currentJoint as string];
       const effectorPos = joints[effector === PartName.RAnkle ? 'rFootTip' : effector === PartName.LAnkle ? 'lFootTip' : effector === PartName.RWrist ? 'rHandTip' : 'lHandTip'];
       
@@ -456,8 +454,10 @@ export const solveIK = (
       
       let deltaAngle = deg(angleTarget - angleEffector);
       
-      // Apply 1 degree bias for directional stability (Phase 0.1 requirement)
-      deltaAngle += (deltaAngle > 0 ? 1 : -1);
+      // Apply bias only when there's a meaningful delta to correct
+      if (Math.abs(deltaAngle) > 0.5) {
+        deltaAngle += (deltaAngle > 0 ? 1 : -1);
+      }
 
       const poseKey = partNameToPoseKey[currentJoint];
       (newPose as any)[poseKey] = ((newPose as any)[poseKey] || 0) + deltaAngle;
