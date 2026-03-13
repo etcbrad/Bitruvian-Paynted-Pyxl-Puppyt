@@ -141,15 +141,20 @@ export const Bone: React.FC<BoneProps> = ({
   };
 
   const partCategoryColor = getPartCategoryColor(partCategory);
+  const rotationHue = useMemo(() => {
+    const normalized = ((rotation % 360) + 360) % 360;
+    return normalized;
+  }, [rotation]);
 
   const pathFill = useMemo(() => {
     if (renderMode === 'wireframe') return 'none';
     if (renderMode === 'silhouette') return COLORS.DEFAULT_FILL; // Solid black fill for silhouette
     if (renderMode === 'backlight') return COLORS.DEFAULT_FILL; // Black fill for backlight mode
+    if (renderMode === 'colorwheel') return `hsl(${rotationHue} 75% 60%)`;
 
     // Default mode: use categorical color, which is now monochrome.
     return fillOverride || partCategoryColor;
-  }, [renderMode, fillOverride, partCategoryColor]);
+  }, [renderMode, fillOverride, partCategoryColor, rotationHue]);
 
   const pathOpacity = useMemo(() => {
     if (renderMode === 'backlight') return COLORS.BACKLIGHT_OPACITY;
@@ -161,6 +166,7 @@ export const Bone: React.FC<BoneProps> = ({
     
     if (renderMode === 'wireframe') return COLORS.RIDGE;
     if (renderMode === 'backlight') return COLORS.RIDGE; // Outline for backlight mode
+    if (renderMode === 'colorwheel') return 'none';
     
     // In silhouette mode, no stroke unless selected
     if (renderMode === 'silhouette') {
@@ -185,6 +191,10 @@ export const Bone: React.FC<BoneProps> = ({
 
   const overlayLineStroke = useMemo(() => {
     if (renderMode === 'default' && showOverlay) {
+      if (jointConstraintMode === 'stretch') return COLORS.PURPLE_STRETCH;
+      if (jointConstraintMode === 'curl') return COLORS.GREEN_CURL;
+    }
+    if (renderMode === 'colorwheel' && showOverlay) {
       if (jointConstraintMode === 'stretch') return COLORS.PURPLE_STRETCH;
       if (jointConstraintMode === 'curl') return COLORS.GREEN_CURL;
     }
