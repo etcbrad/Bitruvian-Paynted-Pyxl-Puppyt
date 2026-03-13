@@ -2275,6 +2275,17 @@ const App: React.FC = () => {
                   >
                     Next Empty Joint
                   </button>
+                  {selectedCutoutPieceId && (
+                    <button
+                      onClick={() => {
+                        const next = JOINT_ORDER.find(p => !maskLayers[p].src);
+                        if (next) applyCutoutPieceToPart(selectedCutoutPieceId, next);
+                      }}
+                      className="w-full mb-2 text-[9px] px-2 py-1 border uppercase bg-accent-purple/20 border-accent-purple/40 text-accent-purple hover:bg-accent-purple/30"
+                    >
+                      Assign Selected → Next
+                    </button>
+                  )}
                   <div className="grid grid-cols-1 gap-1 max-h-52 overflow-y-auto custom-scrollbar">
                     {JOINT_ORDER.map(part => {
                       const hasMask = Boolean(maskLayers[part].src);
