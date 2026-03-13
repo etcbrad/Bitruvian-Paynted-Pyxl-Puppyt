@@ -720,6 +720,47 @@ const App: React.FC = () => {
     validateAndApplyPoseUpdate({ bodyRotation: newValue }, null, false);
   }, [validateAndApplyPoseUpdate]);
 
+  const handleTorsoUnitChange = useCallback((newValue: number) => {
+    setTorsoUnitAngle(newValue);
+    validateAndApplyPoseUpdate({ waist: newValue, torso: newValue, collar: newValue }, PartName.Torso, false);
+  }, [validateAndApplyPoseUpdate]);
+
+  const updateMaskLayer = useCallback((part: PartName, patch: Partial<BodyPartMaskLayer>) => {
+    setMaskLayers(prev => ({ ...prev, [part]: { ...prev[part], ...patch } }));
+  }, []);
+
+  const handleMaskUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !primarySelectedPart) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        updateMaskLayer(primarySelectedPart, { src, width: img.width, height: img.height });
+      };
+      img.src = src;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }, [primarySelectedPart, updateMaskLayer]);
+
+  const handleCutoutUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const src = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        setCutoutSheet({ src, width: img.width, height: img.height });
+      };
+      img.src = src;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }, []);
+
   
 
   return (
