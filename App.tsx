@@ -2159,6 +2159,9 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
+                <div className="text-[8px] text-white/40 mt-2">
+                  Tip: Enable “Place Joint” then click the canvas; snapping uses the grid size.
+                </div>
               </div>
 
               <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
