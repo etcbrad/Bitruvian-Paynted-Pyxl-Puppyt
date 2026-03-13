@@ -1986,21 +1986,6 @@ const App: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                <div className="mt-2">
-                  <div className="flex justify-between text-[8px] text-white/40 uppercase">
-                    <span>Background Light</span>
-                    <span>{Math.round(backgroundLight * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={Math.round(backgroundLight * 100)}
-                    onChange={e => setBackgroundLight(Math.min(1, Math.max(0, Number(e.target.value) / 100)))}
-                    className="w-full accent-selection"
-                    aria-label="Background light overlay"
-                  />
-                </div>
               </div>
             )}
           </div>
