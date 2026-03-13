@@ -166,8 +166,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
         <PartWrapper part={PartName.Waist} isGhost={isGhost}>
           <Bone 
             rotation={getTotalRotation(PartName.Waist, p)} 
-            length={ANATOMY.WAIST} 
-            width={ANATOMY.WAIST_WIDTH} 
+            length={scaled.waist} 
+            width={scaled.waistW} 
             variant="waist-teardrop-pointy-up" 
             drawsUpwards 
             showOverlay={showOverlay} 
@@ -180,8 +180,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
             <PartWrapper part={PartName.Torso} isGhost={isGhost}>
               <Bone 
                 rotation={getTotalRotation(PartName.Torso, p)} 
-                length={ANATOMY.TORSO} 
-                width={ANATOMY.TORSO_WIDTH} 
+                length={scaled.torso} 
+                width={scaled.torsoW} 
                 variant="torso-teardrop-pointy-down" 
                 drawsUpwards 
                 showOverlay={showOverlay} 
@@ -194,8 +194,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                 <PartWrapper part={PartName.Collar} isGhost={isGhost}>
                   <Bone 
                     rotation={getTotalRotation(PartName.Collar, p)} 
-                    length={ANATOMY.COLLAR} 
-                    width={ANATOMY.COLLAR_WIDTH} 
+                    length={scaled.collar} 
+                    width={scaled.collarW} 
                     variant="collar-horizontal-oval-shape" 
                     drawsUpwards 
                     showOverlay={showOverlay} 
@@ -210,8 +210,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                       <PartWrapper part={PartName.Head} isGhost={isGhost}>
                         <Bone 
                           rotation={getTotalRotation(PartName.Head, p)} 
-                          length={ANATOMY.HEAD} 
-                          width={ANATOMY.HEAD_WIDTH} 
+                          length={scaled.head} 
+                          width={scaled.headW} 
                           variant="head-tall-oval" 
                           drawsUpwards 
                           showOverlay={showOverlay} 
@@ -228,8 +228,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                       <PartWrapper part={PartName.RShoulder} isGhost={isGhost}>
                         <Bone 
                           rotation={getTotalRotation(PartName.RShoulder, p)} 
-                          length={ANATOMY.UPPER_ARM} 
-                          width={ANATOMY.LIMB_WIDTH_ARM} 
+                          length={scaled.upperArm} 
+                          width={scaled.armW} 
                           variant="deltoid-shape" 
                           showOverlay={showOverlay} 
                           offset={skeletonOffsets[PartName.RShoulder]} 
@@ -241,8 +241,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                           <PartWrapper part={PartName.RElbow} isGhost={isGhost}>
                             <Bone 
                               rotation={getTotalRotation('rForearm', p)} 
-                              length={ANATOMY.LOWER_ARM} 
-                              width={ANATOMY.LIMB_WIDTH_FOREARM} 
+                              length={scaled.lowerArm} 
+                              width={scaled.forearmW} 
                               variant="limb-tapered" 
                               showOverlay={showOverlay} 
                               offset={skeletonOffsets[PartName.RElbow]} 
@@ -254,8 +254,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                               <PartWrapper part={PartName.RWrist} isGhost={isGhost}>
                                 <Bone 
                                   rotation={getTotalRotation(PartName.RWrist, p)} 
-                                  length={ANATOMY.HAND} 
-                                  width={ANATOMY.HAND_WIDTH} 
+                                  length={scaled.hand} 
+                                  width={scaled.handW} 
                                   variant="hand-foot-arrowhead-shape" 
                                   showOverlay={showOverlay} 
                                   offset={skeletonOffsets[PartName.RWrist]} 
@@ -275,8 +275,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                       <PartWrapper part={PartName.LShoulder} isGhost={isGhost}>
                         <Bone 
                           rotation={getTotalRotation(PartName.LShoulder, p)} 
-                          length={ANATOMY.UPPER_ARM} 
-                          width={ANATOMY.LIMB_WIDTH_ARM} 
+                          length={scaled.upperArm} 
+                          width={scaled.armW} 
                           variant="deltoid-shape" 
                           showOverlay={showOverlay} 
                           offset={skeletonOffsets[PartName.LShoulder]} 
@@ -288,8 +288,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                           <PartWrapper part={PartName.LElbow} isGhost={isGhost}>
                             <Bone 
                               rotation={getTotalRotation('lForearm', p)} 
-                              length={ANATOMY.LOWER_ARM} 
-                              width={ANATOMY.LIMB_WIDTH_FOREARM} 
+                              length={scaled.lowerArm} 
+                              width={scaled.forearmW} 
                               variant="limb-tapered" 
                               showOverlay={showOverlay} 
                               offset={skeletonOffsets[PartName.LElbow]} 
@@ -301,8 +301,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                               <PartWrapper part={PartName.LWrist} isGhost={isGhost}>
                                 <Bone 
                                   rotation={getTotalRotation(PartName.LWrist, p)} 
-                                  length={ANATOMY.HAND} 
-                                  width={ANATOMY.HAND_WIDTH} 
+                                  length={scaled.hand} 
+                                  width={scaled.handW} 
                                   variant="hand-foot-arrowhead-shape" 
                                   showOverlay={showOverlay} 
                                   offset={skeletonOffsets[PartName.LWrist]} 
@@ -327,8 +327,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
         <PartWrapper part={PartName.RThigh} isGhost={isGhost}>
           <Bone 
             rotation={getTotalRotation(PartName.RThigh, p)} 
-            length={ANATOMY.LEG_UPPER} 
-            width={ANATOMY.LIMB_WIDTH_THIGH} 
+            length={scaled.upperLeg} 
+            width={scaled.thighW} 
             variant="limb-tapered" 
             showOverlay={showOverlay} 
             offset={skeletonOffsets[PartName.RThigh]} 
@@ -340,8 +340,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
             <PartWrapper part={PartName.RSkin} isGhost={isGhost}>
               <Bone 
                 rotation={getTotalRotation('rCalf', p)} 
-                length={ANATOMY.LEG_LOWER} 
-                width={ANATOMY.LIMB_WIDTH_CALF} 
+                length={scaled.lowerLeg} 
+                width={scaled.calfW} 
                 variant="limb-tapered" 
                 showOverlay={showOverlay} 
                 offset={skeletonOffsets[PartName.RSkin]} 
@@ -353,8 +353,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                 <PartWrapper part={PartName.RAnkle} isGhost={isGhost}>
                   <Bone 
                     rotation={getTotalRotation(PartName.RAnkle, p)} 
-                    length={ANATOMY.FOOT} 
-                    width={ANATOMY.FOOT_WIDTH} 
+                    length={scaled.foot} 
+                    width={scaled.footW} 
                     variant="hand-foot-arrowhead-shape" 
                     showOverlay={showOverlay} 
                     offset={skeletonOffsets[PartName.RAnkle]} 
@@ -372,8 +372,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
         <PartWrapper part={PartName.LThigh} isGhost={isGhost}>
           <Bone 
             rotation={getTotalRotation(PartName.LThigh, p)} 
-            length={ANATOMY.LEG_UPPER} 
-            width={ANATOMY.LIMB_WIDTH_THIGH} 
+            length={scaled.upperLeg} 
+            width={scaled.thighW} 
             variant="limb-tapered" 
             showOverlay={showOverlay} 
             offset={skeletonOffsets[PartName.LThigh]} 
@@ -385,8 +385,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
             <PartWrapper part={PartName.LSkin} isGhost={isGhost}>
               <Bone 
                 rotation={getTotalRotation('lCalf', p)} 
-                length={ANATOMY.LEG_LOWER} 
-                width={ANATOMY.LIMB_WIDTH_CALF} 
+                length={scaled.lowerLeg} 
+                width={scaled.calfW} 
                 variant="limb-tapered" 
                 showOverlay={showOverlay} 
                 offset={skeletonOffsets[PartName.LSkin]} 
@@ -398,8 +398,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                 <PartWrapper part={PartName.LAnkle} isGhost={isGhost}>
                   <Bone 
                     rotation={getTotalRotation(PartName.LAnkle, p)} 
-                    length={ANATOMY.FOOT} 
-                    width={ANATOMY.FOOT_WIDTH} 
+                    length={scaled.foot} 
+                    width={scaled.footW} 
                     variant="hand-foot-arrowhead-shape" 
                     showOverlay={showOverlay} 
                     offset={skeletonOffsets[PartName.LAnkle]} 
