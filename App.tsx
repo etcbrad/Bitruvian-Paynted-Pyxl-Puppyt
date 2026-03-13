@@ -2040,7 +2040,7 @@ const App: React.FC = () => {
                         disabled={!masksEnabled}
                         className={`flex-1 text-[9px] px-2 py-1 border uppercase ${
                           !masksEnabled
-                            ? 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                            ? 'bg-white/5 border-transparent text-white cursor-not-allowed'
                             : hideBonesWithMasks
                               ? 'bg-selection/30 border-selection text-selection'
                               : 'bg-white/5 border-white/10 text-white/40'
@@ -2060,7 +2060,7 @@ const App: React.FC = () => {
                             onClick={() => maskUploadInputRef.current?.click()}
                             disabled={!primarySelectedPart}
                             className={`text-[9px] px-2 py-1 border ${
-                              primarySelectedPart ? 'bg-white/10 border-white/20 text-white/70' : 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                              primarySelectedPart ? 'bg-white/10 border-white/20 text-white/70' : 'bg-white/5 border-transparent text-white cursor-not-allowed'
                             }`}
                           >
                             Upload
@@ -2069,7 +2069,7 @@ const App: React.FC = () => {
                             onClick={() => primarySelectedPart && updateMaskLayer(primarySelectedPart, { src: null })}
                             disabled={!primarySelectedPart}
                             className={`text-[9px] px-2 py-1 border ${
-                              primarySelectedPart ? 'bg-accent-red/20 border-accent-red/40 text-accent-red' : 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                              primarySelectedPart ? 'bg-accent-red/20 border-accent-red/40 text-accent-red' : 'bg-white/5 border-transparent text-white cursor-not-allowed'
                             }`}
                           >
                             Clear
