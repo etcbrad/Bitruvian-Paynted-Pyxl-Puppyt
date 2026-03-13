@@ -297,24 +297,10 @@ export const solveFABRIK = (
   }
 
   const origin = { ...points[0] };
-  const totalLength = originalLengths.reduce((a, b) => a + b, 0);
-  const targetDist = dist(origin, target);
-
-  // Check if any joint in the chain has 'stretch' mode
-  const hasStretch = chain.some(joint => jointModes[joint] === 'stretch');
-
-  // If target is out of reach AND we have stretch, we scale the lengths
-  let currentLengths = [...originalLengths];
-  if (targetDist > totalLength && hasStretch) {
-    const scale = targetDist / totalLength;
-    currentLengths = originalLengths.map(l => l * scale);
-  }
-
-  // FABRIK Iterations
-  if (targetDist > totalLength && !hasStretch) {
     // Standard out-of-reach behavior: extend fully
     for (let i = 0; i < points.length - 1; i++) {
       const r = dist(points[i], target);
+      if (r < 1e-6) continue; // Skip if points coincide
       const lambda = currentLengths[i] / r;
       points[i + 1] = {
         x: (1 - lambda) * points[i].x + lambda * target.x,
@@ -329,9 +315,26 @@ export const solveFABRIK = (
       points[points.length - 1] = { ...target };
       for (let i = points.length - 2; i >= 0; i--) {
         const r = dist(points[i + 1], points[i]);
+        if (r < 1e-6) continue;
         const lambda = currentLengths[i] / r;
         points[i] = {
           x: (1 - lambda) * points[i + 1].x + lambda * points[i].x,
+          y: (1 - lambda) * points[i + 1].y + lambda * points[i].y
+        };
+      }
+
+      // Backward Pass
+      points[0] = { ...origin };
+      for (let i = 0; i < points.length - 1; i++) {
+        const r = dist(points[i], points[i + 1]);
+        if (r < 1e-6) continue;
+        const lambda = currentLengths[i] / r;
+        points[i + 1] = {
+          x: (1 - lambda) * points[i].x + lambda * points[i + 1].x,
+          y: (1 - lambda) * points[i].y + lambda * points[i + 1].y
+        };
+      }
+    }
           y: (1 - lambda) * points[i + 1].y + lambda * points[i].y
         };
       }
