@@ -1,6 +1,7 @@
 import React from 'react';
 import { Stage, Layer } from 'react-konva';
 import { Pose, PartName, RenderMode, ViewMode } from '../types/types';
+import { RESET_POSE, FLOOR_HEIGHT } from '../constants/constants';
 import { Mannequin } from './mannequin/Mannequin';
 import { SystemGuides, Scanlines } from './layout/SystemGrid';
 
