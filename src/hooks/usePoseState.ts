@@ -34,9 +34,11 @@ export const usePoseState = (initialPose: Pose) => {
   }, []);
 
   const resetPose = useCallback(() => {
-    updatePose(initialPose);
+    setActivePose(initialPose);
     setGhostPose(initialPose);
-  }, [initialPose, updatePose]);
+    undoStack.current = [];
+    redoStack.current = [];
+  }, [initialPose]);
 
   return {
     activePose,
