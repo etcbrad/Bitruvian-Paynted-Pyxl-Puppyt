@@ -2380,6 +2380,18 @@ const App: React.FC = () => {
             )}
             {workflowStep === 'slice' && cutoutSheet && (
               <g>
+                {cutoutRegion && (
+                  <rect
+                    x={-((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x + cutoutRegion.x * cutoutScale}
+                    y={-((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y + cutoutRegion.y * cutoutScale}
+                    width={cutoutRegion.w * cutoutScale}
+                    height={cutoutRegion.h * cutoutScale}
+                    fill="rgba(59,130,246,0.08)"
+                    stroke="rgba(59,130,246,0.6)"
+                    strokeWidth={2}
+                    pointerEvents="none"
+                  />
+                )}
                 {cutoutPieces.map(piece => {
                   const px = -((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x + piece.bbox.x * cutoutScale;
                   const py = -((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y + piece.bbox.y * cutoutScale;
@@ -2417,6 +2429,23 @@ const App: React.FC = () => {
                     Drag up/down
                   </text>
                 </g>
+                {cutoutRegionMode && (
+                  <rect
+                    x={viewBoxValues.x}
+                    y={viewBoxValues.y}
+                    width={viewBoxValues.w}
+                    height={viewBoxValues.h}
+                    fill="transparent"
+                    style={{ cursor: 'crosshair' }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      const point = svgPointToSheetPoint(e.clientX, e.clientY);
+                      if (!point) return;
+                      regionDragRef.current = { startX: point.x, startY: point.y };
+                      setCutoutRegion({ x: point.x, y: point.y, w: 0, h: 0 });
+                    }}
+                  />
+                )}
               </g>
             )}
           </svg>
