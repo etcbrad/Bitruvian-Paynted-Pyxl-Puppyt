@@ -40,6 +40,8 @@ const App: React.FC = () => {
   const [activePins, setActivePins] = useState<AnchorName[]>([PartName.Waist]); 
   const [pinnedState, setPinnedState] = useState<Record<string, Vector2D>>({});
   const [renderMode, setRenderMode] = useState<RenderMode>('default');
+  type BackgroundPreset = 'grid' | 'white' | 'gray-1' | 'gray-2' | 'gray-3' | 'black';
+  const [backgroundPreset, setBackgroundPreset] = useState<BackgroundPreset>('grid');
 
   const [selectedParts, setSelectedParts] = useState<PartSelection>(() => {
     const initialSelection: PartSelection = Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: false }), {} as PartSelection);
