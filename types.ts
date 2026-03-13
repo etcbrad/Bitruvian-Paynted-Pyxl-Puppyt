@@ -118,6 +118,7 @@ export type BodyPartMaskLayer = {
   scale: number;
   baseScale: number;
   mirrorX?: boolean;
+  scaleLocked?: boolean;
   rotationDeg: number;
   offsetX: number;
   offsetY: number;
