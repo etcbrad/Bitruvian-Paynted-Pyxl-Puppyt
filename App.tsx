@@ -1084,10 +1084,10 @@ const App: React.FC = () => {
 
   const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-  const snapValue = useCallback((value: number) => {
+  function snapValue(value: number) {
     if (!snapToGrid || !gridSize) return value;
     return Math.round(value / gridSize) * gridSize;
-  }, [snapToGrid, gridSize]);
+  }
 
   function rotateVec(x: number, y: number, angleDeg: number) {
     const r = angleDeg * Math.PI / 180;
