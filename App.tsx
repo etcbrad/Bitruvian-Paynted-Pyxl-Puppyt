@@ -730,9 +730,26 @@ const App: React.FC = () => {
       case 'wireframe': return 'WIREFRAME (Outline)';
       case 'silhouette': return 'MONOCHROME (Black Fill)';
       case 'backlight': return 'X-RAY (Transparent)';
+      case 'colorwheel': return 'COLOR WHEEL (Rotation-Linked)';
       default: return 'UNKNOWN';
     }
   };
+
+  const backgroundOptions: Array<{
+    id: BackgroundPreset;
+    label: string;
+    className?: string;
+    color?: string;
+  }> = [
+    { id: 'grid', label: 'GRID', className: 'bg-selection-super-light bg-triangle-grid' },
+    { id: 'white', label: 'WHITE', color: '#FFFFFF' },
+    { id: 'gray-1', label: 'GRAY 1', color: '#E5E7EB' },
+    { id: 'gray-2', label: 'GRAY 2', color: '#9CA3AF' },
+    { id: 'gray-3', label: 'GRAY 3', color: '#4B5563' },
+    { id: 'black', label: 'BLACK', color: '#000000' },
+  ];
+
+  const activeBackground = backgroundOptions.find(option => option.id === backgroundPreset) || backgroundOptions[0];
 
 
   const handlePartRotationWheelChange = useCallback((newValue: number) => {
