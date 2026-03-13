@@ -1017,7 +1017,7 @@ const App: React.FC = () => {
     const rot = getWorldRotationForPart(primarySelectedPart, activePose);
     const local = rotateVec(point.x - jointPos.x, point.y - jointPos.y, -rot);
     updateMaskLayer(primarySelectedPart, { offsetX: snapValue(local.x), offsetY: snapValue(local.y) });
-  }, [placingJoint, primarySelectedPart, toSvgPoint, jointPositions, getWorldRotationForPart, activePose, rotateVec, updateMaskLayer, snapValue]);
+  }, [placingJoint, primarySelectedPart, cutoutRegionMode, toSvgPoint, jointPositions, getWorldRotationForPart, activePose, rotateVec, updateMaskLayer, snapValue]);
 
   const getCutoutDetectionParams = useCallback((sensitivity: number) => {
     const normalized = clamp(sensitivity, 0, 1);
