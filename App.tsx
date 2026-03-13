@@ -2753,7 +2753,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-[8px] text-white/40 mt-2">
-                  Tip: Enable “Place Joint” then click the canvas; snapping uses the grid size.
+                  Tip: Use “Drag Mask” to align pieces. “Set Anchors” places 1/2/3 points (point/line/shape).
                 </div>
               </div>
 
