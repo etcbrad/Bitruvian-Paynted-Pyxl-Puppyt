@@ -870,6 +870,16 @@ const App: React.FC = () => {
     return rot;
   }, []);
 
+  const toSvgPoint = useCallback((clientX: number, clientY: number) => {
+    if (!svgRef.current) return null;
+    const svgPoint = svgRef.current.createSVGPoint();
+    svgPoint.x = clientX;
+    svgPoint.y = clientY;
+    const ctm = svgRef.current.getScreenCTM();
+    if (!ctm) return null;
+    return svgPoint.matrixTransform(ctm.inverse());
+  }, []);
+
   const handleMaskUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !primarySelectedPart) return;
