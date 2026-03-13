@@ -2215,6 +2215,22 @@ const App: React.FC = () => {
                     Auto Mirror {autoMirrorLimbs ? 'On' : 'Off'}
                   </button>
                   <button
+                    onClick={() => setAutoBuildFromLegs(prev => !prev)}
+                    className={`text-[9px] px-2 py-1 border uppercase ${
+                      autoBuildFromLegs ? 'bg-accent-purple/20 border-accent-purple/40 text-accent-purple' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Build From Legs {autoBuildFromLegs ? 'On' : 'Off'}
+                  </button>
+                  <button
+                    onClick={() => setAutoAdvanceJoint(prev => !prev)}
+                    className={`text-[9px] px-2 py-1 border uppercase ${
+                      autoAdvanceJoint ? 'bg-selection/30 border-selection text-selection' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Auto-Advance {autoAdvanceJoint ? 'On' : 'Off'}
+                  </button>
+                  <button
                     onClick={() => setPlacingJoint(prev => !prev)}
                     className={`text-[9px] px-2 py-1 border uppercase ${
                       placingJoint ? 'bg-accent-purple/20 border-accent-purple/40 text-accent-purple' : 'bg-white/5 border-white/10 text-white/40'
