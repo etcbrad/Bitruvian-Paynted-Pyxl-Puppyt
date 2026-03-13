@@ -854,6 +854,58 @@ const App: React.FC = () => {
     [PartName.RAnkle]: PartName.LAnkle,
   };
 
+  const applyLegToLimbs = (nextLayers: Record<PartName, BodyPartMaskLayer>) => {
+    const rightLeg = {
+      thigh: nextLayers[PartName.RThigh],
+      calf: nextLayers[PartName.RSkin],
+      ankle: nextLayers[PartName.RAnkle],
+    };
+    if (!rightLeg.thigh.src || !rightLeg.calf.src || !rightLeg.ankle.src) return nextLayers;
+
+    // Auto build left leg from right leg.
+    if (!nextLayers[PartName.LThigh].src) nextLayers[PartName.LThigh] = { ...rightLeg.thigh, mirrorX: true };
+    if (!nextLayers[PartName.LSkin].src) nextLayers[PartName.LSkin] = { ...rightLeg.calf, mirrorX: true };
+    if (!nextLayers[PartName.LAnkle].src) nextLayers[PartName.LAnkle] = { ...rightLeg.ankle, mirrorX: true };
+
+    // Build arms from leg proportions (vitruvian-ish).
+    const armScale = ARM_FROM_LEG_SCALE;
+    if (!nextLayers[PartName.RShoulder].src) {
+      nextLayers[PartName.RShoulder] = {
+        ...rightLeg.thigh,
+        scale: (rightLeg.thigh.scale || 1) * armScale,
+        baseScale: (rightLeg.thigh.baseScale || rightLeg.thigh.scale || 1) * armScale,
+        offsetX: (rightLeg.thigh.offsetX || 0) * armScale,
+        offsetY: (rightLeg.thigh.offsetY || 0) * armScale,
+        mirrorX: false,
+      };
+    }
+    if (!nextLayers[PartName.RElbow].src) {
+      nextLayers[PartName.RElbow] = {
+        ...rightLeg.calf,
+        scale: (rightLeg.calf.scale || 1) * armScale,
+        baseScale: (rightLeg.calf.baseScale || rightLeg.calf.scale || 1) * armScale,
+        offsetX: (rightLeg.calf.offsetX || 0) * armScale,
+        offsetY: (rightLeg.calf.offsetY || 0) * armScale,
+        mirrorX: false,
+      };
+    }
+    if (!nextLayers[PartName.RWrist].src) {
+      nextLayers[PartName.RWrist] = {
+        ...rightLeg.ankle,
+        scale: (rightLeg.ankle.scale || 1) * armScale,
+        baseScale: (rightLeg.ankle.baseScale || rightLeg.ankle.scale || 1) * armScale,
+        offsetX: (rightLeg.ankle.offsetX || 0) * armScale,
+        offsetY: (rightLeg.ankle.offsetY || 0) * armScale,
+        mirrorX: false,
+      };
+    }
+    if (!nextLayers[PartName.LShoulder].src) nextLayers[PartName.LShoulder] = { ...nextLayers[PartName.RShoulder], mirrorX: true };
+    if (!nextLayers[PartName.LElbow].src) nextLayers[PartName.LElbow] = { ...nextLayers[PartName.RElbow], mirrorX: true };
+    if (!nextLayers[PartName.LWrist].src) nextLayers[PartName.LWrist] = { ...nextLayers[PartName.RWrist], mirrorX: true };
+
+    return nextLayers;
+  };
+
   const updateMaskLayer = useCallback((part: PartName, patch: Partial<BodyPartMaskLayer>) => {
     setMaskLayers(prev => {
       const next = { ...prev, [part]: { ...prev[part], ...patch } };
