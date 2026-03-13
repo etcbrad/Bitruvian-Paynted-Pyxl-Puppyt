@@ -2774,6 +2774,30 @@ const App: React.FC = () => {
                   <p className="text-[8px] text-white/40 mt-1">
                     Select a joint on the mannequin, upload its cutout, then fine‑tune scale and offsets.
                   </p>
+                  {workflowStep === 'rig' && (
+                    <div className="mt-2 flex flex-col gap-2">
+                      <button
+                        onClick={() => setShowTPoseTemplate(prev => !prev)}
+                        className={`text-[9px] px-2 py-1 border uppercase ${
+                          showTPoseTemplate ? 'bg-selection/30 border-selection text-selection' : 'bg-white/5 border-white/10 text-white/40'
+                        }`}
+                      >
+                        T‑Pose Template {showTPoseTemplate ? 'On' : 'Off'}
+                      </button>
+                      <div className="flex items-center justify-between text-[8px] text-white/50">
+                        <span>Template Opacity</span>
+                        <span>{Math.round(tPoseTemplateOpacity * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={10}
+                        max={90}
+                        value={Math.round(tPoseTemplateOpacity * 100)}
+                        onChange={e => setTPoseTemplateOpacity(Number(e.target.value) / 100)}
+                        className="w-full accent-selection"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
