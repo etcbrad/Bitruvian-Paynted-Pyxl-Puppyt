@@ -358,10 +358,14 @@ const App: React.FC = () => {
       let normalizedUpdates = proposedUpdates;
       if (torsoUnitEnabled) {
         const torsoUpdate =
-          (typeof proposedUpdates.waist === 'number' && proposedUpdates.waist) ||
-          (typeof proposedUpdates.torso === 'number' && proposedUpdates.torso) ||
-          (typeof proposedUpdates.collar === 'number' && proposedUpdates.collar);
-        if (typeof torsoUpdate === 'number') {
+          typeof proposedUpdates.waist === 'number'
+            ? proposedUpdates.waist
+            : typeof proposedUpdates.torso === 'number'
+              ? proposedUpdates.torso
+              : typeof proposedUpdates.collar === 'number'
+                ? proposedUpdates.collar
+                : null;
+        if (torsoUpdate !== null) {
           normalizedUpdates = {
             ...proposedUpdates,
             waist: torsoUpdate,
