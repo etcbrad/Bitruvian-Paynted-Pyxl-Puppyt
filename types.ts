@@ -110,6 +110,18 @@ export type PinnedState = {
   [key in AnchorName]?: Vector2D;
 };
 
+export type BodyPartMaskLayer = {
+  src: string | null;
+  width: number;
+  height: number;
+  opacity: number;
+  scale: number;
+  rotationDeg: number;
+  offsetX: number;
+  offsetY: number;
+  layerOrder?: 'front' | 'behind';
+};
+
 // Defines the available kinetic constraint modes for joints.
 // Re-introduced 'stretch' and 'curl' as per user request.
 export type JointConstraint = 'fk' | 'stretch' | 'curl';
