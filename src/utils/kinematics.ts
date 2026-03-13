@@ -229,6 +229,21 @@ export const calculateTensionFactor = (anatomicalPos: Vector2D, pinnedPos: Vecto
 /**
  * Interpolates between two poses.
  */
+const interpolateOffsets = (
+  startOffsets: Record<string, Vector2D>,
+  endOffsets: Record<string, Vector2D>,
+  t: number
+): Record<string, Vector2D> => {
+  const keys = new Set([...Object.keys(startOffsets), ...Object.keys(endOffsets)]);
+  const result: Record<string, Vector2D> = {};
+  keys.forEach(key => {
+    const s = startOffsets[key] || { x: 0, y: 0 };
+    const e = endOffsets[key] || { x: 0, y: 0 };
+    result[key] = { x: lerp(s.x, e.x, t), y: lerp(s.y, e.y, t) };
+  });
+  return result;
+};
+
 export const interpolatePoses = (start: Pose, end: Pose, t: number): Pose => {
   const result: any = {
     root: {
@@ -236,7 +251,7 @@ export const interpolatePoses = (start: Pose, end: Pose, t: number): Pose => {
       y: lerp(start.root.y, end.root.y, t),
     },
     bodyRotation: lerpAngleShortestPath(start.bodyRotation, end.bodyRotation, t),
-    offsets: {},
+    offsets: interpolateOffsets(start.offsets || {}, end.offsets || {}, t),
   };
 
   const keys = Object.keys(BASE_ROTATIONS) as (keyof typeof BASE_ROTATIONS)[];
