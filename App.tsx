@@ -1143,7 +1143,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [cutoutSheet, cutoutSensitivity, runCutoutDetection]);
+  }, [cutoutSheet, runCutoutDetection]);
 
   useEffect(() => {
     if (!cutoutImageRef.current || !cutoutSheet) return;
@@ -1183,7 +1183,7 @@ const App: React.FC = () => {
     if (selectedCutoutPieceId) {
       applyCutoutPieceToPart(selectedCutoutPieceId, part);
     }
-  }, []);
+  }, [applyCutoutPieceToPart, selectedCutoutPieceId]);
 
   
 
