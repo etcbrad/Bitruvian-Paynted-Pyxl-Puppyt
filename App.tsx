@@ -1271,7 +1271,9 @@ const App: React.FC = () => {
                         ? 'bg-accent-green/20 border-accent-green/50 text-accent-green'
                         : renderMode === 'silhouette'
                           ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
-                          : 'bg-accent-red/20 border-accent-red/50 text-accent-red'
+                          : renderMode === 'backlight'
+                            ? 'bg-accent-red/20 border-accent-red/50 text-accent-red'
+                            : 'bg-amber-500/20 border-amber-400/50 text-amber-200'
                   }`}
                   aria-label={`Cycle Display Mode. Current: ${getRenderModeDisplayName(renderMode)}`}
                 >
