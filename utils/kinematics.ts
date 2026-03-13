@@ -111,37 +111,38 @@ export const applyKineticBehaviors = (
 const _calculateGlobalJointPositions = (
     baseRoot: Vector2D,
     baseBodyRotation: number,
-    pose: Pose
+    pose: Pose,
+    scales?: Partial<ProportionScales>
 ): Record<string, Vector2D> => {
     const offsets = pose.offsets || {};
 
-    const waistCalc = calculateBoneGlobalPositions(baseRoot, baseBodyRotation, getTotalRotation(PartName.Waist, pose), ANATOMY.WAIST, offsets[PartName.Waist], true);
-    const torsoCalc = calculateBoneGlobalPositions(waistCalc.globalEndPoint, waistCalc.childInheritedGlobalAngle, getTotalRotation(PartName.Torso, pose), ANATOMY.TORSO, offsets[PartName.Torso], true);
-    const collarCalc = calculateBoneGlobalPositions(torsoCalc.globalEndPoint, torsoCalc.childInheritedGlobalAngle, getTotalRotation(PartName.Collar, pose), ANATOMY.COLLAR, offsets[PartName.Collar], true);
+    const waistCalc = calculateBoneGlobalPositions(baseRoot, baseBodyRotation, getTotalRotation(PartName.Waist, pose), scaledLength('WAIST', scales), offsets[PartName.Waist], true);
+    const torsoCalc = calculateBoneGlobalPositions(waistCalc.globalEndPoint, waistCalc.childInheritedGlobalAngle, getTotalRotation(PartName.Torso, pose), scaledLength('TORSO', scales), offsets[PartName.Torso], true);
+    const collarCalc = calculateBoneGlobalPositions(torsoCalc.globalEndPoint, torsoCalc.childInheritedGlobalAngle, getTotalRotation(PartName.Collar, pose), scaledLength('COLLAR', scales), offsets[PartName.Collar], true);
     const collarAngle = collarCalc.childInheritedGlobalAngle;
     const collarEnd = collarCalc.globalEndPoint;
 
     const headPivot = addVec(collarEnd, rotateVec(0, -ANATOMY.HEAD_NECK_GAP_OFFSET, collarAngle));
     const headGlobalAngle = collarAngle + getTotalRotation(PartName.Head, pose);
-    const headTip = addVec(headPivot, rotateVec(0, -ANATOMY.HEAD, headGlobalAngle));
+    const headTip = addVec(headPivot, rotateVec(0, -scaledLength('HEAD', scales), headGlobalAngle));
 
     const getArmJoints = (isRight: boolean) => {
         const side = isRight ? 'r' : 'l';
         const sX = isRight ? RIGGING.R_SHOULDER_X_OFFSET_FROM_COLLAR_CENTER : RIGGING.L_SHOULDER_X_OFFSET_FROM_COLLAR_CENTER;
         // Shoulder pinning remains unchanged: locks to collar corners
         const shoulderAttach = addVec(collarEnd, rotateVec(sX, RIGGING.SHOULDER_Y_OFFSET_FROM_COLLAR_END, collarAngle));
-        const upperArmCalc = calculateBoneGlobalPositions(shoulderAttach, collarAngle, getTotalRotation(isRight ? PartName.RShoulder : PartName.LShoulder, pose), ANATOMY.UPPER_ARM, offsets[isRight ? PartName.RShoulder : PartName.LShoulder], false);
-        const forearmCalc = calculateBoneGlobalPositions(upperArmCalc.globalEndPoint, upperArmCalc.childInheritedGlobalAngle, getTotalRotation(isRight ? 'rForearm' : 'lForearm', pose), ANATOMY.LOWER_ARM, offsets[isRight ? PartName.RElbow : PartName.LElbow], false);
+        const upperArmCalc = calculateBoneGlobalPositions(shoulderAttach, collarAngle, getTotalRotation(isRight ? PartName.RShoulder : PartName.LShoulder, pose), scaledLength('UPPER_ARM', scales), offsets[isRight ? PartName.RShoulder : PartName.LShoulder], false);
+        const forearmCalc = calculateBoneGlobalPositions(upperArmCalc.globalEndPoint, upperArmCalc.childInheritedGlobalAngle, getTotalRotation(isRight ? 'rForearm' : 'lForearm', pose), scaledLength('LOWER_ARM', scales), offsets[isRight ? PartName.RElbow : PartName.LElbow], false);
         const handAngle = forearmCalc.childInheritedGlobalAngle + getTotalRotation(isRight ? PartName.RWrist : PartName.LWrist, pose);
-        const handTip = addVec(forearmCalc.globalEndPoint, rotateVec(0, ANATOMY.HAND, handAngle));
+        const handTip = addVec(forearmCalc.globalEndPoint, rotateVec(0, scaledLength('HAND', scales), handAngle));
         return { shoulder: shoulderAttach, elbow: upperArmCalc.globalEndPoint, wrist: forearmCalc.globalEndPoint, hand: handTip };
     };
 
     const getLegJoints = (isRight: boolean) => {
-        const thighCalc = calculateBoneGlobalPositions(baseRoot, baseBodyRotation, getTotalRotation(isRight ? PartName.RThigh : PartName.LThigh, pose), ANATOMY.LEG_UPPER, offsets[isRight ? PartName.RThigh : PartName.LThigh], false);
-        const calfCalc = calculateBoneGlobalPositions(thighCalc.globalEndPoint, thighCalc.childInheritedGlobalAngle, getTotalRotation(isRight ? 'rCalf' : 'lCalf', pose), ANATOMY.LEG_LOWER, offsets[isRight ? PartName.RSkin : PartName.LSkin], false);
+        const thighCalc = calculateBoneGlobalPositions(baseRoot, baseBodyRotation, getTotalRotation(isRight ? PartName.RThigh : PartName.LThigh, pose), scaledLength('LEG_UPPER', scales), offsets[isRight ? PartName.RThigh : PartName.LThigh], false);
+        const calfCalc = calculateBoneGlobalPositions(thighCalc.globalEndPoint, thighCalc.childInheritedGlobalAngle, getTotalRotation(isRight ? 'rCalf' : 'lCalf', pose), scaledLength('LEG_LOWER', scales), offsets[isRight ? PartName.RSkin : PartName.LSkin], false);
         const ankleAngle = calfCalc.childInheritedGlobalAngle + getTotalRotation(isRight ? PartName.RAnkle : PartName.LAnkle, pose);
-        const footTip = addVec(calfCalc.globalEndPoint, rotateVec(0, ANATOMY.FOOT, ankleAngle));
+        const footTip = addVec(calfCalc.globalEndPoint, rotateVec(0, scaledLength('FOOT', scales), ankleAngle));
         return { hip: baseRoot, knee: thighCalc.globalEndPoint, ankle: calfCalc.globalEndPoint, footTip };
     };
 
