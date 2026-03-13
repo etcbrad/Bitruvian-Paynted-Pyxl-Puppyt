@@ -1264,6 +1264,33 @@ const App: React.FC = () => {
     };
   }, [isAdjustingSensitivity]);
 
+  useEffect(() => {
+    if (!cutoutRegionMode) {
+      regionDragRef.current = null;
+      return;
+    }
+    const handleMove = (e: MouseEvent) => {
+      if (!regionDragRef.current) return;
+      const start = regionDragRef.current;
+      const point = svgPointToSheetPoint(e.clientX, e.clientY);
+      if (!point) return;
+      const x0 = Math.min(start.startX, point.x);
+      const y0 = Math.min(start.startY, point.y);
+      const x1 = Math.max(start.startX, point.x);
+      const y1 = Math.max(start.startY, point.y);
+      setCutoutRegion({ x: x0, y: y0, w: x1 - x0, h: y1 - y0 });
+    };
+    const handleUp = () => {
+      regionDragRef.current = null;
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [cutoutRegionMode, svgPointToSheetPoint]);
+
   const selectSinglePart = useCallback((part: PartName) => {
     setSelectedParts(prev => {
       const next: PartSelection = Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: false }), {} as PartSelection);
