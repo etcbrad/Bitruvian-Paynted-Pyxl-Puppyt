@@ -17,21 +17,21 @@ export const usePoseState = (initialPose: Pose) => {
 
   const undo = useCallback(() => {
     if (undoStack.current.length > 0) {
-      redoStack.current.push({ ...activePose });
-      const previousPose = undoStack.current.pop()!;
-      setActivePose(previousPose);
+      setActivePose(prev => {
+        redoStack.current.push({ ...prev });
+        return undoStack.current.pop()!;
+      });
     }
+  }, []);
+
   const redo = useCallback(() => {
-    setActivePose(prev => {
-      if (redoStack.current.length > 0) {
+    if (redoStack.current.length > 0) {
+      setActivePose(prev => {
         undoStack.current.push({ ...prev });
         return redoStack.current.pop()!;
-      }
-      return prev;
-    });
-  }, []);
+      });
     }
-  }, [activePose]);
+  }, []);
 
   const resetPose = useCallback(() => {
     updatePose(initialPose);
