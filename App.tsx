@@ -1776,15 +1776,11 @@ const App: React.FC = () => {
   }, [cutoutDraftShape, cutoutIsErasing, cutoutPieces, eraseAtPoint, rebuildPieceFromLabels, selectedCutoutPieceId, svgPointToSheetPoint]);
 
   const selectSinglePart = useCallback((part: PartName) => {
-    setSelectedParts(prev => {
-      const next: PartSelection = Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: false }), {} as PartSelection);
-      next[part] = true;
-      return next;
-    });
+    selectSinglePartBase(part);
     if (selectedCutoutPieceId) {
       applyCutoutPieceToPart(selectedCutoutPieceId, part);
     }
-  }, [applyCutoutPieceToPart, selectedCutoutPieceId]);
+  }, [applyCutoutPieceToPart, selectSinglePartBase, selectedCutoutPieceId]);
 
   const handleMaskUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
