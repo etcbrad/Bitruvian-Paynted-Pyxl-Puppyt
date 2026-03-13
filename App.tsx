@@ -2426,9 +2426,43 @@ const App: React.FC = () => {
             width="100%" 
             height="100%" 
             viewBox={autoViewBox} 
-            className="overflow-visible relative z-30" 
+            className={`overflow-visible relative z-30 ${placingJoint ? 'cursor-crosshair' : ''}`} 
+            onClick={handleCanvasClick}
           >
+            {cutoutSheet && (
+              <image
+                href={cutoutSheet.src}
+                x={-((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x}
+                y={-((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y}
+                width={cutoutSheet.width * cutoutScale}
+                height={cutoutSheet.height * cutoutScale}
+                opacity={cutoutOpacity}
+                preserveAspectRatio="xMidYMid meet"
+              />
+            )}
             <SystemGuides floorY={FLOOR_HEIGHT} /> 
+            {showJointLabels && (
+              <g>
+                {PART_NAMES.map(part => {
+                  const pos = jointPositions[part];
+                  if (!pos) return null;
+                  return (
+                    <text
+                      key={`label-${part}`}
+                      x={pos.x + 8}
+                      y={pos.y - 6}
+                      fontSize={10}
+                      fill="rgba(17,17,17,0.7)"
+                      stroke="rgba(255,255,255,0.6)"
+                      strokeWidth={0.5}
+                      paintOrder="stroke"
+                    >
+                      {part.toUpperCase()}
+                    </text>
+                  );
+                })}
+              </g>
+            )}
             <g>
               <Mannequin
                 pose={activePose}
