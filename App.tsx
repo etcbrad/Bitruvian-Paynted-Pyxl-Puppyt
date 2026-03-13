@@ -125,6 +125,7 @@ const App: React.FC = () => {
   const [cutoutRegion, setCutoutRegion] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [cutoutTool, setCutoutTool] = useState<'select' | 'rect' | 'circle' | 'freehand' | 'erase'>('select');
   const [cutoutEraseSize, setCutoutEraseSize] = useState(14);
+  const [cutoutIsErasing, setCutoutIsErasing] = useState(false);
   const [cutoutShapes, setCutoutShapes] = useState<Array<{
     id: string;
     type: 'rect' | 'circle' | 'freehand';
@@ -252,9 +253,9 @@ const App: React.FC = () => {
     if (limb) {
       let solvedPose: Pose;
       if (kinematicMode === 'ik') {
-        solvedPose = solveIK(ghostPose, limb, targetPos);
+        solvedPose = solveIK(ghostPose, limb, targetPos, 10, proportionScales);
       } else {
-        solvedPose = solveAdvancedIK(ghostPose, limb, targetPos, jointModes, activePins);
+        solvedPose = solveAdvancedIK(ghostPose, limb, targetPos, jointModes, activePins, proportionScales);
       }
       setGhostPose(solvedPose);
     }
@@ -341,7 +342,7 @@ const App: React.FC = () => {
     return Boolean(primarySelectedPart && [PartName.Waist, PartName.Torso, PartName.Collar].includes(primarySelectedPart));
   }, [primarySelectedPart]);
 
-  const jointPositions = useMemo(() => getJointPositions(activePose, activePins), [activePose, activePins]);
+  const jointPositions = useMemo(() => getJointPositions(activePose, activePins, proportionScales), [activePose, activePins, proportionScales]);
 
   // Dynamically calculate viewBox based on viewMode and windowSize
   const autoViewBox = useMemo(() => {
@@ -406,7 +407,7 @@ const App: React.FC = () => {
   ): boolean => {
     if (isAirMode) return true;
 
-    const potentialJoints = getJointPositions(potentialPose, activePins);
+    const potentialJoints = getJointPositions(potentialPose, activePins, proportionScales);
     
     // 1. Check Pin Immovability (Softened by Elasticity)
     // In Bitruvius 0.2, pins are elastic, but we still have a "Hard Stop" threshold
@@ -551,7 +552,7 @@ const App: React.FC = () => {
       validateAndApplyPoseUpdate({ root: { x: newRootX, y: newRootY } }, null, false);
       
     } else if (isAdjusting && rotatingPart && rotationStartInfo.current) {
-      const joints = getJointPositions(ghostPose, activePins);
+      const joints = getJointPositions(ghostPose, activePins, proportionScales);
       const pivot = joints[rotatingPart]; 
       if (!pivot) return;
       
@@ -576,7 +577,7 @@ const App: React.FC = () => {
   }, [isAdjusting, rotatingPart, isCraneDragging, isIKDragging, effectorPart, ghostPose, validateAndApplyPoseUpdate, activePins, handleIKMove]);
 
   const updatePinnedState = useCallback((pins: AnchorName[]) => {
-    const joints = getJointPositions(activePose, pins);
+    const joints = getJointPositions(activePose, pins, proportionScales);
     const newState: Record<string, Vector2D> = {};
     pins.forEach(p => {
       newState[p] = joints[p];
@@ -643,7 +644,7 @@ const App: React.FC = () => {
       return next;
     });
 
-    const joints = getJointPositions(activePose, activePins);
+    const joints = getJointPositions(activePose, activePins, proportionScales);
     const pivot = joints[part]; 
     if (!pivot) return;
 
@@ -837,26 +838,30 @@ const App: React.FC = () => {
   }, []);
 
   const getBoneLengthForPart = useCallback((part: PartName): number => {
+    const arm = proportionScales.arm || 1;
+    const leg = proportionScales.leg || 1;
+    const torso = proportionScales.torso || 1;
+    const head = proportionScales.head || 1;
     switch (part) {
-      case PartName.Waist: return ANATOMY.WAIST;
-      case PartName.Torso: return ANATOMY.TORSO;
-      case PartName.Collar: return ANATOMY.COLLAR;
-      case PartName.Head: return ANATOMY.HEAD;
+      case PartName.Waist: return ANATOMY.WAIST * torso;
+      case PartName.Torso: return ANATOMY.TORSO * torso;
+      case PartName.Collar: return ANATOMY.COLLAR * torso;
+      case PartName.Head: return ANATOMY.HEAD * head;
       case PartName.RShoulder:
-      case PartName.LShoulder: return ANATOMY.UPPER_ARM;
+      case PartName.LShoulder: return ANATOMY.UPPER_ARM * arm;
       case PartName.RElbow:
-      case PartName.LElbow: return ANATOMY.LOWER_ARM;
+      case PartName.LElbow: return ANATOMY.LOWER_ARM * arm;
       case PartName.RWrist:
-      case PartName.LWrist: return ANATOMY.HAND;
+      case PartName.LWrist: return ANATOMY.HAND * arm;
       case PartName.RThigh:
-      case PartName.LThigh: return ANATOMY.LEG_UPPER;
+      case PartName.LThigh: return ANATOMY.LEG_UPPER * leg;
       case PartName.RSkin:
-      case PartName.LSkin: return ANATOMY.LEG_LOWER;
+      case PartName.LSkin: return ANATOMY.LEG_LOWER * leg;
       case PartName.RAnkle:
-      case PartName.LAnkle: return ANATOMY.FOOT;
-      default: return ANATOMY.TORSO;
+      case PartName.LAnkle: return ANATOMY.FOOT * leg;
+      default: return ANATOMY.TORSO * torso;
     }
-  }, []);
+  }, [proportionScales]);
 
   const handleTorsoUnitChange = useCallback((newValue: number) => {
     setTorsoUnitAngle(newValue);
@@ -1109,7 +1114,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if (!placingJoint || !primarySelectedPart || cutoutRegionMode) return;
+    if (!placingJoint || !primarySelectedPart || workflowStep === 'slice') return;
     const point = toSvgPoint(e.clientX, e.clientY);
     if (!point) return;
     const jointPos = jointPositions[primarySelectedPart];
@@ -1117,7 +1122,7 @@ const App: React.FC = () => {
     const rot = getWorldRotationForPart(primarySelectedPart, activePose);
     const local = rotateVec(point.x - jointPos.x, point.y - jointPos.y, -rot);
     updateMaskLayer(primarySelectedPart, { offsetX: snapValue(local.x), offsetY: snapValue(local.y) });
-  }, [placingJoint, primarySelectedPart, cutoutRegionMode, toSvgPoint, jointPositions, getWorldRotationForPart, activePose, rotateVec, updateMaskLayer, snapValue]);
+  }, [placingJoint, primarySelectedPart, workflowStep, toSvgPoint, jointPositions, getWorldRotationForPart, activePose, rotateVec, updateMaskLayer, snapValue]);
 
   const getCutoutDetectionParams = useCallback((sensitivity: number) => {
     const normalized = clamp(sensitivity, 0, 1);
@@ -1479,6 +1484,103 @@ const App: React.FC = () => {
     }
   }, [cutoutPieces, getBoneLengthForPart, updateMaskLayer, autoAdvanceJoint, getNextEmptyJoint, selectSinglePart]);
 
+  const rebuildPieceFromLabels = useCallback((labelId: number, shapeId: string) => {
+    const labelMap = cutoutLabelMapRef.current;
+    const imageData = cutoutImageDataRef.current;
+    if (!labelMap || !imageData) return null;
+    const { labels, width, height } = labelMap;
+    let minX = width;
+    let minY = height;
+    let maxX = 0;
+    let maxY = 0;
+    let area = 0;
+    let sumX = 0;
+    let sumY = 0;
+    for (let y = 0; y < height; y += 1) {
+      const row = y * width;
+      for (let x = 0; x < width; x += 1) {
+        const idx = row + x;
+        if (labels[idx] !== labelId) continue;
+        area += 1;
+        sumX += x;
+        sumY += y;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+    if (area === 0) return null;
+    const w = maxX - minX + 1;
+    const h = maxY - minY + 1;
+    const fillRatio = area / (w * h);
+    const preview = buildCutoutPreviews(labels, imageData, [{
+      labelId,
+      shapeId,
+      bbox: { x: minX, y: minY, w, h },
+      area,
+      center: { x: sumX / area, y: sumY / area },
+      fillRatio,
+    }])[0];
+    return preview;
+  }, [buildCutoutPreviews]);
+
+  const getPieceAtPoint = useCallback((clientX: number, clientY: number) => {
+    const point = svgPointToSheetPoint(clientX, clientY);
+    const labelMap = cutoutLabelMapRef.current;
+    if (!point || !labelMap) return null;
+    const { labels, width, height } = labelMap;
+    const x = clamp(Math.floor(point.x), 0, width - 1);
+    const y = clamp(Math.floor(point.y), 0, height - 1);
+    const labelId = labels[y * width + x];
+    if (labelId === -1) return null;
+    return cutoutPieces.find(piece => piece.labelId === labelId) || null;
+  }, [cutoutPieces, svgPointToSheetPoint]);
+
+  const mergePieces = useCallback((target: typeof cutoutPieces[number], source: typeof cutoutPieces[number]) => {
+    const labelMap = cutoutLabelMapRef.current;
+    if (!labelMap) return;
+    const { labels } = labelMap;
+    for (let i = 0; i < labels.length; i += 1) {
+      if (labels[i] === source.labelId) {
+        labels[i] = target.labelId;
+      }
+    }
+    const rebuilt = rebuildPieceFromLabels(target.labelId, target.shapeId);
+    if (!rebuilt) return;
+    setCutoutPieces(prev => prev.filter(piece => piece.id !== source.id).map(piece => (
+      piece.id === target.id ? rebuilt : piece
+    )));
+    setSelectedCutoutPieceId(rebuilt.id);
+  }, [rebuildPieceFromLabels]);
+
+  const eraseAtPoint = useCallback((clientX: number, clientY: number) => {
+    if (!selectedCutoutPieceId) return;
+    const piece = cutoutPieces.find(p => p.id === selectedCutoutPieceId);
+    const labelMap = cutoutLabelMapRef.current;
+    const point = svgPointToSheetPoint(clientX, clientY);
+    if (!piece || !labelMap || !point) return;
+    const { labels, width, height } = labelMap;
+    const radius = Math.max(2, cutoutEraseSize);
+    const r2 = radius * radius;
+    const cx = Math.floor(point.x);
+    const cy = Math.floor(point.y);
+    const x0 = clamp(cx - radius, 0, width - 1);
+    const x1 = clamp(cx + radius, 0, width - 1);
+    const y0 = clamp(cy - radius, 0, height - 1);
+    const y1 = clamp(cy + radius, 0, height - 1);
+    for (let y = y0; y <= y1; y += 1) {
+      const row = y * width;
+      for (let x = x0; x <= x1; x += 1) {
+        const dx = x - cx;
+        const dy = y - cy;
+        if (dx * dx + dy * dy > r2) continue;
+        const idx = row + x;
+        if (labels[idx] === piece.labelId) labels[idx] = -1;
+      }
+    }
+  }, [cutoutEraseSize, cutoutPieces, selectedCutoutPieceId, svgPointToSheetPoint]);
+
   const svgPointToSheetPoint = useCallback((clientX: number, clientY: number) => {
     if (!svgRef.current || !cutoutSheet) return null;
     const svgPoint = svgRef.current.createSVGPoint();
@@ -1545,23 +1647,76 @@ const App: React.FC = () => {
   }, [isAdjustingSensitivity]);
 
   useEffect(() => {
-    if (!cutoutRegionMode) {
-      regionDragRef.current = null;
-      return;
-    }
+    if (!cutoutDraftShape && !cutoutIsErasing) return;
     const handleMove = (e: MouseEvent) => {
-      if (!regionDragRef.current) return;
-      const start = regionDragRef.current;
-      const point = svgPointToSheetPoint(e.clientX, e.clientY);
-      if (!point) return;
-      const x0 = Math.min(start.startX, point.x);
-      const y0 = Math.min(start.startY, point.y);
-      const x1 = Math.max(start.startX, point.x);
-      const y1 = Math.max(start.startY, point.y);
-      setCutoutRegion({ x: x0, y: y0, w: x1 - x0, h: y1 - y0 });
+      if (cutoutDraftShape) {
+        const point = svgPointToSheetPoint(e.clientX, e.clientY);
+        if (!point || !shapeDragRef.current) return;
+        if (cutoutDraftShape.type === 'freehand') {
+          const nextPoints = [...(cutoutDraftShape.points || []), point];
+          const xs = nextPoints.map(p => p.x);
+          const ys = nextPoints.map(p => p.y);
+          const x0 = Math.min(...xs);
+          const y0 = Math.min(...ys);
+          const x1 = Math.max(...xs);
+          const y1 = Math.max(...ys);
+          setCutoutDraftShape({
+            type: 'freehand',
+            points: nextPoints,
+            bbox: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 },
+          });
+        } else {
+          const x0 = Math.min(shapeDragRef.current.startX, point.x);
+          const y0 = Math.min(shapeDragRef.current.startY, point.y);
+          const x1 = Math.max(shapeDragRef.current.startX, point.x);
+          const y1 = Math.max(shapeDragRef.current.startY, point.y);
+          setCutoutDraftShape(prev => prev ? ({
+            ...prev,
+            bbox: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 },
+          }) : prev);
+        }
+      }
+      if (cutoutIsErasing) {
+        eraseAtPoint(e.clientX, e.clientY);
+      }
     };
     const handleUp = () => {
-      regionDragRef.current = null;
+      if (longPressTimerRef.current) {
+        window.clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      if (cutoutDraftShape) {
+        const id = `shape-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+        const nextShape = {
+          id,
+          type: cutoutDraftShape.type,
+          bbox: cutoutDraftShape.bbox,
+          points: cutoutDraftShape.points,
+        };
+        if (nextShape.bbox.w > 2 && nextShape.bbox.h > 2) {
+          setCutoutShapes(prev => [...prev, nextShape]);
+          setCutoutActiveShapeId(id);
+        }
+        setCutoutDraftShape(null);
+        shapeDragRef.current = null;
+      }
+      if (cutoutIsErasing) {
+        setCutoutIsErasing(false);
+        isErasingRef.current = false;
+        if (selectedCutoutPieceId) {
+          const piece = cutoutPieces.find(p => p.id === selectedCutoutPieceId);
+          if (piece) {
+            const rebuilt = rebuildPieceFromLabels(piece.labelId, piece.shapeId);
+            if (!rebuilt) {
+              setCutoutPieces(prev => prev.filter(p => p.id !== piece.id));
+              setSelectedCutoutPieceId(null);
+            } else {
+              setCutoutPieces(prev => prev.map(p => (p.id === piece.id ? rebuilt : p)));
+              setSelectedCutoutPieceId(rebuilt.id);
+            }
+          }
+        }
+      }
     };
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
@@ -1569,7 +1724,7 @@ const App: React.FC = () => {
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
-  }, [cutoutRegionMode, svgPointToSheetPoint]);
+  }, [cutoutDraftShape, cutoutIsErasing, cutoutPieces, eraseAtPoint, rebuildPieceFromLabels, selectedCutoutPieceId, svgPointToSheetPoint]);
 
   const selectSinglePart = useCallback((part: PartName) => {
     setSelectedParts(prev => {
@@ -2264,10 +2419,10 @@ const App: React.FC = () => {
                 ))}
               </div>
 
-              <div className="mb-3 border border-white/10 p-2 rounded bg-white/5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[9px] uppercase font-bold text-white/70">Assist</span>
-                  <button
+                <div className="mb-3 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] uppercase font-bold text-white/70">Assist</span>
+                    <button
                     onClick={() => setShowJointLabels(prev => !prev)}
                     className={`text-[8px] px-2 py-1 border uppercase ${
                       showJointLabels ? 'bg-selection/30 border-selection text-selection' : 'bg-white/5 border-white/10 text-white/40'
@@ -2275,6 +2430,57 @@ const App: React.FC = () => {
                   >
                     Labels {showJointLabels ? 'On' : 'Off'}
                   </button>
+                </div>
+
+                <div className="mb-3 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] uppercase font-bold text-white/70">Proportions</span>
+                    <span className="text-[8px] text-white/40">Mirrored L/R</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <div className="flex justify-between text-[8px] text-white/40">
+                        <span>Arms</span>
+                        <span>{proportionScales.arm.toFixed(2)}x</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={60}
+                        max={140}
+                        value={Math.round(proportionScales.arm * 100)}
+                        onChange={e => setProportionScales(prev => ({ ...prev, arm: Number(e.target.value) / 100 }))}
+                        className="w-full accent-selection"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[8px] text-white/40">
+                        <span>Legs</span>
+                        <span>{proportionScales.leg.toFixed(2)}x</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={60}
+                        max={140}
+                        value={Math.round(proportionScales.leg * 100)}
+                        onChange={e => setProportionScales(prev => ({ ...prev, leg: Number(e.target.value) / 100 }))}
+                        className="w-full accent-selection"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[8px] text-white/40">
+                        <span>Torso</span>
+                        <span>{proportionScales.torso.toFixed(2)}x</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={70}
+                        max={130}
+                        value={Math.round(proportionScales.torso * 100)}
+                        onChange={e => setProportionScales(prev => ({ ...prev, torso: Number(e.target.value) / 100 }))}
+                        className="w-full accent-selection"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -2871,6 +3077,7 @@ const App: React.FC = () => {
                 masksEnabled={masksEnabled}
                 hideBonesWithMasks={hideBonesWithMasks}
                 maskLayers={maskLayers}
+                proportionScales={proportionScales}
               />
             </g>
             {cutoutSheet && (
