@@ -864,9 +864,12 @@ const App: React.FC = () => {
           next[mirrorTarget] = { ...next[mirrorTarget], src: null };
         }
       }
+      if (autoBuildFromLegs) {
+        applyLegToLimbs(next);
+      }
       return next;
     });
-  }, [autoMirrorLimbs]);
+  }, [autoMirrorLimbs, autoBuildFromLegs, applyLegToLimbs]);
 
   useEffect(() => {
     if (!autoMirrorLimbs) return;
