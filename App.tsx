@@ -1027,6 +1027,7 @@ const App: React.FC = () => {
     return svgPoint.matrixTransform(ctm.inverse());
   }, []);
 
+
   const handleMaskUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !primarySelectedPart) return;
