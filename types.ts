@@ -80,6 +80,12 @@ export const LIMB_SEQUENCES: { [key: string]: PartName[] } = {
 };
 
 export type Vector2D = { x: number; y: number; };
+export type ProportionScales = {
+  arm: number;
+  leg: number;
+  torso: number;
+  head: number;
+};
 export type Pose = {
   root: Vector2D;
   bodyRotation: number;
