@@ -830,6 +830,7 @@ const App: React.FC = () => {
       const img = new Image();
       img.onload = () => {
         setCutoutSheet({ src, width: img.width || img.naturalWidth, height: img.height || img.naturalHeight });
+        setWorkflowStep('slice');
       };
       img.src = src;
     };
@@ -861,6 +862,7 @@ const App: React.FC = () => {
         const src = `data:image/svg+xml;utf8,${encodeURIComponent(raw)}`;
         if (width > 0 && height > 0) {
           setCutoutSheet({ src, width, height });
+          setWorkflowStep('slice');
         } else {
           // Some SVGs omit size attributes; attempt to infer via image load.
           loadRaster(src);
