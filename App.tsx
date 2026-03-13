@@ -1368,9 +1368,10 @@ const App: React.FC = () => {
               </div>
             </>
           )}
-        </DraggablePanel>
+          </div>
+        </aside>
 
-        <div className="w-full h-full bg-selection-super-light bg-triangle-grid flex items-center justify-center relative">
+        <div className="flex-1 bg-selection-super-light bg-triangle-grid flex items-center justify-center relative">
           <Scanlines />
           {showSplash && (
             <div className="absolute top-[8%] left-0 right-0 z-30 flex items-center justify-center pointer-events-none">
