@@ -1588,6 +1588,18 @@ const App: React.FC = () => {
                 >
                   <span className="text-[9px] font-bold uppercase tracking-widest">Aesthetic Engine</span>
                 </button>
+                <div className="flex flex-col items-end gap-1 px-2">
+                  <span className="text-[7px] uppercase text-white/50">BG LIGHT</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(backgroundLight * 100)}
+                    onChange={e => setBackgroundLight(Math.min(1, Math.max(0, Number(e.target.value) / 100)))}
+                    className="w-20 accent-selection"
+                    aria-label="Background light overlay"
+                  />
+                </div>
                 <button
                   onClick={() => backgroundUploadInputRef.current?.click()}
                   className="p-2 rounded border bg-white/10 border-white/20 text-white/70 hover:bg-white/20 transition-all"
