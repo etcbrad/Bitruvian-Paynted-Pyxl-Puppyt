@@ -1270,7 +1270,7 @@ const App: React.FC = () => {
             )}
           </div>
             </>
-          ) : (
+          ) : activeTab === 'animation' ? (
             <>
               {/* Section: AB Pose to Pose Engine */}
               <div className="flex flex-col gap-1 w-full text-left border-b border-white/10 pb-2 mb-2">
