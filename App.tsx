@@ -606,13 +606,6 @@ const App: React.FC = () => {
         innerWidth: window.innerWidth,
         innerHeight: window.innerHeight,
       });
-      // Adjust panel position on resize if it would go off-screen
-      setPanelRects(prev => {
-        const panel = prev['model-settings-panel'];
-        const newX = Math.min(panel.x, window.innerWidth - panel.width - 16);
-        const newY = Math.min(panel.y, window.innerHeight - (panel.minimized ? 40 : panel.height) - 16); // 40px is rough minimized height
-        return { ...prev, 'model-settings-panel': { ...panel, x: Math.max(0, newX), y: Math.max(0, newY) } };
-      });
     };
 
     window.addEventListener('keydown', handleKeyDown);
