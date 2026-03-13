@@ -431,13 +431,15 @@ export const solveIK = (
   if (!chain) return newPose;
 
   // CCD Implementation
-  for (let i = 0; i < iterations; i++) {
-    // Iterate from end of chain to start
-    for (let j = chain.length - 1; j >= 0; j--) {
-      const joints = getJointPositions(newPose, [], scales);
-      const currentJoint = chain[j];
-      const effector = chain[chain.length - 1];
+      let deltaAngle = deg(angleTarget - angleEffector);
       
+      // Apply bias only when there's a meaningful delta to correct
+      if (Math.abs(deltaAngle) > 0.5) {
+        deltaAngle += (deltaAngle > 0 ? 1 : -1);
+      }
+
+      const poseKey = partNameToPoseKey[currentJoint];
+      (newPose as any)[poseKey] = ((newPose as any)[poseKey] || 0) + deltaAngle;
       const jointPos = joints[currentJoint as string];
       const effectorPos = joints[effector === PartName.RAnkle ? 'rFootTip' : effector === PartName.LAnkle ? 'lFootTip' : effector === PartName.RWrist ? 'rHandTip' : 'lHandTip'];
       
