@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { Pose, PartName, PartSelection, PartVisibility, AnchorName, partNameToPoseKey, JointConstraint, RenderMode, Vector2D, ViewMode, AnimationState, AnimationKeyframe, SavedPose, KinematicMode, BodyPartMaskLayer, PARENT_MAP } from './types';
+import { Pose, PartName, PartSelection, PartVisibility, AnchorName, partNameToPoseKey, JointConstraint, RenderMode, Vector2D, ViewMode, AnimationState, AnimationKeyframe, SavedPose, KinematicMode, BodyPartMaskLayer, PARENT_MAP, PART_NAMES } from './types';
 import { RESET_POSE, FLOOR_HEIGHT, JOINT_LIMITS, ANATOMY, GROUND_STRIP_HEIGHT } from './constants'; 
 import { getJointPositions, getShortestAngleDiffDeg, interpolatePoses, solveIK, solveAdvancedIK, getTotalRotation } from './utils/kinematics';
 import { Scanlines, SystemGuides } from './components/SystemGrid';
