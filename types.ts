@@ -116,6 +116,7 @@ export type BodyPartMaskLayer = {
   height: number;
   opacity: number;
   scale: number;
+  baseScale: number;
   rotationDeg: number;
   offsetX: number;
   offsetY: number;
