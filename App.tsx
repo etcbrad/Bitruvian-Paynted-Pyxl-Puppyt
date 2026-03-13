@@ -109,6 +109,8 @@ const App: React.FC = () => {
     PartName.LAnkle,
   ];
 
+  const ARM_FROM_LEG_SCALE = 0.72;
+
   const maskUploadInputRef = useRef<HTMLInputElement>(null);
   const cutoutUploadInputRef = useRef<HTMLInputElement>(null);
   const [cutoutSheet, setCutoutSheet] = useState<{ src: string; width: number; height: number } | null>(null);
