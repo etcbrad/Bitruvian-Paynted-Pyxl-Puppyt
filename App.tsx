@@ -558,17 +558,6 @@ const App: React.FC = () => {
   }, []);
 
   // Handler for toggling the minimized state of the settings panel
-  const toggleSettingsPanelMinimized = useCallback(() => {
-    setPanelRects(prev => {
-      const currentPanel = prev['model-settings-panel'];
-      return {
-        ...prev,
-        'model-settings-panel': { ...currentPanel, minimized: !currentPanel.minimized }
-      };
-    });
-    bringPanelToFront('model-settings-panel'); // Bring to front when toggled
-  }, [bringPanelToFront]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'v') cycleViewMode();
@@ -675,8 +664,7 @@ const App: React.FC = () => {
     validateAndApplyPoseUpdate({ bodyRotation: newValue }, null, false);
   }, [validateAndApplyPoseUpdate]);
 
-  const allPanelRectsArray = useMemo(() => Object.values(panelRects), [panelRects]);
-  const settingsPanel = panelRects['model-settings-panel'];
+  
 
   return (
     <div className={`w-full h-full bg-mono-darker shadow-2xl flex flex-col relative touch-none fixed inset-0 z-50 overflow-hidden text-ink font-mono ${!isPoweredOn ? 'grayscale brightness-50' : ''}`}>
