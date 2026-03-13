@@ -1888,6 +1888,67 @@ const App: React.FC = () => {
                 </div>
               )}
 
+              {workflowStep === 'slice' && cutoutSheet && (
+                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] uppercase font-bold text-white/70">Detection</span>
+                    <span className="text-[8px] text-white/40">{Math.round(cutoutSensitivity * 100)}%</span>
+                  </div>
+                  <div className="text-[8px] text-white/40 mb-2">
+                    Drag on the canvas to tune sensitivity. Higher = more pieces.
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(cutoutSensitivity * 100)}
+                    onChange={e => setCutoutSensitivity(Number(e.target.value) / 100)}
+                    className="w-full accent-selection"
+                  />
+                </div>
+              )}
+
+              {workflowStep === 'slice' && cutoutSheet && (
+                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] uppercase font-bold text-white/70">Detected Pieces</span>
+                    <span className="text-[8px] text-white/40">{cutoutPieces.length}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto custom-scrollbar">
+                    {cutoutPieces.map(piece => {
+                      const isSelected = piece.id === selectedCutoutPieceId;
+                      return (
+                        <button
+                          key={piece.id}
+                          onClick={() => {
+                            if (primarySelectedPart) {
+                              applyCutoutPieceToPart(piece.id, primarySelectedPart);
+                            } else {
+                              setSelectedCutoutPieceId(piece.id);
+                            }
+                          }}
+                          className={`border p-1 flex items-center justify-center bg-black/40 ${
+                            isSelected ? 'border-selection' : 'border-white/10'
+                          }`}
+                          title="Click to assign to the active joint"
+                        >
+                          {piece.previewSrc ? (
+                            <img src={piece.previewSrc} alt="cutout piece" className="w-full h-full object-contain" />
+                          ) : (
+                            <span className="text-[8px] text-white/30">No Preview</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {!primarySelectedPart && selectedCutoutPieceId && (
+                    <div className="mt-2 text-[8px] text-accent-red">
+                      Select a joint to assign the highlighted piece.
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Cutout Maker */}
               <div className="flex flex-col gap-1 w-full text-left border-b border-white/10 pb-2 mb-2">
                 <button
