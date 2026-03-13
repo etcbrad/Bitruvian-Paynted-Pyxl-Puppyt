@@ -2701,6 +2701,22 @@ const App: React.FC = () => {
                     Place Joint {placingJoint ? 'On' : 'Off'}
                   </button>
                   <button
+                    onClick={() => setPlacingAnchors(prev => !prev)}
+                    className={`text-[9px] px-2 py-1 border uppercase ${
+                      placingAnchors ? 'bg-selection/30 border-selection text-selection' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Set Anchors {placingAnchors ? 'On' : 'Off'}
+                  </button>
+                  <button
+                    onClick={() => setDragMaskMode(prev => !prev)}
+                    className={`text-[9px] px-2 py-1 border uppercase ${
+                      dragMaskMode ? 'bg-selection/30 border-selection text-selection' : 'bg-white/5 border-white/10 text-white/40'
+                    }`}
+                  >
+                    Drag Mask {dragMaskMode ? 'On' : 'Off'}
+                  </button>
+                  <button
                     onClick={() => setSnapToGrid(prev => !prev)}
                     className={`text-[9px] px-2 py-1 border uppercase ${
                       snapToGrid ? 'bg-selection/30 border-selection text-selection' : 'bg-white/5 border-white/10 text-white/40'
