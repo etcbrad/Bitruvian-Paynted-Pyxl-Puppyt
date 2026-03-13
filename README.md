@@ -1,20 +1,51 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Bitruvian Rig Builder
 
-# Run and deploy your AI Studio app
+A clean, modern posing and rigging application for character animation.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/22135501-ddb7-4050-aa2b-d58eadc84f1d
+- **Clean Architecture**: Organized component structure with separation of concerns
+- **Modular Design**: Custom hooks for state management
+- **TypeScript**: Full type safety throughout
+- **Modern UI**: Responsive controls and canvas interface
 
-## Run Locally
+## Development
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Build for production:
+   ```bash
+   npm run build
+   ```
+
+## Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── ui/             # Reusable UI components
+│   ├── mannequin/      # Mannequin-related components
+│   ├── controls/       # Control panels and inputs
+│   └── layout/         # Layout components
+├── hooks/              # Custom React hooks
+├── utils/              # Utility functions
+├── types/              # TypeScript definitions
+└── constants/          # Constants and configuration
+```
+
+## Key Components
+
+- **App.tsx**: Main application component with clean structure
+- **MannequinCanvas**: Canvas rendering for the character model
+- **ControlPanel**: UI controls for posing and settings
+- **Custom Hooks**: Modular state management for poses, selections, and workspace
