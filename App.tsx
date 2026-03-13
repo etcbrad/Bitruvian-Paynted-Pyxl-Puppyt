@@ -1560,6 +1560,17 @@ const App: React.FC = () => {
             viewBox={autoViewBox} 
             className="overflow-visible relative z-10" 
           >
+            {cutoutSheet && (
+              <image
+                href={cutoutSheet.src}
+                x={-((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x}
+                y={-((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y}
+                width={cutoutSheet.width * cutoutScale}
+                height={cutoutSheet.height * cutoutScale}
+                opacity={cutoutOpacity}
+                preserveAspectRatio="xMidYMid meet"
+              />
+            )}
             <SystemGuides floorY={FLOOR_HEIGHT} /> 
             <g>
               <Mannequin
