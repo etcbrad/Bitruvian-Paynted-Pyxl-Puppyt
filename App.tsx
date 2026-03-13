@@ -818,8 +818,56 @@ const App: React.FC = () => {
     validateAndApplyPoseUpdate({ waist: newValue, torso: newValue, collar: newValue }, PartName.Torso, false);
   }, [validateAndApplyPoseUpdate]);
 
+  const mirrorPairs: Partial<Record<PartName, PartName>> = {
+    [PartName.RShoulder]: PartName.LShoulder,
+    [PartName.RElbow]: PartName.LElbow,
+    [PartName.RWrist]: PartName.LWrist,
+    [PartName.RThigh]: PartName.LThigh,
+    [PartName.RSkin]: PartName.LSkin,
+    [PartName.RAnkle]: PartName.LAnkle,
+  };
+
   const updateMaskLayer = useCallback((part: PartName, patch: Partial<BodyPartMaskLayer>) => {
-    setMaskLayers(prev => ({ ...prev, [part]: { ...prev[part], ...patch } }));
+    setMaskLayers(prev => {
+      const next = { ...prev, [part]: { ...prev[part], ...patch } };
+      const mirrorTarget = mirrorPairs[part];
+      if (autoMirrorLimbs && mirrorTarget) {
+        next[mirrorTarget] = { ...prev[mirrorTarget], ...patch, mirrorX: true };
+        if (patch.src === null) {
+          next[mirrorTarget] = { ...next[mirrorTarget], src: null };
+        }
+      }
+      return next;
+    });
+  }, [autoMirrorLimbs]);
+
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+  const snapValue = useCallback((value: number) => {
+    if (!snapToGrid || !gridSize) return value;
+    return Math.round(value / gridSize) * gridSize;
+  }, [snapToGrid, gridSize]);
+
+  const rotateVec = useCallback((x: number, y: number, angleDeg: number) => {
+    const r = angleDeg * Math.PI / 180;
+    const c = Math.cos(r);
+    const s = Math.sin(r);
+    return { x: x * c - y * s, y: x * s + y * c };
+  }, []);
+
+  const getWorldRotationForPart = useCallback((part: PartName, pose: Pose) => {
+    const chain: PartName[] = [];
+    let current: PartName | undefined = part;
+    while (current) {
+      chain.unshift(current);
+      current = PARENT_MAP[current];
+    }
+    let rot = pose.bodyRotation || 0;
+    chain.forEach(p => {
+      const key = partNameToPoseKey[p];
+      rot += getTotalRotation(key, pose);
+    });
+    return rot;
   }, []);
 
   const handleMaskUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
