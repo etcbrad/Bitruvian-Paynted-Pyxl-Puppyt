@@ -75,6 +75,13 @@ const App: React.FC = () => {
     Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: { ...DEFAULT_MASK_LAYER } }), {} as Record<PartName, BodyPartMaskLayer>)
   );
 
+  const maskUploadInputRef = useRef<HTMLInputElement>(null);
+  const cutoutUploadInputRef = useRef<HTMLInputElement>(null);
+  const [cutoutSheet, setCutoutSheet] = useState<{ src: string; width: number; height: number } | null>(null);
+  const [cutoutOpacity, setCutoutOpacity] = useState(0.45);
+  const [cutoutScale, setCutoutScale] = useState(1);
+  const [cutoutOffset, setCutoutOffset] = useState({ x: 0, y: 0 });
+
   // Animation State
   const [animation, setAnimation] = useState<AnimationState>({
     keyframes: [],
