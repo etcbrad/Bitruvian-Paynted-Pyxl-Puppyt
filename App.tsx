@@ -1552,6 +1552,21 @@ const App: React.FC = () => {
     return preview;
   }, [buildCutoutPreviews]);
 
+  const svgPointToSheetPoint = useCallback((clientX: number, clientY: number) => {
+    if (!svgRef.current || !cutoutSheet) return null;
+    const svgPoint = svgRef.current.createSVGPoint();
+    svgPoint.x = clientX;
+    svgPoint.y = clientY;
+    const ctm = svgRef.current.getScreenCTM();
+    if (!ctm) return null;
+    const transformed = svgPoint.matrixTransform(ctm.inverse());
+    const sheetOriginX = -((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x;
+    const sheetOriginY = -((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y;
+    const sx = (transformed.x - sheetOriginX) / cutoutScale;
+    const sy = (transformed.y - sheetOriginY) / cutoutScale;
+    return { x: clamp(sx, 0, cutoutSheet.width), y: clamp(sy, 0, cutoutSheet.height) };
+  }, [cutoutOffset.x, cutoutOffset.y, cutoutScale, cutoutSheet]);
+
   const getPieceAtPoint = useCallback((clientX: number, clientY: number) => {
     const point = svgPointToSheetPoint(clientX, clientY);
     const labelMap = cutoutLabelMapRef.current;
@@ -1607,21 +1622,6 @@ const App: React.FC = () => {
       }
     }
   }, [cutoutEraseSize, cutoutPieces, selectedCutoutPieceId, svgPointToSheetPoint]);
-
-  const svgPointToSheetPoint = useCallback((clientX: number, clientY: number) => {
-    if (!svgRef.current || !cutoutSheet) return null;
-    const svgPoint = svgRef.current.createSVGPoint();
-    svgPoint.x = clientX;
-    svgPoint.y = clientY;
-    const ctm = svgRef.current.getScreenCTM();
-    if (!ctm) return null;
-    const transformed = svgPoint.matrixTransform(ctm.inverse());
-    const sheetOriginX = -((cutoutSheet.width * cutoutScale) / 2) + cutoutOffset.x;
-    const sheetOriginY = -((cutoutSheet.height * cutoutScale) / 2) + cutoutOffset.y;
-    const sx = (transformed.x - sheetOriginX) / cutoutScale;
-    const sy = (transformed.y - sheetOriginY) / cutoutScale;
-    return { x: clamp(sx, 0, cutoutSheet.width), y: clamp(sy, 0, cutoutSheet.height) };
-  }, [cutoutOffset.x, cutoutOffset.y, cutoutScale, cutoutSheet]);
 
   const handleSliceMouseDown = useCallback((e: React.MouseEvent<SVGRectElement, MouseEvent>) => {
     if (!cutoutSheet) return;
