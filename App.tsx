@@ -1931,6 +1931,7 @@ const App: React.FC = () => {
         eraseSize: cutoutEraseSize,
         shapes: cutoutShapes,
       },
+      jointParents: jointParentOverrides,
       pieces: cutoutPieces.map(piece => ({
         id: piece.id,
         labelId: piece.labelId,
