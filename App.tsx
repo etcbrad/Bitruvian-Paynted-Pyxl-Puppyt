@@ -2878,6 +2878,36 @@ const App: React.FC = () => {
                 </div>
               )}
 
+              {workflowStep === 'rig' && (
+                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="text-[9px] uppercase font-bold text-white/70">Joint Parents</div>
+                  <p className="text-[8px] text-white/40 mt-1">
+                    Set parent/child relations for export. (Does not change the live rig yet.)
+                  </p>
+                  <div className="mt-2 space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+                    {Object.values(PartName).map(part => (
+                      <label key={`parent-${part}`} className="flex items-center gap-2 text-[9px] text-white/60">
+                        <span className="w-20">{part.toUpperCase()}</span>
+                        <select
+                          value={jointParentOverrides[part] || ''}
+                          onChange={e => {
+                            const value = e.target.value as AnchorName | '';
+                            setJointParentOverrides(prev => ({ ...prev, [part]: value ? value : null }));
+                          }}
+                          className="flex-1 bg-black/30 border border-white/10 text-white/70 text-[9px] px-1 py-0.5"
+                        >
+                          <option value="">NONE</option>
+                          <option value="root">ROOT</option>
+                          {Object.values(PartName).filter(p => p !== part).map(option => (
+                            <option key={`parent-option-${part}-${option}`} value={option}>{option.toUpperCase()}</option>
+                          ))}
+                        </select>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {workflowStep === 'slice' && (
                 <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
                   <div className="flex items-center justify-between mb-2">
