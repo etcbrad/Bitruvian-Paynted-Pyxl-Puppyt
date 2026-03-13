@@ -1399,7 +1399,11 @@ const App: React.FC = () => {
       opacity: 1,
     });
     setSelectedCutoutPieceId(null);
-  }, [cutoutPieces, getBoneLengthForPart, updateMaskLayer]);
+    if (autoAdvanceJoint) {
+      const next = getNextEmptyJoint(part);
+      if (next) selectSinglePart(next);
+    }
+  }, [cutoutPieces, getBoneLengthForPart, updateMaskLayer, autoAdvanceJoint, getNextEmptyJoint, selectSinglePart]);
 
   const svgPointToSheetPoint = useCallback((clientX: number, clientY: number) => {
     if (!svgRef.current || !cutoutSheet) return null;
