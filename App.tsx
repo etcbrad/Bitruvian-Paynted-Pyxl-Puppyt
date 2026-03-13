@@ -765,76 +765,69 @@ const App: React.FC = () => {
 
   return (
     <div className={`w-full h-full bg-mono-darker shadow-2xl flex flex-col relative touch-none fixed inset-0 z-50 overflow-hidden text-ink font-mono ${!isPoweredOn ? 'grayscale brightness-50' : ''}`}>
-      <div className="relative flex h-full w-full">
-        {/* Top Left: System Status */}
-        <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-1">
-          <span className="text-[8px] text-white/40 uppercase">System_Status</span>
-          <div className="flex items-center gap-2 bg-black/40 px-2 py-1 border border-white/10 rounded">
-            <div className={`w-1.5 h-1.5 rounded-full ${isPoweredOn ? 'bg-accent-green animate-pulse' : 'bg-accent-red'}`} />
-            <span className="text-[9px] font-bold text-white/70 tracking-widest">
-              {isPoweredOn ? 'ACTIVE' : 'STANDBY'}
-            </span>
-          </div>
-        </div>
-
-        {/* Top Right: Consolidated Controls */}
-        <div className="absolute top-4 right-4 z-[1000] flex items-center gap-2 bg-black/20 backdrop-blur-sm p-1 border border-white/10 rounded-full">
-          {/* Kinematic Mode Toggle */}
-          <button
-            onClick={cycleKinematicMode}
-            className={`px-3 py-2 rounded-full border transition-all duration-300 flex items-center gap-2 ${
-              kinematicMode !== 'fk' 
-              ? 'bg-accent-purple/30 border-accent-purple text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]' 
-              : 'bg-white/10 border-white/20 text-white/70 hover:bg-white/20'
-            }`}
-            aria-label={`Kinematic Mode: ${kinematicMode.toUpperCase()}`}
-          >
-            <span className="text-[10px] font-bold tracking-tighter">{kinematicMode.toUpperCase()}</span>
-          </button>
-
-          {/* Power/Activation Button */}
-          <button
-            onClick={() => setIsPoweredOn(!isPoweredOn)}
-            className={`p-2 rounded-full border transition-all duration-300 ${
-              isPoweredOn 
-              ? 'bg-accent-green/30 border-accent-green text-accent-green shadow-[0_0_15px_rgba(34,197,94,0.4)]' 
-              : 'bg-accent-red/30 border-accent-red text-accent-red opacity-50'
-            }`}
-            aria-label={isPoweredOn ? "System Shutdown" : "System Activation"}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </button>
-
-          {/* Settings Toggle Button */}
-          <button
-            onClick={toggleSettingsPanelMinimized}
-            className={`p-2 bg-white/10 hover:bg-white/20 rounded-full border border-white/20 text-white hover:text-focus-ring transition-all duration-200 ${!settingsPanel.minimized ? 'border-selection text-selection bg-selection/20' : ''}`}
-            aria-label={settingsPanel.minimized ? "Open Model Settings" : "Close Model Settings"}
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M17.243 14.757l-.37-.37c-.63.63-1.39 1.05-2.22 1.25l-.23.95a.996.996 0 01-1.22.75l-2-.5a.996.996 0 01-.75-1.22l.23-.95c-.83-.2-1.59-.62-2.22-1.25l-.37.37a.997.997 0 01-1.41 0l-.707-.707a.997.997 0 010-1.414l.37-.37c-.63-.63-1.05-1.39-1.25-2.22l-.95-.23a.996.996 0 01-.75-1.22l.5-2a.996.996 0 011.22-.75l.95.23c.2-.83.62-1.59 1.25-2.22l-.37-.37a.997.997 0 010-1.414l.707-.707a.997.997 0 011.414 0l.37.37c.63-.63 1.39-1.05 2.22-1.25l.23-.95a.996.996 0 011.22-.75l2 .5a.996.996 0 01.75 1.22l-.23.95c.83.2 1.59.62 2.22 1.25l.37-.37a.997.997 0 011.414 0l.707.707a.997.997 0 010 1.414l-.37.37c.63.63 1.05 1.39 1.25 2.22l.95.23a.996.996 0 01.75 1.22l-.5 2a.996.996 0 01-1.22.75l-.95-.23c-.2.83-.62 1.59-1.25-2.22l.37.37a.997.997 0 010 1.414l-.707.707a.997.997 0 01-1.414 0zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" fillRule="evenodd"></path>
-            </svg>
-          </button>
-        </div>
-
-        {/* MODEL SETTINGS (New Master Draggable Panel) */}
-        <DraggablePanel
-          id="model-settings-panel"
-          title="MODEL SETTINGS"
-          x={settingsPanel.x}
-          y={settingsPanel.y}
-          minimized={settingsPanel.minimized}
-          onUpdateRect={(id, rect) => updatePanelRect(id, rect)}
-          onUpdatePosition={(id, x, y, minimized) => updatePanelPosition(id, x, y, minimized)}
-          allPanelRects={allPanelRectsArray}
-          onBringToFront={bringPanelToFront}
-          currentZIndex={panelZIndices['model-settings-panel']}
-          className="w-56 max-h-[90vh] overflow-y-auto custom-scrollbar" // Allow scrolling if content is too long
+      <div className="flex h-full w-full">
+        <aside
+          className="w-72 flex flex-col overflow-hidden z-20 flex-shrink-0 border-r border-white/10"
+          style={{ background: 'rgba(13,17,23,0.88)', backdropFilter: 'blur(12px)' }}
         >
+          <div className="p-4 border-b border-white/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[8px] text-white/40 uppercase">System_Status</span>
+                <div className="flex items-center gap-2 mt-1 bg-black/40 px-2 py-1 border border-white/10 rounded">
+                  <div className={`w-1.5 h-1.5 rounded-full ${isPoweredOn ? 'bg-accent-green animate-pulse' : 'bg-accent-red'}`} />
+                  <span className="text-[9px] font-bold text-white/70 tracking-widest">
+                    {isPoweredOn ? 'ACTIVE' : 'STANDBY'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={cycleKinematicMode}
+                  className={`px-2 py-1 rounded border text-[9px] font-bold transition-all ${
+                    kinematicMode !== 'fk'
+                      ? 'bg-accent-purple/30 border-accent-purple text-white'
+                      : 'bg-white/10 border-white/20 text-white/70 hover:bg-white/20'
+                  }`}
+                  aria-label={`Kinematic Mode: ${kinematicMode.toUpperCase()}`}
+                >
+                  {kinematicMode.toUpperCase()}
+                </button>
+                <button
+                  onClick={() => setIsPoweredOn(!isPoweredOn)}
+                  className={`p-2 rounded border transition-all ${
+                    isPoweredOn
+                      ? 'bg-accent-green/30 border-accent-green text-accent-green'
+                      : 'bg-accent-red/30 border-accent-red text-accent-red opacity-50'
+                  }`}
+                  aria-label={isPoweredOn ? "System Shutdown" : "System Activation"}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-4 gap-1">
+              {(['upload', 'slice', 'rig', 'pose'] as const).map(step => (
+                <button
+                  key={step}
+                  onClick={() => setWorkflowStep(step)}
+                  className={`py-1 text-[9px] font-bold uppercase border transition-all ${
+                    workflowStep === step
+                      ? 'bg-selection text-paper border-selection'
+                      : 'bg-white/5 border-white/10 text-white/50 hover:text-white/80'
+                  }`}
+                >
+                  {step}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Tab Bar */}
-          <div className="flex border-b border-white/20 mb-4">
+          <div className="flex border-b border-white/20 mb-4 px-4 pt-3">
             <button 
               onClick={() => setActiveTab('model')}
               className={`flex-1 py-1 text-[9px] font-bold tracking-widest transition-all ${activeTab === 'model' ? 'text-focus-ring border-b-2 border-focus-ring' : 'text-white/40 hover:text-white/70'}`}
@@ -849,8 +842,59 @@ const App: React.FC = () => {
             </button>
           </div>
 
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
           {activeTab === 'model' ? (
             <>
+              {/* Workflow: Upload */}
+              {workflowStep === 'upload' && (
+                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] uppercase font-bold text-white/70">Upload Cutout Sheet</span>
+                    <button
+                      onClick={() => cutoutUploadInputRef.current?.click()}
+                      className="text-[9px] px-2 py-1 border border-white/20 bg-white/10 hover:bg-white/20 uppercase"
+                    >
+                      Upload
+                    </button>
+                  </div>
+                  <input ref={cutoutUploadInputRef} type="file" accept="image/*" onChange={handleCutoutUpload} className="hidden" />
+                  {cutoutSheet && (
+                    <div className="mt-2 space-y-2">
+                      <div className="flex justify-between text-[8px] text-white/50">
+                        <span>Opacity</span>
+                        <span>{Math.round(cutoutOpacity * 100)}%</span>
+                      </div>
+                      <input type="range" min={0} max={100} value={Math.round(cutoutOpacity * 100)} onChange={e => setCutoutOpacity(Number(e.target.value) / 100)} className="w-full accent-selection" />
+                      <div className="flex justify-between text-[8px] text-white/50">
+                        <span>Scale</span>
+                        <span>{cutoutScale.toFixed(2)}x</span>
+                      </div>
+                      <input type="range" min={50} max={200} value={Math.round(cutoutScale * 100)} onChange={e => setCutoutScale(Number(e.target.value) / 100)} className="w-full accent-selection" />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Workflow: Slice (Conceptual) */}
+              {workflowStep === 'slice' && (
+                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="text-[9px] uppercase font-bold text-white/70">Slice (Lightweight)</div>
+                  <p className="text-[8px] text-white/40 mt-1">
+                    Use joint masks below to assign cutout pieces. This keeps the flow light while aligning to the rig.
+                  </p>
+                </div>
+              )}
+
+              {/* Workflow: Rig */}
+              {workflowStep === 'rig' && (
+                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
+                  <div className="text-[9px] uppercase font-bold text-white/70">Rig Alignment</div>
+                  <p className="text-[8px] text-white/40 mt-1">
+                    Select a joint on the mannequin, upload its cutout, then fine‑tune scale and offsets.
+                  </p>
+                </div>
+              )}
+
               {/* Section: Joint Control */}
               <div className="flex flex-col gap-1 w-full text-left border-b border-white/10 pb-2 mb-2">
             <button 
