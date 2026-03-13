@@ -65,6 +65,7 @@ const App: React.FC = () => {
     height: 0,
     opacity: 1,
     scale: 1,
+    baseScale: 1,
     rotationDeg: 0,
     offsetX: 0,
     offsetY: 0,
