@@ -1,6 +1,6 @@
 
 import { ANATOMY, BASE_ROTATIONS, RIGGING } from '../constants';
-import { PartName, Pose, Vector2D, AnchorName, JointConstraint, CHILD_MAP, LIMB_SEQUENCES, partNameToPoseKey } from '../types';
+import { PartName, Pose, Vector2D, AnchorName, JointConstraint, CHILD_MAP, LIMB_SEQUENCES, partNameToPoseKey, ProportionScales } from '../types';
 
 export const lerp = (start: number, end: number, t: number): number => start * (1 - t) + end * t;
 
@@ -38,6 +38,22 @@ const addVec = (v1: Vector2D, v2: Vector2D): Vector2D => ({ x: v1.x + v2.x, y: v
 
 export const getTotalRotation = (key: string, pose: Pose): number => 
   (BASE_ROTATIONS[key as keyof typeof BASE_ROTATIONS] || 0) + ((pose as any)[key] || 0);
+
+const DEFAULT_SCALES: ProportionScales = { arm: 1, leg: 1, torso: 1, head: 1 };
+const withScales = (scales?: Partial<ProportionScales>): ProportionScales => ({
+  ...DEFAULT_SCALES,
+  ...(scales || {}),
+});
+
+const scaledLength = (key: keyof typeof ANATOMY, scales?: Partial<ProportionScales>) => {
+  const s = withScales(scales);
+  const base = ANATOMY[key];
+  if (['UPPER_ARM', 'LOWER_ARM', 'HAND'].includes(key)) return base * s.arm;
+  if (['LEG_UPPER', 'LEG_LOWER', 'FOOT'].includes(key)) return base * s.leg;
+  if (['TORSO', 'WAIST', 'COLLAR'].includes(key)) return base * s.torso;
+  if (['HEAD'].includes(key)) return base * s.head;
+  return base;
+};
 
 const calculateBoneGlobalPositions = (
   parentGlobalPos: Vector2D,
@@ -165,22 +181,22 @@ const _calculateGlobalJointPositions = (
  * The primary pin (first in array) is used for stabilization.
  * Other pins will exhibit "elasticity" (tension) if the model moves away from them.
  */
-export const getJointPositions = (pose: Pose, activePins: AnchorName[]): Record<string, Vector2D> => {
+export const getJointPositions = (pose: Pose, activePins: AnchorName[], scales?: Partial<ProportionScales>): Record<string, Vector2D> => {
     const inputRoot = pose.root;
     const inputBodyRotation = getTotalRotation('bodyRotation', pose);
     const primaryPin = activePins[0] || 'root';
 
     // If pinning root, just return standard calc.
     if (primaryPin === 'root' || primaryPin === PartName.Waist) {
-        return _calculateGlobalJointPositions(inputRoot, inputBodyRotation, pose);
+        return _calculateGlobalJointPositions(inputRoot, inputBodyRotation, pose, scales);
     }
 
     // To keep a pin fixed while rotating, we find the offset the rotation caused.
-    const jointsNoRot = _calculateGlobalJointPositions(inputRoot, 0, pose);
+    const jointsNoRot = _calculateGlobalJointPositions(inputRoot, 0, pose, scales);
     const pinNoRot = jointsNoRot[primaryPin as string];
     if (!pinNoRot) return _calculateGlobalJointPositions(inputRoot, inputBodyRotation, pose);
 
-    const jointsWithRot = _calculateGlobalJointPositions(inputRoot, inputBodyRotation, pose);
+    const jointsWithRot = _calculateGlobalJointPositions(inputRoot, inputBodyRotation, pose, scales);
     const pinWithRot = jointsWithRot[primaryPin as string];
     if (!pinWithRot) return jointsWithRot;
 
@@ -196,7 +212,7 @@ export const getJointPositions = (pose: Pose, activePins: AnchorName[]): Record<
         y: inputRoot.y + offset.y,
     };
 
-    return _calculateGlobalJointPositions(stabilizedRoot, inputBodyRotation, pose);
+    return _calculateGlobalJointPositions(stabilizedRoot, inputBodyRotation, pose, scales);
 };
 
 /**
