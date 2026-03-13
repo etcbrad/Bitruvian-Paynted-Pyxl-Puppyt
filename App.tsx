@@ -681,6 +681,7 @@ const App: React.FC = () => {
     setIsIKDragging(false);
     rotationStartInfo.current = null;
     dragStartInfo.current = dragStartInfoInitial(); 
+    maskDragInfo.current = null;
   }, [ghostPose, activePose]);
 
   const handleDoubleClickOnPart = useCallback((part: PartName, e: React.MouseEvent<SVGGElement>) => {
