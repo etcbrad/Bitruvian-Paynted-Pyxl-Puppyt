@@ -1837,6 +1837,17 @@ const App: React.FC = () => {
                         <input type="range" min={-500} max={500} value={Math.round(cutoutOffset.y)} onChange={e => setCutoutOffset(prev => ({ ...prev, y: Number(e.target.value) }))} className="w-full accent-selection" />
                       </div>
                     </div>
+                    <button
+                      onClick={handleExportMasks}
+                      disabled={!Object.values(maskLayers).some(layer => layer.src)}
+                      className={`w-full mt-2 text-[9px] px-2 py-1 border uppercase ${
+                        Object.values(maskLayers).some(layer => layer.src)
+                          ? 'bg-white/10 border-white/20 text-white/70 hover:bg-white/20'
+                          : 'bg-white/5 border-transparent text-white/30 cursor-not-allowed'
+                      }`}
+                    >
+                      Export Masks JSON
+                    </button>
                   </div>
                 )}
               </div>
