@@ -176,6 +176,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                     partCategory={getPartCategory(PartName.Collar)}
                     offset={skeletonOffsets[PartName.Collar]} 
                     visible={visibility[PartName.Collar]} 
+                    maskLayer={masksEnabled ? maskLayers[PartName.Collar] : undefined}
+                    suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.Collar]?.src)}
                   >
                     
                     <g transform={`translate(0, 0)`}>
