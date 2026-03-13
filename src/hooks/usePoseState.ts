@@ -8,10 +8,12 @@ export const usePoseState = (initialPose: Pose) => {
   const redoStack = useRef<Pose[]>([]);
 
   const updatePose = useCallback((newPose: Pose) => {
-    undoStack.current.push({ ...activePose });
-    setActivePose(newPose);
-    redoStack.current = [];
-  }, [activePose]);
+    setActivePose(prev => {
+      undoStack.current.push({ ...prev });
+      redoStack.current = [];
+      return newPose;
+    });
+  }, []);
 
   const undo = useCallback(() => {
     if (undoStack.current.length > 0) {
