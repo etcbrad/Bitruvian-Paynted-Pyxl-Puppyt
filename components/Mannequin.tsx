@@ -209,6 +209,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                           offset={skeletonOffsets[PartName.RShoulder]} 
                           visible={visibility[PartName.RShoulder]} 
                           partCategory={getPartCategory(PartName.RShoulder)}
+                          maskLayer={masksEnabled ? maskLayers[PartName.RShoulder] : undefined}
+                          suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.RShoulder]?.src)}
                         >
                           <PartWrapper part={PartName.RElbow} isGhost={isGhost}>
                             <Bone 
@@ -220,6 +222,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                               offset={skeletonOffsets[PartName.RElbow]} 
                               visible={visibility[PartName.RElbow]} 
                               partCategory={getPartCategory(PartName.RElbow)}
+                              maskLayer={masksEnabled ? maskLayers[PartName.RElbow] : undefined}
+                              suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.RElbow]?.src)}
                             >
                               <PartWrapper part={PartName.RWrist} isGhost={isGhost}>
                                 <Bone 
@@ -231,6 +235,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                                   offset={skeletonOffsets[PartName.RWrist]} 
                                   visible={visibility[PartName.RWrist]} 
                                   partCategory={getPartCategory(PartName.RWrist)}
+                                  maskLayer={masksEnabled ? maskLayers[PartName.RWrist] : undefined}
+                                  suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.RWrist]?.src)}
                                 />
                               </PartWrapper>
                             </Bone>
