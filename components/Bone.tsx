@@ -1,7 +1,7 @@
 
 
 import React, { useMemo } from 'react';
-import { Vector2D, JointConstraint, RenderMode, PartName } from '../types';
+import { Vector2D, JointConstraint, RenderMode, PartName, BodyPartMaskLayer } from '../types';
 import { ANATOMY } from '../constants';
 import { adjustBrightness } from '../utils/color-utils'; // Import the new utility
 
@@ -21,6 +21,8 @@ export interface BoneProps { // Exported for use in Mannequin.tsx cloneElement
   renderMode?: RenderMode; // 'constraint' and 'darken20Percent' removed
   partCategory?: string; 
   jointConstraintMode?: JointConstraint; // New prop for kinetic modes
+  maskLayer?: BodyPartMaskLayer;
+  suppressBone?: boolean;
 }
 
 export const COLORS = {
@@ -83,6 +85,8 @@ export const Bone: React.FC<BoneProps> = ({
   renderMode = 'default', // 'constraint' and 'darken20Percent' removed
   partCategory, 
   jointConstraintMode = 'fk', // Default to 'fk'
+  maskLayer,
+  suppressBone = false,
 }) => {
   const getBonePath = (length: number, width: number, variant: string, drawsUpwards: boolean): string => {
     const effectiveLength = drawsUpwards ? -length : length;
@@ -195,9 +199,37 @@ export const Bone: React.FC<BoneProps> = ({
     ? `translate(${offset.x}, ${offset.y}) rotate(${rotation})`
     : `rotate(${rotation})`;
 
+  const renderMask = (position: 'front' | 'behind') => {
+    if (!maskLayer?.src) return null;
+    const layerOrder = maskLayer.layerOrder || 'front';
+    if (layerOrder !== position) return null;
+    const scale = Number.isFinite(maskLayer.scale) ? maskLayer.scale : 1;
+    const width = (maskLayer.width || 0) * scale || 100 * scale;
+    const height = (maskLayer.height || 0) * scale || 100 * scale;
+    const offsetX = Number.isFinite(maskLayer.offsetX) ? maskLayer.offsetX : 0;
+    const offsetY = Number.isFinite(maskLayer.offsetY) ? maskLayer.offsetY : 0;
+    const rotationDeg = Number.isFinite(maskLayer.rotationDeg) ? maskLayer.rotationDeg : 0;
+    const opacity = Number.isFinite(maskLayer.opacity) ? maskLayer.opacity : 1;
+
+    return (
+      <g transform={`rotate(${rotationDeg})`}>
+        <image
+          href={maskLayer.src}
+          x={-width / 2 + offsetX}
+          y={-height / 2 + offsetY}
+          width={width}
+          height={height}
+          opacity={opacity}
+          preserveAspectRatio="xMidYMid meet"
+        />
+      </g>
+    );
+  };
+
   return (
     <g transform={transform} className={className}>
-      {visible && (
+      {renderMask('behind')}
+      {visible && !suppressBone && (
         <React.Fragment>
           <path
             d={getBonePath(length, width, variant, drawsUpwards)}
@@ -213,11 +245,12 @@ export const Bone: React.FC<BoneProps> = ({
           )}
         </React.Fragment>
       )}
+      {renderMask('front')}
 
       <g transform={`translate(0, ${visualEndPoint})`}>{children}</g>
 
       {/* Anchor (red dot) at the start of the bone, always visible if showOverlay */}
-      {showOverlay && visible && (
+      {showOverlay && (
         <circle 
           cx="0" cy="0" r={isSelected ? 7 : 5} 
           fill={COLORS.ANCHOR_RED} 
