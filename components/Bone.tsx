@@ -225,17 +225,20 @@ export const Bone: React.FC<BoneProps> = ({
     const rotationDeg = Number.isFinite(maskLayer.rotationDeg) ? maskLayer.rotationDeg : 0;
     const opacity = Number.isFinite(maskLayer.opacity) ? maskLayer.opacity : 1;
 
+    const mirror = maskLayer.mirrorX ? -1 : 1;
     return (
-      <g transform={`rotate(${rotationDeg})`}>
-        <image
-          href={maskLayer.src}
-          x={-width / 2 + offsetX}
-          y={-height / 2 + offsetY}
-          width={width}
-          height={height}
-          opacity={opacity}
-          preserveAspectRatio="xMidYMid meet"
-        />
+      <g transform={`scale(${mirror}, 1)`}>
+        <g transform={`rotate(${rotationDeg})`}>
+          <image
+            href={maskLayer.src}
+            x={-width / 2 + offsetX}
+            y={-height / 2 + offsetY}
+            width={width}
+            height={height}
+            opacity={opacity}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        </g>
       </g>
     );
   };
