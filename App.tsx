@@ -1635,7 +1635,7 @@ const App: React.FC = () => {
       setCutoutIsErasing(true);
       eraseAtPoint(e.clientX, e.clientY);
     }
-  }, [cutoutEraseSize, cutoutSensitivity, cutoutSheet, cutoutTool, eraseAtPoint, selectedCutoutPieceId, svgPointToSheetPoint]);
+  }, [cutoutSensitivity, cutoutSheet, cutoutTool, eraseAtPoint, selectedCutoutPieceId, svgPointToSheetPoint]);
 
   const handleSliceMouseUp = useCallback((e: React.MouseEvent<SVGRectElement, MouseEvent>) => {
     if (longPressTimerRef.current) {
