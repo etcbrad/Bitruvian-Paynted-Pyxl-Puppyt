@@ -2568,10 +2568,30 @@ const App: React.FC = () => {
                   }
           }
         >
+          {backgroundLight > 0 && (
+            <div
+              className="absolute inset-0 z-10 pointer-events-none"
+              style={{ backgroundColor: `rgba(255,255,255,${backgroundLight})` }}
+              aria-hidden="true"
+            />
+          )}
           <Scanlines />
           {showSplash && (
             <div className="absolute top-[8%] left-0 right-0 z-30 flex items-center justify-center pointer-events-none">
               <h1 className="text-6xl font-archaic text-paper/80 animate-terminal-boot tracking-widest uppercase">BITRUVIUS</h1>
+            </div>
+          )}
+          {renderMode === 'colorwheel' && (
+            <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+              <div
+                className="w-56 h-56 rounded-full"
+                style={{
+                  background: 'conic-gradient(from 0deg, #ff3b30, #ff9500, #ffcc00, #34c759, #00c7be, #007aff, #5856d6, #ff2d55, #ff3b30)',
+                  boxShadow: '0 0 0 2px rgba(255,255,255,0.2), inset 0 0 30px rgba(0,0,0,0.35)',
+                  maskImage: 'radial-gradient(circle, transparent 42%, black 43%)',
+                  WebkitMaskImage: 'radial-gradient(circle, transparent 42%, black 43%)',
+                }}
+              />
             </div>
           )}
           
