@@ -1096,7 +1096,7 @@ const App: React.FC = () => {
     return { x: x * c - y * s, y: x * s + y * c };
   }, []);
 
-  const getWorldRotationForPart = useCallback((part: PartName, pose: Pose) => {
+  function getWorldRotationForPart(part: PartName, pose: Pose) {
     const chain: PartName[] = [];
     let current: PartName | undefined = part;
     while (current) {
@@ -1109,7 +1109,7 @@ const App: React.FC = () => {
       rot += getTotalRotation(key, pose);
     });
     return rot;
-  }, []);
+  }
 
   const toSvgPoint = useCallback((clientX: number, clientY: number) => {
     if (!svgRef.current) return null;
