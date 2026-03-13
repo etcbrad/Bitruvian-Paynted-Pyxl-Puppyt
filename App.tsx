@@ -1,24 +1,14 @@
 
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { Pose, PartName, PartSelection, PartVisibility, AnchorName, partNameToPoseKey, JointConstraint, RenderMode, Vector2D, ViewMode, AnimationState, AnimationKeyframe, SavedPose, KinematicMode } from './types';
+import { Pose, PartName, PartSelection, PartVisibility, AnchorName, partNameToPoseKey, JointConstraint, RenderMode, Vector2D, ViewMode, AnimationState, AnimationKeyframe, SavedPose, KinematicMode, BodyPartMaskLayer } from './types';
 import { RESET_POSE, FLOOR_HEIGHT, JOINT_LIMITS, ANATOMY, GROUND_STRIP_HEIGHT } from './constants'; 
 import { getJointPositions, getShortestAngleDiffDeg, interpolatePoses, solveIK, solveAdvancedIK } from './utils/kinematics';
 import { Scanlines, SystemGuides } from './components/SystemGrid';
 import { Mannequin, getPartCategory, getPartCategoryDisplayName } from './components/Mannequin'; 
-import { DraggablePanel } from './components/DraggablePanel';
 import { COLORS_BY_CATEGORY, COLORS } from './components/Bone';
 import { poseToString, stringToPose } from './utils/pose-parser';
 import { RotationWheelControl } from './components/RotationWheelControl';
 import { POSE_LIBRARY_DB } from './pose-library-db';
-
-interface PanelRect {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  minimized: boolean;
-}
 
 const App: React.FC = () => {
   const [activePose, setActivePose] = useState<Pose>(RESET_POSE);
