@@ -846,12 +846,343 @@ const App: React.FC = () => {
     e.target.value = '';
   }, []);
 
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+  const getCutoutDetectionParams = useCallback((sensitivity: number) => {
+    const normalized = clamp(sensitivity, 0, 1);
+    return {
+      lumaThreshold: Math.round(80 + normalized * 160),
+      alphaThreshold: Math.round(40 - normalized * 30),
+      minArea: Math.round(30 + (1 - normalized) * 260),
+      mergeDistance: Math.round(normalized * 2),
+      colorDistanceThreshold: 0.08 + normalized * 0.35,
+    };
+  }, []);
+
+  const buildCutoutPreviews = useCallback((
+    labels: Int32Array,
+    imageData: ImageData,
+    pieces: Array<{ labelId: number; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number } }>
+  ) => {
+    const { width, height, data } = imageData;
+    return pieces.map(piece => {
+      const { x, y, w, h } = piece.bbox;
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        return {
+          ...piece,
+          id: `piece-${piece.labelId}`,
+          previewSrc: '',
+        };
+      }
+      const output = ctx.createImageData(w, h);
+      const outData = output.data;
+      for (let yy = 0; yy < h; yy += 1) {
+        const srcRow = (y + yy) * width;
+        const outRow = yy * w;
+        for (let xx = 0; xx < w; xx += 1) {
+          const srcIndex = srcRow + (x + xx);
+          const outIndex = outRow + xx;
+          const outOffset = outIndex * 4;
+          if (labels[srcIndex] === piece.labelId) {
+            const srcOffset = srcIndex * 4;
+            outData[outOffset] = data[srcOffset];
+            outData[outOffset + 1] = data[srcOffset + 1];
+            outData[outOffset + 2] = data[srcOffset + 2];
+            outData[outOffset + 3] = data[srcOffset + 3];
+          } else {
+            outData[outOffset] = 0;
+            outData[outOffset + 1] = 0;
+            outData[outOffset + 2] = 0;
+            outData[outOffset + 3] = 0;
+          }
+        }
+      }
+      ctx.putImageData(output, 0, 0);
+      return {
+        ...piece,
+        id: `piece-${piece.labelId}`,
+        previewSrc: canvas.toDataURL('image/png'),
+      };
+    });
+  }, []);
+
+  const runCutoutDetection = useCallback((img: HTMLImageElement, sensitivity: number) => {
+    const params = getCutoutDetectionParams(sensitivity);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx || canvas.width === 0 || canvas.height === 0) {
+      setCutoutPieces([]);
+      cutoutImageDataRef.current = null;
+      cutoutLabelMapRef.current = null;
+      return;
+    }
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    cutoutImageDataRef.current = imageData;
+    const { width, height, data } = imageData;
+    const pixelCount = width * height;
+    const foreground = new Uint8Array(pixelCount);
+
+    const sampleCorner = (sx: number, sy: number) => {
+      let r = 0;
+      let g = 0;
+      let b = 0;
+      let count = 0;
+      for (let yy = 0; yy < 6; yy += 1) {
+        for (let xx = 0; xx < 6; xx += 1) {
+          const x = clamp(sx + xx, 0, width - 1);
+          const y = clamp(sy + yy, 0, height - 1);
+          const idx = (y * width + x) * 4;
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          count += 1;
+        }
+      }
+      return { r: r / count, g: g / count, b: b / count };
+    };
+
+    const cornerSamples = [
+      sampleCorner(0, 0),
+      sampleCorner(width - 6, 0),
+      sampleCorner(0, height - 6),
+      sampleCorner(width - 6, height - 6),
+    ];
+    const bg = cornerSamples.reduce((acc, c) => ({ r: acc.r + c.r, g: acc.g + c.g, b: acc.b + c.b }), { r: 0, g: 0, b: 0 });
+    bg.r /= cornerSamples.length;
+    bg.g /= cornerSamples.length;
+    bg.b /= cornerSamples.length;
+
+    for (let i = 0; i < pixelCount; i += 1) {
+      const offset = i * 4;
+      const r = data[offset];
+      const g = data[offset + 1];
+      const b = data[offset + 2];
+      const a = data[offset + 3];
+      const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const dr = r - bg.r;
+      const dg = g - bg.g;
+      const db = b - bg.b;
+      const colorDistance = Math.sqrt(dr * dr + dg * dg + db * db) / 441;
+      const isForeground = a > params.alphaThreshold || luma < params.lumaThreshold || colorDistance > params.colorDistanceThreshold;
+      foreground[i] = isForeground ? 1 : 0;
+    }
+
+    if (params.mergeDistance > 0) {
+      let current = foreground;
+      for (let iter = 0; iter < params.mergeDistance; iter += 1) {
+        const next = new Uint8Array(pixelCount);
+        for (let y = 0; y < height; y += 1) {
+          const row = y * width;
+          for (let x = 0; x < width; x += 1) {
+            const idx = row + x;
+            if (current[idx]) {
+              next[idx] = 1;
+              if (x > 0) next[idx - 1] = 1;
+              if (x < width - 1) next[idx + 1] = 1;
+              if (y > 0) next[idx - width] = 1;
+              if (y < height - 1) next[idx + width] = 1;
+              if (x > 0 && y > 0) next[idx - width - 1] = 1;
+              if (x < width - 1 && y > 0) next[idx - width + 1] = 1;
+              if (x > 0 && y < height - 1) next[idx + width - 1] = 1;
+              if (x < width - 1 && y < height - 1) next[idx + width + 1] = 1;
+            }
+          }
+        }
+        current = next;
+      }
+      foreground.set(current);
+    }
+
+    const labels = new Int32Array(pixelCount);
+    labels.fill(-1);
+    const queueX: number[] = [];
+    const queueY: number[] = [];
+    const pieces: Array<{ labelId: number; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number } }> = [];
+    let labelId = 0;
+
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const idx = y * width + x;
+        if (!foreground[idx] || labels[idx] !== -1) continue;
+        let minX = x;
+        let maxX = x;
+        let minY = y;
+        let maxY = y;
+        let area = 0;
+        let sumX = 0;
+        let sumY = 0;
+        queueX.length = 0;
+        queueY.length = 0;
+        queueX.push(x);
+        queueY.push(y);
+        labels[idx] = labelId;
+        while (queueX.length) {
+          const qx = queueX.pop()!;
+          const qy = queueY.pop()!;
+          const qIdx = qy * width + qx;
+          area += 1;
+          sumX += qx;
+          sumY += qy;
+          if (qx < minX) minX = qx;
+          if (qx > maxX) maxX = qx;
+          if (qy < minY) minY = qy;
+          if (qy > maxY) maxY = qy;
+          const neighbors = [
+            [qx - 1, qy],
+            [qx + 1, qy],
+            [qx, qy - 1],
+            [qx, qy + 1],
+          ];
+          for (const [nx, ny] of neighbors) {
+            if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+            const nIdx = ny * width + nx;
+            if (!foreground[nIdx] || labels[nIdx] !== -1) continue;
+            labels[nIdx] = labelId;
+            queueX.push(nx);
+            queueY.push(ny);
+          }
+        }
+        if (area >= params.minArea) {
+          const w = maxX - minX + 1;
+          const h = maxY - minY + 1;
+          pieces.push({
+            labelId,
+            bbox: { x: minX, y: minY, w, h },
+            area,
+            center: { x: sumX / area, y: sumY / area },
+          });
+        }
+        labelId += 1;
+      }
+    }
+
+    cutoutLabelMapRef.current = { labels, width, height };
+    const previews = buildCutoutPreviews(labels, imageData, pieces);
+    previews.sort((a, b) => b.area - a.area);
+    setCutoutPieces(previews);
+  }, [buildCutoutPreviews, getCutoutDetectionParams]);
+
+  const applyCutoutPieceToPart = useCallback((pieceId: string, part: PartName) => {
+    const piece = cutoutPieces.find(p => p.id === pieceId);
+    const labelMap = cutoutLabelMapRef.current;
+    const imageData = cutoutImageDataRef.current;
+    if (!piece || !labelMap || !imageData) return;
+    const { labels, width, height } = labelMap;
+    const { data } = imageData;
+    const { x, y, w, h } = piece.bbox;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const output = ctx.createImageData(w, h);
+    const outData = output.data;
+    for (let yy = 0; yy < h; yy += 1) {
+      const srcRow = (y + yy) * width;
+      const outRow = yy * w;
+      for (let xx = 0; xx < w; xx += 1) {
+        const srcIndex = srcRow + (x + xx);
+        const outIndex = outRow + xx;
+        const outOffset = outIndex * 4;
+        if (labels[srcIndex] === piece.labelId) {
+          const srcOffset = srcIndex * 4;
+          outData[outOffset] = data[srcOffset];
+          outData[outOffset + 1] = data[srcOffset + 1];
+          outData[outOffset + 2] = data[srcOffset + 2];
+          outData[outOffset + 3] = data[srcOffset + 3];
+        } else {
+          outData[outOffset] = 0;
+          outData[outOffset + 1] = 0;
+          outData[outOffset + 2] = 0;
+          outData[outOffset + 3] = 0;
+        }
+      }
+    }
+    ctx.putImageData(output, 0, 0);
+    const src = canvas.toDataURL('image/png');
+    const boneLength = getBoneLengthForPart(part);
+    const dominantSize = Math.max(w, h);
+    const baseScale = dominantSize > 0 ? boneLength / dominantSize : 1;
+    updateMaskLayer(part, {
+      src,
+      width: w,
+      height: h,
+      baseScale,
+      scale: baseScale,
+      offsetX: 0,
+      offsetY: 0,
+      rotationDeg: 0,
+      opacity: 1,
+    });
+    setSelectedCutoutPieceId(null);
+  }, [cutoutPieces, getBoneLengthForPart, updateMaskLayer]);
+
+  useEffect(() => {
+    if (!cutoutSheet) {
+      setCutoutPieces([]);
+      cutoutImageRef.current = null;
+      cutoutImageDataRef.current = null;
+      cutoutLabelMapRef.current = null;
+      return;
+    }
+    const img = new Image();
+    let cancelled = false;
+    img.onload = () => {
+      if (cancelled) return;
+      cutoutImageRef.current = img;
+      runCutoutDetection(img, cutoutSensitivity);
+    };
+    img.src = cutoutSheet.src;
+    return () => {
+      cancelled = true;
+    };
+  }, [cutoutSheet, cutoutSensitivity, runCutoutDetection]);
+
+  useEffect(() => {
+    if (!cutoutImageRef.current || !cutoutSheet) return;
+    const timer = setTimeout(() => {
+      if (!cutoutImageRef.current) return;
+      runCutoutDetection(cutoutImageRef.current, cutoutSensitivity);
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [cutoutSensitivity, cutoutSheet, runCutoutDetection]);
+
+  useEffect(() => {
+    if (!isAdjustingSensitivity) return;
+    const handleMove = (e: MouseEvent) => {
+      if (!sensitivityDragRef.current) return;
+      const deltaY = e.clientY - sensitivityDragRef.current.startY;
+      const next = clamp(sensitivityDragRef.current.startSensitivity - deltaY * 0.003, 0, 1);
+      setCutoutSensitivity(next);
+    };
+    const handleUp = () => {
+      sensitivityDragRef.current = null;
+      setIsAdjustingSensitivity(false);
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [isAdjustingSensitivity]);
+
   const selectSinglePart = useCallback((part: PartName) => {
     setSelectedParts(prev => {
       const next: PartSelection = Object.values(PartName).reduce((acc, name) => ({ ...acc, [name]: false }), {} as PartSelection);
       next[part] = true;
       return next;
     });
+    if (selectedCutoutPieceId) {
+      applyCutoutPieceToPart(selectedCutoutPieceId, part);
+    }
   }, []);
 
   
