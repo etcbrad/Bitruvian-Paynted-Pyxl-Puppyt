@@ -129,7 +129,7 @@ export type JointConstraint = 'fk' | 'stretch' | 'curl';
 
 // Defines the rendering mode for the Bone component.
 // Simplified: 'grayscale' removed as UI is globally monochrome, 'silhouette' now represents solid black fill.
-export type RenderMode = 'default' | 'wireframe' | 'silhouette' | 'backlight'; // Added 'backlight'
+export type RenderMode = 'default' | 'wireframe' | 'silhouette' | 'backlight' | 'colorwheel'; // Added 'backlight' + 'colorwheel'
 
 export type ViewMode = 'zoomed' | 'default' | 'lotte' | 'wide' | 'mobile'; // Added 'mobile'
 
