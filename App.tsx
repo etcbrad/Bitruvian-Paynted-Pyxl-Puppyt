@@ -1009,7 +1009,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if (!placingJoint || !primarySelectedPart) return;
+    if (!placingJoint || !primarySelectedPart || cutoutRegionMode) return;
     const point = toSvgPoint(e.clientX, e.clientY);
     if (!point) return;
     const jointPos = jointPositions[primarySelectedPart];
