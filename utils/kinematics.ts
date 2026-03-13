@@ -258,6 +258,7 @@ export const solveFABRIK = (
   target: Vector2D,
   jointModes: Record<PartName, JointConstraint>,
   activePins: AnchorName[],
+  scales?: Partial<ProportionScales>,
   iterations: number = 10,
   tolerance: number = 0.1
 ): Pose => {
@@ -267,7 +268,7 @@ export const solveFABRIK = (
 
   // 1. Get current global positions and bone lengths
   // Use activePins to ensure we are solving in the correct world space
-  const joints = getJointPositions(newPose, activePins);
+  const joints = getJointPositions(newPose, activePins, scales);
   const points: Vector2D[] = chain.map(joint => ({ ...joints[joint as string] }));
   
   // Add effector tip for better precision
