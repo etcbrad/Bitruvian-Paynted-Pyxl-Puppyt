@@ -1,5 +1,5 @@
 import React from 'react';
-import { PartName, RenderMode, ViewMode, BackgroundPreset } from '../types';
+import { PartName, RenderMode, ViewMode, BackgroundPreset } from '../types/types';
 import { RotationWheelControl } from './controls/RotationWheelControl';
 
 interface ControlPanelProps {
