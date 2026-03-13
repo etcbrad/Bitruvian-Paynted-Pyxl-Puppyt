@@ -140,6 +140,23 @@ const App: React.FC = () => {
     return pivotData as WalkingEnginePivotOffsets;
   }, [activePose]);
 
+  // Optimize joint modes and disabled joints initialization
+  const jointModes = useMemo(() => 
+    Object.keys(pivotOffsets).reduce((acc, key) => ({ 
+      ...acc, 
+      [key]: 'fk' as JointMode 
+    }), {} as Record<keyof WalkingEnginePivotOffsets, JointMode>),
+    [pivotOffsets]
+  );
+
+  const disabledJoints = useMemo(() => 
+    Object.keys(pivotOffsets).reduce((acc, key) => ({ 
+      ...acc, 
+      [key]: false 
+    }), {} as Record<keyof WalkingEnginePivotOffsets, boolean>),
+    [pivotOffsets]
+  );
+
   const handlePartColorChange = useCallback((partKey: keyof WalkingEngineProportions, color: string) => {
     setPartColors(prev => ({ ...prev, [partKey]: color }));
   }, []);
