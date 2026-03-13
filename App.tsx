@@ -863,6 +863,19 @@ const App: React.FC = () => {
     });
   }, [autoMirrorLimbs]);
 
+  useEffect(() => {
+    if (!autoMirrorLimbs) return;
+    setMaskLayers(prev => {
+      const next = { ...prev };
+      (Object.entries(mirrorPairs) as Array<[PartName, PartName]>).forEach(([right, left]) => {
+        if (prev[right].src && !prev[left].src) {
+          next[left] = { ...prev[right], mirrorX: true };
+        }
+      });
+      return next;
+    });
+  }, [autoMirrorLimbs]);
+
   const copyRightToLeft = useCallback((pairs: Array<[PartName, PartName]>) => {
     setMaskLayers(prev => {
       const next = { ...prev };
