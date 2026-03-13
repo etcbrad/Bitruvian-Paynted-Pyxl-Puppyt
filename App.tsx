@@ -902,7 +902,7 @@ const App: React.FC = () => {
   const buildCutoutPreviews = useCallback((
     labels: Int32Array,
     imageData: ImageData,
-    pieces: Array<{ labelId: number; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number } }>
+    pieces: Array<{ labelId: number; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number }; fillRatio: number }>
   ) => {
     const { width, height, data } = imageData;
     return pieces.map(piece => {
@@ -1014,6 +1014,21 @@ const App: React.FC = () => {
       foreground[i] = isForeground ? 1 : 0;
     }
 
+    if (cutoutRegion) {
+      const regionX0 = clamp(Math.floor(cutoutRegion.x), 0, width - 1);
+      const regionY0 = clamp(Math.floor(cutoutRegion.y), 0, height - 1);
+      const regionX1 = clamp(Math.ceil(cutoutRegion.x + cutoutRegion.w), 0, width);
+      const regionY1 = clamp(Math.ceil(cutoutRegion.y + cutoutRegion.h), 0, height);
+      for (let y = 0; y < height; y += 1) {
+        const row = y * width;
+        for (let x = 0; x < width; x += 1) {
+          const idx = row + x;
+          const inRegion = x >= regionX0 && x <= regionX1 && y >= regionY0 && y <= regionY1;
+          if (!inRegion) foreground[idx] = 0;
+        }
+      }
+    }
+
     if (params.mergeDistance > 0) {
       let current = foreground;
       for (let iter = 0; iter < params.mergeDistance; iter += 1) {
@@ -1044,7 +1059,7 @@ const App: React.FC = () => {
     labels.fill(-1);
     const queueX: number[] = [];
     const queueY: number[] = [];
-    const pieces: Array<{ labelId: number; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number } }> = [];
+    const pieces: Array<{ labelId: number; bbox: { x: number; y: number; w: number; h: number }; area: number; center: { x: number; y: number }; fillRatio: number }> = [];
     let labelId = 0;
 
     for (let y = 0; y < height; y += 1) {
@@ -1092,11 +1107,18 @@ const App: React.FC = () => {
         if (area >= params.minArea) {
           const w = maxX - minX + 1;
           const h = maxY - minY + 1;
+          const fillRatio = area / (w * h);
+          const isLikelyText = cutoutIgnoreText && area < params.textAreaMax && fillRatio < params.textFillRatioThreshold;
+          if (isLikelyText) {
+            labelId += 1;
+            continue;
+          }
           pieces.push({
             labelId,
             bbox: { x: minX, y: minY, w, h },
             area,
             center: { x: sumX / area, y: sumY / area },
+            fillRatio,
           });
         }
         labelId += 1;
@@ -1107,7 +1129,7 @@ const App: React.FC = () => {
     const previews = buildCutoutPreviews(labels, imageData, pieces);
     previews.sort((a, b) => b.area - a.area);
     setCutoutPieces(previews);
-  }, [buildCutoutPreviews, getCutoutDetectionParams]);
+  }, [buildCutoutPreviews, cutoutIgnoreText, cutoutRegion, getCutoutDetectionParams]);
 
   const applyCutoutPieceToPart = useCallback((pieceId: string, part: PartName) => {
     const piece = cutoutPieces.find(p => p.id === pieceId);
