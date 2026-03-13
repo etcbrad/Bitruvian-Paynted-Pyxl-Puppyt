@@ -1581,7 +1581,7 @@ const App: React.FC = () => {
               <div className="mt-2 flex flex-col gap-1">
                 <span className="text-white/40 text-[8px] uppercase">Render_Style</span>
                 <div className="flex flex-col gap-1">
-                  {(['default', 'wireframe', 'silhouette', 'backlight'] as RenderMode[]).map(mode => (
+                  {(['default', 'wireframe', 'silhouette', 'backlight', 'colorwheel'] as RenderMode[]).map(mode => (
                     <button
                       key={mode}
                       onClick={() => setRenderMode(mode)}
