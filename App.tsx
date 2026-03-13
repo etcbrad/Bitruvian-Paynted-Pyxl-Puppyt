@@ -1597,6 +1597,76 @@ const App: React.FC = () => {
     return { x: clamp(sx, 0, cutoutSheet.width), y: clamp(sy, 0, cutoutSheet.height) };
   }, [cutoutOffset.x, cutoutOffset.y, cutoutScale, cutoutSheet]);
 
+  const handleSliceMouseDown = useCallback((e: React.MouseEvent<SVGRectElement, MouseEvent>) => {
+    if (!cutoutSheet) return;
+    e.stopPropagation();
+    if (cutoutTool === 'select') {
+      if (longPressTimerRef.current) {
+        window.clearTimeout(longPressTimerRef.current);
+      }
+      longPressTriggeredRef.current = false;
+      longPressTimerRef.current = window.setTimeout(() => {
+        longPressTriggeredRef.current = true;
+        sensitivityDragRef.current = { startY: e.clientY, startSensitivity: cutoutSensitivity };
+        setIsAdjustingSensitivity(true);
+      }, 300);
+      return;
+    }
+    const point = svgPointToSheetPoint(e.clientX, e.clientY);
+    if (!point) return;
+    if (cutoutTool === 'rect' || cutoutTool === 'circle') {
+      shapeDragRef.current = { startX: point.x, startY: point.y };
+      setCutoutDraftShape({
+        type: cutoutTool,
+        bbox: { x: point.x, y: point.y, w: 0, h: 0 },
+      });
+      return;
+    }
+    if (cutoutTool === 'freehand') {
+      shapeDragRef.current = { startX: point.x, startY: point.y };
+      setCutoutDraftShape({
+        type: 'freehand',
+        bbox: { x: point.x, y: point.y, w: 0, h: 0 },
+        points: [point],
+      });
+      return;
+    }
+    if (cutoutTool === 'erase') {
+      if (!selectedCutoutPieceId) return;
+      isErasingRef.current = true;
+      setCutoutIsErasing(true);
+      eraseAtPoint(e.clientX, e.clientY);
+    }
+  }, [cutoutEraseSize, cutoutSensitivity, cutoutSheet, cutoutTool, eraseAtPoint, selectedCutoutPieceId, svgPointToSheetPoint]);
+
+  const handleSliceMouseUp = useCallback((e: React.MouseEvent<SVGRectElement, MouseEvent>) => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    if (cutoutTool === 'select' && !longPressTriggeredRef.current) {
+      const picked = getPieceAtPoint(e.clientX, e.clientY);
+      if (picked) {
+        setSelectedCutoutPieceId(picked.id);
+      }
+    }
+    longPressTriggeredRef.current = false;
+  }, [cutoutTool, getPieceAtPoint]);
+
+  const handleSliceDoubleClick = useCallback((e: React.MouseEvent<SVGRectElement, MouseEvent>) => {
+    if (cutoutTool !== 'select') return;
+    const picked = getPieceAtPoint(e.clientX, e.clientY);
+    if (!picked) return;
+    if (selectedCutoutPieceId && picked.id !== selectedCutoutPieceId) {
+      const target = cutoutPieces.find(p => p.id === selectedCutoutPieceId);
+      if (target) {
+        mergePieces(target, picked);
+      }
+    } else {
+      setSelectedCutoutPieceId(picked.id);
+    }
+  }, [cutoutPieces, cutoutTool, getPieceAtPoint, mergePieces, selectedCutoutPieceId]);
+
   useEffect(() => {
     if (!cutoutSheet) {
       setCutoutPieces([]);
