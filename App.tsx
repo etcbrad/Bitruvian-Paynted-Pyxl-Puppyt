@@ -1582,6 +1582,9 @@ const App: React.FC = () => {
                 }}
                 jointModes={jointModes}
                 renderMode={renderMode}
+                masksEnabled={masksEnabled}
+                hideBonesWithMasks={hideBonesWithMasks}
+                maskLayers={maskLayers}
               />
             </g>
           </svg>
