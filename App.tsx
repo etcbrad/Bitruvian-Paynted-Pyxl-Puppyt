@@ -1016,66 +1016,6 @@ const App: React.FC = () => {
           <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
           {activeTab === 'model' ? (
             <>
-              {/* Workflow: Upload */}
-              {workflowStep === 'upload' && (
-                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] uppercase font-bold text-white/70">Upload Cutout Sheet</span>
-                    <button
-                      onClick={() => cutoutUploadInputRef.current?.click()}
-                      className="text-[9px] px-2 py-1 border border-white/20 bg-white/10 hover:bg-white/20 uppercase"
-                    >
-                      Upload
-                    </button>
-                  </div>
-                  <input ref={cutoutUploadInputRef} type="file" accept="image/*" onChange={handleCutoutUpload} className="hidden" />
-                  {cutoutSheet && (
-                    <div className="mt-2 space-y-2">
-                      <div className="flex justify-between text-[8px] text-white/50">
-                        <span>Opacity</span>
-                        <span>{Math.round(cutoutOpacity * 100)}%</span>
-                      </div>
-                      <input type="range" min={0} max={100} value={Math.round(cutoutOpacity * 100)} onChange={e => setCutoutOpacity(Number(e.target.value) / 100)} className="w-full accent-selection" />
-                      <div className="flex justify-between text-[8px] text-white/50">
-                        <span>Scale</span>
-                        <span>{cutoutScale.toFixed(2)}x</span>
-                      </div>
-                      <input type="range" min={50} max={200} value={Math.round(cutoutScale * 100)} onChange={e => setCutoutScale(Number(e.target.value) / 100)} className="w-full accent-selection" />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <div className="flex justify-between text-[8px] text-white/50"><span>Offset X</span><span>{Math.round(cutoutOffset.x)}</span></div>
-                          <input type="range" min={-500} max={500} value={Math.round(cutoutOffset.x)} onChange={e => setCutoutOffset(prev => ({ ...prev, x: Number(e.target.value) }))} className="w-full accent-selection" />
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-[8px] text-white/50"><span>Offset Y</span><span>{Math.round(cutoutOffset.y)}</span></div>
-                          <input type="range" min={-500} max={500} value={Math.round(cutoutOffset.y)} onChange={e => setCutoutOffset(prev => ({ ...prev, y: Number(e.target.value) }))} className="w-full accent-selection" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Workflow: Slice (Conceptual) */}
-              {workflowStep === 'slice' && (
-                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
-                  <div className="text-[9px] uppercase font-bold text-white/70">Slice (Lightweight)</div>
-                  <p className="text-[8px] text-white/40 mt-1">
-                    Use joint masks below to assign cutout pieces. This keeps the flow light while aligning to the rig.
-                  </p>
-                </div>
-              )}
-
-              {/* Workflow: Rig */}
-              {workflowStep === 'rig' && (
-                <div className="mb-4 border border-white/10 p-2 rounded bg-white/5">
-                  <div className="text-[9px] uppercase font-bold text-white/70">Rig Alignment</div>
-                  <p className="text-[8px] text-white/40 mt-1">
-                    Select a joint on the mannequin, upload its cutout, then fine‑tune scale and offsets.
-                  </p>
-                </div>
-              )}
-
               {/* Torso Unit */}
               <div className="flex flex-col gap-2 w-full text-left border-b border-white/10 pb-2 mb-2">
                 <div className="flex items-center justify-between">
