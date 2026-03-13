@@ -192,6 +192,8 @@ export const Mannequin: React.FC<MannequinProps> = ({
                           offset={skeletonOffsets[PartName.Head]} 
                           visible={visibility[PartName.Head]} 
                           partCategory={getPartCategory(PartName.Head)}
+                          maskLayer={masksEnabled ? maskLayers[PartName.Head] : undefined}
+                          suppressBone={Boolean(masksEnabled && hideBonesWithMasks && maskLayers[PartName.Head]?.src)}
                         />
                       </PartWrapper>
                     </g>
