@@ -21,13 +21,15 @@ export const usePoseState = (initialPose: Pose) => {
       const previousPose = undoStack.current.pop()!;
       setActivePose(previousPose);
     }
-  }, [activePose]);
-
   const redo = useCallback(() => {
-    if (redoStack.current.length > 0) {
-      undoStack.current.push({ ...activePose });
-      const nextPose = redoStack.current.pop()!;
-      setActivePose(nextPose);
+    setActivePose(prev => {
+      if (redoStack.current.length > 0) {
+        undoStack.current.push({ ...prev });
+        return redoStack.current.pop()!;
+      }
+      return prev;
+    });
+  }, []);
     }
   }, [activePose]);
 
