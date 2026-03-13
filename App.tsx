@@ -1023,12 +1023,16 @@ const App: React.FC = () => {
           baseScale,
           scale: baseScale,
         });
+        if (autoAdvanceJoint) {
+          const next = getNextEmptyJoint(primarySelectedPart);
+          if (next) selectSinglePart(next);
+        }
       };
       img.src = src;
     };
     reader.readAsDataURL(file);
     e.target.value = '';
-  }, [primarySelectedPart, updateMaskLayer, getBoneLengthForPart]);
+  }, [primarySelectedPart, updateMaskLayer, getBoneLengthForPart, autoAdvanceJoint, getNextEmptyJoint, selectSinglePart]);
 
   const handleCutoutUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
