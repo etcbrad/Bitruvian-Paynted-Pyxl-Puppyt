@@ -69,6 +69,8 @@ const App: React.FC = () => {
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [gridSize, setGridSize] = useState(10);
   const [placingJoint, setPlacingJoint] = useState(false);
+  const [placingAnchors, setPlacingAnchors] = useState(false);
+  const [dragMaskMode, setDragMaskMode] = useState(false);
   const [showJointLabels, setShowJointLabels] = useState(false);
   const [proportionScales, setProportionScales] = useState({ arm: 1, leg: 1, torso: 1, head: 1 });
 
