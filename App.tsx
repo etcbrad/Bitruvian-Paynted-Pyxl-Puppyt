@@ -1022,7 +1022,7 @@ const App: React.FC = () => {
     return nextLayers;
   };
 
-  const updateMaskLayer = useCallback((part: PartName, patch: Partial<BodyPartMaskLayer>) => {
+  function updateMaskLayer(part: PartName, patch: Partial<BodyPartMaskLayer>) {
     setMaskLayers(prev => {
       const next = { ...prev, [part]: { ...prev[part], ...patch } };
       const mirrorTarget = mirrorPairs[part];
@@ -1037,7 +1037,7 @@ const App: React.FC = () => {
       }
       return next;
     });
-  }, [autoMirrorLimbs, autoBuildFromLegs, applyLegToLimbs]);
+  }
 
   useEffect(() => {
     if (!autoMirrorLimbs) return;
