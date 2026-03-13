@@ -129,6 +129,7 @@ export type BodyPartMaskLayer = {
   offsetX: number;
   offsetY: number;
   layerOrder?: 'front' | 'behind';
+  jointAnchors?: Vector2D[];
 };
 
 // Defines the available kinetic constraint modes for joints.
