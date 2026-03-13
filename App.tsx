@@ -415,9 +415,11 @@ const App: React.FC = () => {
     let rafId: number;
     const smooth = () => {
       setActivePose(current => {
+        // During direct manipulation, reflect changes immediately for snappier feedback.
+        if (isDragging.current) return ghostPose;
         // If not dragging, we can either snap or continue smoothing
         // The "5-frame snap" logic is handled in handleMouseUp
-        const smoothingFactor = isDragging.current ? 0.3 : 0.15;
+        const smoothingFactor = 0.15;
         return interpolatePoses(current, ghostPose, smoothingFactor);
       });
       rafId = requestAnimationFrame(smooth);
